@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: cbr_bot_postgres
+    environment:
+      POSTGRES_DB: cbr_bot
+      POSTGRES_USER: cbr_user
+      POSTGRES_PASSWORD: cbr_password
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - cbr_bot_network
+    restart: unless-stopped
+
+  # pgAdmin - Web UI for PostgreSQL
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: cbr_bot_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@cbrbot.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:5050"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - cbr_bot_network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  # CBR Bot Application
+  cbr-bot:
+    build: .
+    container_name: cbr_bot_app
+    environment:
+      - NODE_ENV=production
+      - BOT_TOKEN=6501710497:AAFmbkmk4_ObKk5wOUhs03qDYOZewXlXsCs
+      - FIRECRAWL_API_KEY=fc-ab1e434c66f143b0a0f09c2ba98b8381
+      - DATABASE_URL=postgresql://cbr_user:cbr_password@postgres:5432/cbr_bot
+      - MONITORING_INTERVAL=${MONITORING_INTERVAL:-2700000}
+      - ADMIN_USER_IDS=${ADMIN_USER_IDS:-1856156198,145328014}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    depends_on:
+      - postgres
+    networks:
+      - cbr_bot_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  cbr_bot_network:
+    driver: bridge
