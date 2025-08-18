@@ -70,6 +70,14 @@ export class FireCrawlService {
   }
 
   /**
+   * Очищает адрес от лишних сокращений
+   */
+  private cleanAddress(address: string): string {
+    return address
+      .replace(/\s*вн\.тер\.г\s*/g, ' ') // удаляем 'вн.тер.г'
+  }
+
+  /**
    * Парсит markdown данные с Контур.Фокус
    */
   private parseKonturData(markdown: string, inn: string): KonturOrganizationData {
@@ -97,7 +105,7 @@ export class FireCrawlService {
       // Извлекаем адрес
       const addressMatch = markdown.match(/\n\n(.+?г .+?)\n\n/);
       if (addressMatch && addressMatch[1]) {
-        data.address = addressMatch[1].trim();
+        data.address = this.cleanAddress(addressMatch[1]);
       }
 
       // Извлекаем ОГРН
