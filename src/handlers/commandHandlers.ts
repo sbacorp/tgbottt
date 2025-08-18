@@ -509,11 +509,14 @@ export async function handleCheck(ctx: MyContext): Promise<void> {
       }
       
       if (result.illegalitySigns && result.illegalitySigns.length > 0) {
-        message += `🚨 <b>Признаки нелегальности:</b> ${result.illegalitySigns.join(', ')}\n`;
+        message += `🚨 <b>Санкции:</b> ${result.illegalitySigns.join(', ')}\n`;
       }
       
       if (result.activities && result.activities.length > 0) {
         message += `🏢 <b>Деятельность:</b> ${result.activities[0]}\n`;
+      }
+      if(result.hasIllegalActivity!==undefined) {
+        message += `🚨 <b>Признаки нелегальной деятельности:</b> ${result.hasIllegalActivity ? 'Да' : 'Нет'}\n`;
       }
       message += `🚦 ЗСК:\n`
       message += `${statusMessage}\n`;

@@ -25,6 +25,7 @@ export interface Organization {
   additionalInfo?: string;
   comment?: string;
   riskInfo?: string;
+  hasIllegalActivity?: boolean;
   addedDate: Date;
   updatedDate: Date;
 }

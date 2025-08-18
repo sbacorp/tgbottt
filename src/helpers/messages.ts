@@ -17,11 +17,17 @@ export function formatOrganizationList(organizations: any[]): string {
     message += `   Обновлено: ${org.undated_at ? org.undated_at.toLocaleDateString('ru-RU') : 'Не указано'}\n`;
     message += `   Регион: ${org.region || 'Не указано'}\n`;
     
-    message += `\n${statusMessage}\n\n`;
     // Добавляем информацию о рисках для оранжевого статуса
     if (org.status === 'orange' && org.riskInfo) {
       message += `   ⚠️ Риски: ${org.riskInfo}\n`;
     }
+    
+    // Добавляем информацию о признаках нелегальной деятельности
+    if (org.hasIllegalActivity !== undefined) {
+      message += `   🚨 Признаки нелегальной деятельности: ${org.hasIllegalActivity ? 'Да' : 'Нет'}\n`;
+    }
+    
+    message += `\n${statusMessage}\n\n`;
     
   }
 

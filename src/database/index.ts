@@ -104,12 +104,18 @@ class Database {
       ALTER TABLE tracked_organizations ADD COLUMN IF NOT EXISTS risk_info TEXT;
     `;
 
+    // Добавляем поле has_illegal_activity в таблицу tracked_organizations если его нет
+    const addIllegalActivityColumn = `
+      ALTER TABLE tracked_organizations ADD COLUMN IF NOT EXISTS has_illegal_activity BOOLEAN DEFAULT FALSE;
+    `;
+
     try {
       await this.client.query(createUsersTable);
       await this.client.query(createOrganizationsTable);
       await this.client.query(createChecksTable);
       await this.client.query(createUserOrganizationsTable);
       await this.client.query(addRiskInfoColumn);
+      await this.client.query(addIllegalActivityColumn);
       
       logger.info('Database tables created successfully');
     } catch (error) {
@@ -323,6 +329,7 @@ class Database {
           additionalInfo: row.additional_info,
           comment: row.comment,
           riskInfo: row.risk_info,
+          hasIllegalActivity: row.has_illegal_activity,
           addedDate: row.created_at,
           updatedDate: row.updated_at
         };
@@ -357,6 +364,7 @@ class Database {
         additionalInfo: row.additional_info,
         comment: row.comment,
         riskInfo: row.risk_info,
+        hasIllegalActivity: row.has_illegal_activity,
         addedDate: row.created_at,
         updatedDate: row.updated_at
       }));
@@ -398,8 +406,9 @@ class Database {
          additional_info = COALESCE($8, additional_info),
          comment = COALESCE($9, comment),
          risk_info = COALESCE($10, risk_info),
+         has_illegal_activity = COALESCE($11, has_illegal_activity),
          updated_at = CURRENT_TIMESTAMP
-         WHERE inn = $11
+         WHERE inn = $12
          RETURNING *`,
         [
           organizationData.name,
@@ -412,6 +421,7 @@ class Database {
           organizationData.additionalInfo,
           organizationData.comment,
           organizationData.riskInfo,
+          organizationData.hasIllegalActivity,
           inn
         ]
       );

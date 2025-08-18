@@ -184,7 +184,7 @@ export class MonitoringService {
       }
       
       if (newData.illegalitySigns && newData.illegalitySigns.length > 0) {
-        message += `🚨 **Список признаков, по которым организация нелегальна:** ${newData.illegalitySigns.join(', ')}\n`;
+        message += `🚨 **Санкции:** ${newData.illegalitySigns.join(', ')}\n`;
       }
       
       if (newData.region) {
@@ -197,6 +197,11 @@ export class MonitoringService {
       
       if (newData.comment) {
         message += `💬 **Комментарий:** ${newData.comment}\n`;
+      }
+
+      // Добавляем информацию о признаках нелегальной деятельности
+      if (newData.hasIllegalActivity !== undefined) {
+        message += `🚨 **Признаки нелегальной деятельности:** ${newData.hasIllegalActivity ? 'Да' : 'Нет'}\n`;
       }
       
       message += `\n${statusMessage}\n`;

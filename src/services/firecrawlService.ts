@@ -1,6 +1,7 @@
 import FireCrawlApp from '@mendable/firecrawl-js';
 import { config } from '../utils/config';
 import logger from '../utils/logger';
+import { cbrService } from './cbrService';
 
 export interface KonturOrganizationData {
   inn: string;
@@ -23,6 +24,7 @@ export interface KonturOrganizationData {
   capital?: string;
   taxAuthority?: string;
   riskInfo?: string;
+  hasIllegalActivity?: boolean;
 }
 
 export class FireCrawlService {
@@ -54,7 +56,13 @@ export class FireCrawlService {
         return null;
       }
   // @ts-ignore 
-      return this.parseKonturData(scrapeResult.markdown, inn);
+      const konturData = this.parseKonturData(scrapeResult.markdown, inn);
+      
+      // Проверяем в списке ЦБ РФ
+      const hasIllegalActivity = await cbrService.searchOrganization(inn);
+      konturData.hasIllegalActivity = hasIllegalActivity;
+      
+      return konturData;
     } catch (error) {
       logger.error(`Ошибка при получении данных для ИНН ${inn}:`, error);
       return null;
