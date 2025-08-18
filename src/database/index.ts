@@ -99,11 +99,17 @@ class Database {
       );
     `;
 
+    // Добавляем поле risk_info в таблицу tracked_organizations если его нет
+    const addRiskInfoColumn = `
+      ALTER TABLE tracked_organizations ADD COLUMN IF NOT EXISTS risk_info TEXT;
+    `;
+
     try {
       await this.client.query(createUsersTable);
       await this.client.query(createOrganizationsTable);
       await this.client.query(createChecksTable);
       await this.client.query(createUserOrganizationsTable);
+      await this.client.query(addRiskInfoColumn);
       
       logger.info('Database tables created successfully');
     } catch (error) {
