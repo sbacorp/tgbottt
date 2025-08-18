@@ -1,4 +1,4 @@
-import { STATUS_EMOJIS, STATUS_NAMES } from "../utils/config";
+import { STATUS_EMOJIS, STATUS_MESSAGE } from "../utils/config";
 
 export function formatOrganizationList(organizations: any[]): string {
   if (organizations.length === 0) {
@@ -10,13 +10,13 @@ export function formatOrganizationList(organizations: any[]): string {
   
   for (const org of organizations) {
     const emoji = STATUS_EMOJIS[org.status as keyof typeof STATUS_EMOJIS];
-    const statusName = STATUS_NAMES[org.status as keyof typeof STATUS_NAMES];
+    const statusMessage = STATUS_MESSAGE[org.status as keyof typeof STATUS_MESSAGE];
     
     message += `${emoji} <b>${org.inn}</b>\n`;
-    message += `   Название: ${org.name || 'Не указано'}\n`;
-    message += `   Статус: ${statusName}\n`;
+    message += `   Актуальное название компании: ${org.name || 'Не указано'}\n`;
     message += `   Обновлено: ${org.undated_at ? org.undated_at.toLocaleDateString('ru-RU') : 'Не указано'}\n`;
     message += `   Регион: ${org.region || 'Не указано'}\n\n`;
+    message += `${statusMessage}\n\n`;
 
   }
 

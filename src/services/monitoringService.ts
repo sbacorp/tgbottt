@@ -166,7 +166,7 @@ export class MonitoringService {
       }
       
       if (newData.name) {
-        message += `🏢 **Название организации:** ${newData.name}\n`;
+        message += `🏢 **Актуальное название компании:** ${newData.name}\n`;
       }
       
       message += `🔢 **ИНН:** ${inn}\n`;
@@ -199,9 +199,9 @@ export class MonitoringService {
         message += `💬 **Комментарий:** ${newData.comment}\n`;
       }
 
-      message += `\n📊 Текущее состояние\n*Уровень риска:* ${statusMessage}`;
+      message += `\n${statusMessage}\n`;
 
-      message += '➕ Обновлено: ' + new Date().toLocaleDateString('ru-RU');
+      message += '➕ Обновлено в системе: ' + new Date().toLocaleDateString('ru-RU');
 
       // Отправляем уведомление всем пользователям
       await getNotificationService().sendNotificationToAllUsers(message);
