@@ -62,21 +62,6 @@ CREATE TABLE IF NOT EXISTS user_organizations (
   FOREIGN KEY (inn) REFERENCES tracked_organizations(inn) ON DELETE CASCADE
 );
 
--- Добавление первичных ИНН для отслеживания
-INSERT INTO tracked_organizations (inn, name, status) VALUES
-  ('9704209904', 'Организация 9704209904', 'green'),
-  ('9719075594', 'Организация 9719075594', 'green'),
-  ('7720942551', 'Организация 7720942551', 'green'),
-  ('7720943749', 'Организация 7720943749', 'green'),
-  ('9719075989', 'Организация 9719075989', 'green'),
-  ('9719076044', 'Организация 9719076044', 'green'),
-  ('5024250841', 'Организация 5024250841', 'green'),
-  ('9729401367', 'Организация 9729401367', 'green'),
-  ('9726098881', 'Организация 9726098881', 'green'),
-  ('9728156881', 'Организация 9728156881', 'green'),
-  ('9727107641', 'Организация 9727107641', 'green')
-ON CONFLICT (inn) DO NOTHING;
-
 -- Создание индексов для оптимизации
 CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id);
 CREATE INDEX IF NOT EXISTS idx_organizations_inn ON tracked_organizations(inn);

@@ -491,12 +491,11 @@ export async function handleCheck(ctx: MyContext): Promise<void> {
     console.log(result, 'result')
     
     if (result) {
-      const statusEmoji = config.STATUS_EMOJIS[result.status];
-      const statusName = config.STATUS_NAMES[result.status];
+      const statusMessage = config.STATUS_MESSAGE[result.status]
       
       let message = `📊 <b>Результат проверки ИНН ${inn}</b>\n\n`;
-      message += `${statusEmoji} <b>Статус:</b> ${statusName}\n`;
-      message += `🏢 <b>Название:</b> ${result.name}\n`;
+      message += `${statusMessage}\n`;
+      message += `🏢 <b>Актуальное название компании:</b> ${result.name}\n`;
       
       if (result.address) {
         message += `📍 <b>Адрес:</b> ${result.address}\n`;
@@ -517,6 +516,8 @@ export async function handleCheck(ctx: MyContext): Promise<void> {
       if (result.activities && result.activities.length > 0) {
         message += `🏢 <b>Деятельность:</b> ${result.activities[0]}\n`;
       }
+      message += `🚦 ЗСК:`
+      message += `${statusMessage}\n`;
       
       await ctx.reply(message, { parse_mode: 'HTML' });
     } else {
