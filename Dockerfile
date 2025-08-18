@@ -10,14 +10,17 @@ WORKDIR /app
 # Копирование файлов зависимостей
 COPY package*.json ./
 
-# Установка зависимостей
-RUN npm install --only=production
+# Установка всех зависимостей (включая dev-зависимости для сборки)
+RUN npm install
 
 # Копирование исходного кода
 COPY . .
 
 # Сборка TypeScript
 RUN npm run build
+
+# Удаление dev-зависимостей для уменьшения размера образа
+RUN npm prune --production
 
 # Создание пользователя для безопасности
 RUN addgroup -g 1001 -S nodejs

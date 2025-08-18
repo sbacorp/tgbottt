@@ -25,8 +25,8 @@ export class MonitoringService {
 
     logger.info('Запуск мониторинга организаций...');
 
-    // Запускаем мониторинг каждые 4 часа (в 00:00, 04:00, 08:00, 12:00, 16:00, 20:00)
-    cron.schedule('0 */4 * * *', async () => {
+    // Запускаем мониторинг каждый час в 6 минут
+    cron.schedule('6 * * * *', async () => {
       await this.performMonitoring();
     }, {
       scheduled: true,
@@ -158,8 +158,9 @@ export class MonitoringService {
     try {
       const statusEmoji = config.STATUS_EMOJIS[newData.status as keyof typeof config.STATUS_EMOJIS];
       const statusName = config.STATUS_NAMES[newData.status as keyof typeof config.STATUS_NAMES];
+      const statusMessage = config.STATUS_MESSAGE[newData.status as keyof typeof config.STATUS_MESSAGE];
 
-      let message = `${statusEmoji} **Внимание! Обнаружено изменение статуса организации!**\n\n`;
+      let message = `${statusEmoji} **Внимание! 🚦 ЗСК:**\n\n`;
       
       // Добавляем информацию только если поле не пустое
       if (newData.liquidationDate) {
@@ -200,7 +201,9 @@ export class MonitoringService {
         message += `💬 **Комментарий:** ${newData.comment}\n`;
       }
 
-      message += `\n📊 **Статус изменен:** ${config.STATUS_NAMES[oldStatus as keyof typeof config.STATUS_NAMES] || oldStatus} → ${statusName}`;
+      message += `\n📊 Текущее состояние\n*Уровень риска:* ${statusMessage}`;
+
+      message += '➕ Обновлено: ' + new Date().toLocaleDateString('ru-RU');
 
       // Отправляем уведомление всем пользователям
       await getNotificationService().sendNotificationToAllUsers(message);
