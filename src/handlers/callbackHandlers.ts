@@ -257,7 +257,8 @@ async function handleOrganizationsListCallback(ctx: MyContext): Promise<void> {
       message += `${emoji} <b>${org.inn}</b>\n`;
       message += `   Название: ${org.name || 'Не указано'}\n`;
       message += `   Статус: ${statusName}\n`;
-      message += `   Обновлено: ${org.updatedDate ? org.updatedDate.toLocaleDateString('ru-RU') : 'Не указано'}\n\n`;
+      //@ts-ignore
+      message += `   Обновлено: ${org.updated_at ? org.updated_at.toLocaleDateString('ru-RU') : 'Не указано'}\n\n`;
     }
 
     const keyboard = {
