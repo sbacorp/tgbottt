@@ -43,6 +43,24 @@ bot.use(session({
   })
 }));
 
+// Middleware для обновления данных сессии из базы данных
+bot.use(async (ctx, next) => {
+  if (ctx.session.isRegistered && ctx.from?.id) {
+    try {
+      const user = await database.getUserByTelegramId(ctx.from.id);
+      if (user) {
+        // Обновляем данные сессии из базы данных
+        ctx.session.isRegistered = true;
+        ctx.session.isAdmin = user.is_admin;
+      }
+    } catch (error) {
+      logger.error('Error updating session from database:', error);
+    }
+  }
+  
+  await next();
+});
+
 // Middleware для логирования
 bot.use(async (ctx, next) => {
   const start = Date.now();
@@ -75,23 +93,6 @@ bot.use(async (ctx, next) => {
   await next();
 });
 
-// Middleware для обновления данных сессии из базы данных
-bot.use(async (ctx, next) => {
-  if (ctx.session.isRegistered && ctx.from?.id) {
-    try {
-      const user = await database.getUserByTelegramId(ctx.from.id);
-      if (user) {
-        // Обновляем данные сессии из базы данных
-        ctx.session.isRegistered = true;
-        ctx.session.isAdmin = user.is_admin;
-      }
-    } catch (error) {
-      logger.error('Error updating session from database:', error);
-    }
-  }
-  
-  await next();
-});
 
 // Обработчики команд
 bot.command('start', handleStart);

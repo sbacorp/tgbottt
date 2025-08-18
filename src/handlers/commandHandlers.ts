@@ -518,8 +518,6 @@ export async function handleCheck(ctx: MyContext): Promise<void> {
         message += `🏢 <b>Деятельность:</b> ${result.activities[0]}\n`;
       }
       
-      message += `\n✅ <b>Данные обновлены в базе данных</b>`;
-      
       await ctx.reply(message, { parse_mode: 'HTML' });
     } else {
       await ctx.reply(`❌ Организация с ИНН ${inn} не найдена`);
