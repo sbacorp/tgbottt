@@ -133,7 +133,7 @@ export class MonitoringService {
         const shouldNotify = !lastCheck || !lastCheck.notified || lastCheck.status !== newData.status;
 
         if (shouldNotify) {
-          await this.sendStatusChangeNotification(inn, currentOrg.status, newData);
+          await this.sendStatusChangeNotification(inn, newData);
           
           // Отмечаем, что уведомление отправлено
           await database.markCheckAsNotified(inn, newData.status);
@@ -152,12 +152,10 @@ export class MonitoringService {
    */
   private async sendStatusChangeNotification(
     inn: string, 
-    oldStatus: string, 
     newData: KonturOrganizationData
   ): Promise<void> {
     try {
       const statusEmoji = config.STATUS_EMOJIS[newData.status as keyof typeof config.STATUS_EMOJIS];
-      const statusName = config.STATUS_NAMES[newData.status as keyof typeof config.STATUS_NAMES];
       const statusMessage = config.STATUS_MESSAGE[newData.status as keyof typeof config.STATUS_MESSAGE];
 
       let message = `${statusEmoji} **Внимание! 🚦 ЗСК:**\n\n`;
