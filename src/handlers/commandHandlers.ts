@@ -494,7 +494,6 @@ export async function handleCheck(ctx: MyContext): Promise<void> {
       const statusMessage = config.STATUS_MESSAGE[result.status]
       
       let message = `📊 <b>Результат проверки ИНН ${inn}</b>\n\n`;
-      message += `${statusMessage}\n`;
       message += `🏢 <b>Актуальное название компании:</b> ${result.name}\n`;
       
       if (result.address) {
@@ -516,7 +515,7 @@ export async function handleCheck(ctx: MyContext): Promise<void> {
       if (result.activities && result.activities.length > 0) {
         message += `🏢 <b>Деятельность:</b> ${result.activities[0]}\n`;
       }
-      message += `🚦 ЗСК:`
+      message += `🚦 ЗСК:\n`
       message += `${statusMessage}\n`;
       
       await ctx.reply(message, { parse_mode: 'HTML' });

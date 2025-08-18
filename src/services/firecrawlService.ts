@@ -45,6 +45,7 @@ export class FireCrawlService {
         formats: ["markdown"],
         onlyMainContent: true,
         parsePDF: false,
+        waitFor: 3000,
         maxAge: 14400000
       });
       // @ts-ignore 
