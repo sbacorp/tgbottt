@@ -42,7 +42,7 @@ services:
     container_name: cbr_bot_app
     environment:
       - NODE_ENV=production
-      - BOT_TOKEN=6501710497:AAFmbkmk4_ObKk5wOUhs03qDYOZewXlXsCs
+      - BOT_TOKEN=7846797822:AAFnIzlaA_5iKFMfgD5JBArTImn4cON-hgE
       - FIRECRAWL_API_KEY=fc-ab1e434c66f143b0a0f09c2ba98b8381
       - DATABASE_URL=postgresql://cbr_user:cbr_password@postgres:5432/cbr_bot
       - MONITORING_INTERVAL=${MONITORING_INTERVAL:-2700000}
