@@ -22,6 +22,7 @@ export interface KonturOrganizationData {
   activities?: string[];
   capital?: string;
   taxAuthority?: string;
+  riskInfo?: string;
 }
 
 export class FireCrawlService {
@@ -43,7 +44,7 @@ export class FireCrawlService {
       const scrapeResult = await this.app.scrapeUrl(url, {
         formats: ["markdown"],
         onlyMainContent: true,
-        parsePDF: true,
+        parsePDF: false,
         maxAge: 14400000
       });
       // @ts-ignore 
@@ -152,23 +153,47 @@ export class FireCrawlService {
         }
       }
 
-      // Проверяем на признаки проблемной организации
-      const problemIndicators = [
-        'ликвидация',
-        'банкротство',
-        'нелегальная',
-        'мошенничество',
-        'санкции',
-        'черный список',
-        'предупреждение'
-      ];
+      // Определяем статус на основе фактов из автоматической проверки
+      const liquidationFactMatch = markdown.match(/ с ликвидацией или банкротством/);
+      const attentionFactMatch = markdown.match(/на который следует обратить внимание/);
 
-      const hasProblems = problemIndicators.some(indicator => 
-        markdown.toLowerCase().includes(indicator.toLowerCase())
-      );
-
-      if (hasProblems && data.status !== 'red') {
+      if (liquidationFactMatch) {
+        data.status = 'red';
+      } else if (attentionFactMatch) {
         data.status = 'orange';
+        
+        // Извлекаем информацию о рисках для оранжевого статуса
+        const riskPatterns = [
+          /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)/,
+          /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)\d{2}\.\d{2}\.\d{4}/,
+          /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)\n/,
+          /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)\s*\d{2}\.\d{2}\.\d{4}/
+        ];
+
+        for (const pattern of riskPatterns) {
+          const riskMatch = markdown.match(pattern);
+          if (riskMatch && riskMatch[1]) {
+            data.riskInfo = `Сведения недостоверны (по результатам проверки ФНС – ${riskMatch[1]})`;
+            break;
+          }
+        }
+
+        // Если не нашли по паттерну, ищем просто текст "Сведения недостоверны"
+        if (!data.riskInfo && markdown.includes('Сведения недостоверны')) {
+          const lines = markdown.split('\n');
+          for (const line of lines) {
+            if (line.includes('Сведения недостоверны')) {
+              // Очищаем строку от лишних символов и дат в конце
+              let cleanLine = line.trim();
+              // Убираем дату в конце строки (формат DD.MM.YYYY)
+              cleanLine = cleanLine.replace(/\d{2}\.\d{2}\.\d{4}$/, '').trim();
+              data.riskInfo = cleanLine;
+              break;
+            }
+          }
+        }
+      } else {
+        data.status = 'green';
       }
 
       // Извлекаем дополнительные признаки нелегальности

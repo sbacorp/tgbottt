@@ -198,8 +198,13 @@ export class MonitoringService {
       if (newData.comment) {
         message += `💬 **Комментарий:** ${newData.comment}\n`;
       }
-
+      
       message += `\n${statusMessage}\n`;
+      // Добавляем информацию о рисках для оранжевого статуса
+      if (newData.status === 'orange' && newData.riskInfo) {
+        message += `\n⚠️ **Риски:**\n${newData.riskInfo}\n`;
+      }
+
 
       message += '➕ Обновлено в системе: ' + new Date().toLocaleDateString('ru-RU');
 

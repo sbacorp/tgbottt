@@ -15,9 +15,14 @@ export function formatOrganizationList(organizations: any[]): string {
     message += `${emoji} <b>${org.inn}</b>\n`;
     message += `   Актуальное название компании: ${org.name || 'Не указано'}\n`;
     message += `   Обновлено: ${org.undated_at ? org.undated_at.toLocaleDateString('ru-RU') : 'Не указано'}\n`;
-    message += `   Регион: ${org.region || 'Не указано'}\n\n`;
-    message += `${statusMessage}\n\n`;
-
+    message += `   Регион: ${org.region || 'Не указано'}\n`;
+    
+    message += `\n${statusMessage}\n\n`;
+    // Добавляем информацию о рисках для оранжевого статуса
+    if (org.status === 'orange' && org.riskInfo) {
+      message += `   ⚠️ Риски: ${org.riskInfo}\n`;
+    }
+    
   }
 
   return message;

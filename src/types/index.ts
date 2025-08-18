@@ -24,6 +24,7 @@ export interface Organization {
   region?: string;
   additionalInfo?: string;
   comment?: string;
+  riskInfo?: string;
   addedDate: Date;
   updatedDate: Date;
 }

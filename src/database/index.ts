@@ -71,6 +71,7 @@ class Database {
         region VARCHAR(255),
         additional_info TEXT,
         comment TEXT,
+        risk_info TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -301,7 +302,27 @@ class Database {
         [inn]
       );
       
-      return result.rows[0] || null;
+      if (result.rows[0]) {
+        const row = result.rows[0];
+        return {
+          id: row.id,
+          inn: row.inn,
+          name: row.name,
+          status: row.status,
+          address: row.address,
+          websites: row.websites,
+          isLiquidated: row.is_liquidated,
+          illegalitySigns: row.illegality_signs,
+          region: row.region,
+          additionalInfo: row.additional_info,
+          comment: row.comment,
+          riskInfo: row.risk_info,
+          addedDate: row.created_at,
+          updatedDate: row.updated_at
+        };
+      }
+      
+      return null;
     } catch (error) {
       logger.error('Error getting organization by INN:', error);
       throw error;
@@ -316,7 +337,23 @@ class Database {
       const result = await this.client.query(
         'SELECT * FROM tracked_organizations ORDER BY updated_at DESC'
       );
-      return result.rows;
+      
+      return result.rows.map(row => ({
+        id: row.id,
+        inn: row.inn,
+        name: row.name,
+        status: row.status,
+        address: row.address,
+        websites: row.websites,
+        isLiquidated: row.is_liquidated,
+        illegalitySigns: row.illegality_signs,
+        region: row.region,
+        additionalInfo: row.additional_info,
+        comment: row.comment,
+        riskInfo: row.risk_info,
+        addedDate: row.created_at,
+        updatedDate: row.updated_at
+      }));
     } catch (error) {
       logger.error('Error getting all organizations:', error);
       throw error;
@@ -354,8 +391,9 @@ class Database {
          region = COALESCE($7, region),
          additional_info = COALESCE($8, additional_info),
          comment = COALESCE($9, comment),
+         risk_info = COALESCE($10, risk_info),
          updated_at = CURRENT_TIMESTAMP
-         WHERE inn = $10
+         WHERE inn = $11
          RETURNING *`,
         [
           organizationData.name,
@@ -367,6 +405,7 @@ class Database {
           organizationData.region,
           organizationData.additionalInfo,
           organizationData.comment,
+          organizationData.riskInfo,
           inn
         ]
       );
