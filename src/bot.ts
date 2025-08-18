@@ -45,7 +45,7 @@ bot.use(session({
 
 // Middleware для обновления данных сессии из базы данных
 bot.use(async (ctx, next) => {
-  if (ctx.session.isRegistered && ctx.from?.id) {
+  if (ctx.from?.id) {
     try {
       const user = await database.getUserByTelegramId(ctx.from.id);
       if (user) {
@@ -79,13 +79,6 @@ bot.use(async (ctx, next) => {
   const isStartCommand = ctx.message?.text === '/start';
   
   if (!isStartCommand && !ctx.session.isRegistered) {
-    // Пропускаем только команду /start
-    if (ctx.message?.text?.startsWith('/start')) {
-      await next();
-      return;
-    }
-    
-    // Для всех остальных команд показываем сообщение о незарегистрированности
     await ctx.reply('❌ Вы не зарегистрированы в системе.\nОбратитесь к администратору для получения доступа.');
     return;
   }
