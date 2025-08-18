@@ -36,7 +36,8 @@ import {
   removeInnConversation,
   addUsersConversation,
   removeUsersConversation,
-  addAdminsConversation
+  addAdminsConversation,
+  removeAdminsConversation
 } from './conversations/commandConversations';
 
 // Создание экземпляра бота
@@ -64,6 +65,7 @@ bot.use(createConversation(removeInnConversation, "remove_inn"));
 bot.use(createConversation(addUsersConversation, "add_users"));
 bot.use(createConversation(removeUsersConversation, "remove_users"));
 bot.use(createConversation(addAdminsConversation, "add_admins"));
+bot.use(createConversation(removeAdminsConversation, "remove_admins"));
 
 // Middleware для обновления данных сессии из базы данных
 bot.use(async (ctx, next) => {

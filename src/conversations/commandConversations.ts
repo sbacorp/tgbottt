@@ -432,3 +432,77 @@ export async function addAdminsConversation(
     await ctx.reply('Не удалось назначить ни одного администратора.');
   }
 }
+
+/**
+ * Conversation для команды /remove_admins
+ * Запрашивает telegram_id у администратора и снимает права администратора
+ */
+export async function removeAdminsConversation(
+  conversation: MyConversation,
+  ctx: Context
+) {
+  const session = await conversation.external((ctx) => ctx.session);
+  if (!session.isAdmin) {
+    await ctx.reply(MESSAGES.adminOnly);
+    return;
+  }
+  
+  let telegramIdsStr: string;
+  let validIds: number[] = [];
+  
+  do {
+    await ctx.reply('➖ Введите telegram_id администраторов для снятия прав (можно несколько через пробел):');
+    const { message } = await conversation.waitFor("message:text");
+    telegramIdsStr = message.text || '';
+    
+    if (!telegramIdsStr) {
+      await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.');
+      continue;
+    }
+    
+    const { valid, invalid } = validateTelegramIdList(telegramIdsStr);
+    
+    if (invalid.length > 0) {
+      await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`);
+      continue;
+    }
+    
+    if (valid.length === 0) {
+      await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.');
+      continue;
+    }
+    
+    validIds = valid;
+    break;
+  } while (true);
+  
+  await ctx.reply(`🔄 Снимаю права администратора у ${validIds.length} пользователя(ей)...`);
+  
+  const removedAdmins = [];
+  for (const telegramId of validIds) {
+    try {
+      const existingUser = await database.getUserByTelegramId(telegramId);
+      if (!existingUser) {
+        logger.info(`User with telegram_id ${telegramId} does not exist`);
+        continue;
+      }
+      
+      if (!existingUser.is_admin) {
+        logger.info(`User with telegram_id ${telegramId} is not an admin`);
+        continue;
+      }
+      
+      await database.updateUserAdminStatus(telegramId, false);
+      removedAdmins.push(telegramId.toString());
+      logger.info(`Removed admin rights from user ${telegramId}`);
+    } catch (error) {
+      logger.error(`Error removing admin rights from ${telegramId}:`, error);
+    }
+  }
+  
+  if (removedAdmins.length > 0) {
+    await ctx.reply(`✅ Права администратора сняты у: ${removedAdmins.join(', ')}`);
+  } else {
+    await ctx.reply('Не удалось снять права ни у одного администратора.');
+  }
+}
