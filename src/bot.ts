@@ -82,6 +82,7 @@ bot.use(async (ctx, next) => {
       const user = await database.getUserByTelegramId(ctx.from.id);
       if (user) {
         // Обновляем данные сессии из базы данных
+        ctx.session.isRegistered = true;
         ctx.session.isAdmin = user.is_admin;
       }
     } catch (error) {

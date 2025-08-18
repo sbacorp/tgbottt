@@ -488,6 +488,7 @@ export async function handleCheck(ctx: MyContext): Promise<void> {
 
     // Выполнение проверки через monitoringService (обновляет данные в БД)
     const result = await monitoringService.checkOrganization(inn);
+    console.log(result, 'result')
     
     if (result) {
       const statusEmoji = config.STATUS_EMOJIS[result.status];

@@ -46,7 +46,6 @@ export class FireCrawlService {
         parsePDF: true,
         maxAge: 14400000
       });
-      console.log(scrapeResult, 'scrapeResult')
       // @ts-ignore 
       if (!scrapeResult.markdown) {
         logger.warn(`Не удалось получить данные для ИНН ${inn}: пустой ответ`);
@@ -232,41 +231,4 @@ export class FireCrawlService {
     return results;
   }
 
-  /**
-   * Получает краткую информацию об организации
-   */
-  async getOrganizationSummary(inn: string): Promise<string> {
-    const data = await this.getOrganizationData(inn);
-    if (!data) {
-      return `❌ Организация с ИНН ${inn} не найдена`;
-    }
-
-    const statusEmoji = config.STATUS_EMOJIS[data.status];
-    const statusName = config.STATUS_NAMES[data.status];
-    
-    let summary = `${statusEmoji} **${data.name}** (ИНН: ${inn})\n`;
-    summary += `📊 Статус: ${statusName}\n`;
-    
-    if (data.address) {
-      summary += `📍 Адрес: ${data.address}\n`;
-    }
-    
-    if (data.registrationDate) {
-      summary += `📅 Дата регистрации: ${data.registrationDate}\n`;
-    }
-    
-    if (data.isLiquidated && data.liquidationDate) {
-      summary += `⚠️ Ликвидация: ${data.liquidationDate}\n`;
-    }
-    
-    if (data.illegalitySigns && data.illegalitySigns.length > 0) {
-      summary += `🚨 Признаки: ${data.illegalitySigns.join(', ')}\n`;
-    }
-    
-    if (data.activities && data.activities.length > 0) {
-      summary += `🏢 Деятельность: ${data.activities[0]}\n`;
-    }
-
-    return summary;
-  }
 }

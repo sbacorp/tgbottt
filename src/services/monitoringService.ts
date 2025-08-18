@@ -221,46 +221,9 @@ export class MonitoringService {
       logger.info(`Ручная проверка организации с ИНН: ${inn}`);
       
       const data = await this.firecrawlService.getOrganizationData(inn);
-      
+      console.log(data, 'data')
       if (data) {
-        // Сохраняем результат проверки
-        await database.addOrganizationCheck({
-          inn,
-          status: data.status,
-          details: {
-            name: data.name,
-            address: data.address,
-            isLiquidated: data.isLiquidated,
-            illegalitySigns: data.illegalitySigns,
-            region: data.region,
-            additionalInfo: data.additionalInfo,
-            comment: data.comment,
-            liquidationDate: data.liquidationDate,
-            registrationDate: data.registrationDate,
-            ogrn: data.ogrn,
-            kpp: data.kpp,
-            okpo: data.okpo,
-            founders: data.founders,
-            activities: data.activities,
-            capital: data.capital,
-            taxAuthority: data.taxAuthority
-          }
-        });
-
-        // Полное обновление данных организации в БД
-        const updateData: Partial<Organization> = {};
         
-        if (data.name) updateData.name = data.name;
-        if (data.status) updateData.status = data.status;
-        if (data.address) updateData.address = data.address;
-        if (data.websites) updateData.websites = data.websites;
-        if (data.isLiquidated !== undefined) updateData.isLiquidated = data.isLiquidated;
-        if (data.illegalitySigns) updateData.illegalitySigns = data.illegalitySigns;
-        if (data.region) updateData.region = data.region;
-        if (data.additionalInfo) updateData.additionalInfo = data.additionalInfo;
-        if (data.comment) updateData.comment = data.comment;
-        
-        await database.updateOrganizationData(inn, updateData);
         
         logger.info(`Данные организации ${inn} обновлены в базе данных`);
       }
