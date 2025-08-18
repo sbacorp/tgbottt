@@ -1,8 +1,7 @@
 import { MyContext } from '../types';
-import { validateInnList, validateTelegramIdList } from '../utils/validation';
+import { validateTelegramIdList } from '../utils/validation';
 import { database } from '../database';
 import { monitoringService } from '../services/monitoringService';
-import { getNotificationService } from '../services/notificationService';
 
 import { MESSAGES, config } from '../utils/config';
 import { isBotAdmin } from '../guards/admin';
@@ -158,72 +157,8 @@ export async function handleAddInn(ctx: MyContext): Promise<void> {
       return;
     }
 
-    const text = ctx.message?.text;
-    if (!text) {
-      await ctx.reply('Пожалуйста, укажите ИНН для добавления. Например: /add_inn 1234567890 1234567891');
-      return;
-    }
-
-    // Извлечение ИНН из команды
-    const inns = text.replace('/add_inn', '').trim();
-    if (!inns) {
-      await ctx.reply('Пожалуйста, укажите ИНН для добавления. Например: /add_inn 1234567890 1234567891');
-      return;
-    }
-
-    const { valid, invalid } = validateInnList(inns);
-    
-    if (invalid.length > 0) {
-      await ctx.reply(`❌ Неверный формат ИНН: ${invalid.join(', ')}`);
-      return;
-    }
-
-    if (valid.length === 0) {
-      await ctx.reply('Не найдено валидных ИНН для добавления.');
-      return;
-    }
-
-    // Добавление организаций с получением актуальных данных
-    const addedOrganizations = [];
-    for (const inn of valid) {
-      try {
-        // Сначала добавляем организацию с базовыми данными (только если её нет)
-        const addedOrg = await database.addOrganizationIfNotExists({
-          inn,
-          name: `Организация ${inn}`,
-          status: 'green'
-        });
-        
-        if (!addedOrg) {
-          logger.info(`Organization with INN ${inn} already exists, skipping addition`);
-          addedOrganizations.push(inn);
-          continue;
-        }
-        
-        // Затем получаем актуальные данные через monitoringService
-        const orgData = await monitoringService.checkOrganization(inn);
-        if (orgData) {
-          logger.info(`Получены актуальные данные для организации ${inn}: ${orgData.name}`);
-        }
-        
-        addedOrganizations.push(inn);
-      } catch (error) {
-        logger.error(`Error adding organization ${inn}:`, error);
-      }
-    }
-
-    if (addedOrganizations.length > 0) {
-      await ctx.reply(MESSAGES.innAdded(addedOrganizations));
-      
-      // Уведомление администраторов
-      if (ctx.session.isAdmin) {
-        await getNotificationService().sendNewOrganizationsNotification(
-          addedOrganizations.map(inn => ({ inn, name: `Организация ${inn}` }))
-        );
-      }
-    } else {
-      await ctx.reply('Не удалось добавить ни одной организации.');
-    }
+    // Запускаем conversation для добавления ИНН
+    await ctx.conversation.enter("add_inn");
   } catch (error) {
     logger.error('Error in handleAddInn:', error);
     await ctx.reply(MESSAGES.error);
@@ -327,66 +262,8 @@ export async function handleCheck(ctx: MyContext): Promise<void> {
       return;
     }
 
-    const text = ctx.message?.text;
-    if (!text) {
-      await ctx.reply('Пожалуйста, укажите ИНН для проверки. Например: /check 1234567890');
-      return;
-    }
-
-    const inn = text.replace('/check', '').trim();
-    if (!inn) {
-      await ctx.reply('Пожалуйста, укажите ИНН для проверки. Например: /check 1234567890');
-      return;
-    }
-
-    // Валидация ИНН
-    const { validateInn } = await import('../utils/validation');
-    if (!validateInn(inn)) {
-      await ctx.reply(MESSAGES.invalidInn);
-      return;
-    }
-
-    await ctx.reply('🔍 Выполняется проверка организации через Контур.Фокус...');
-
-    // Выполнение проверки через monitoringService (обновляет данные в БД)
-    const result = await monitoringService.checkOrganization(inn);
-    console.log(result, 'result')
-    
-    if (result) {
-      const statusMessage = config.STATUS_MESSAGE[result.status]
-      
-      let message = `📊 <b>Результат проверки ИНН ${inn}</b>\n\n`;
-      message += `🏢 <b>Актуальное название компании:</b> ${result.name}\n`;
-      
-      if (result.address) {
-        message += `📍 <b>Адрес:</b> ${result.address}\n`;
-      }
-      
-      if (result.registrationDate) {
-        message += `📅 <b>Дата регистрации:</b> ${result.registrationDate}\n`;
-      }
-      
-      if (result.isLiquidated && result.liquidationDate) {
-        message += `⚠️ <b>Ликвидация:</b> ${result.liquidationDate}\n`;
-      }
-      
-      if (result.illegalitySigns && result.illegalitySigns.length > 0) {
-        message += `🚨 <b>Санкции:</b> ${result.illegalitySigns.join(', ')}\n`;
-      }
-      
-      if (result.activities && result.activities.length > 0) {
-        message += `🏢 <b>Деятельность:</b> ${result.activities[0]}\n`;
-      }
-      if(result.hasIllegalActivity!==undefined) {
-        message += `🚨 <b>Признаки нелегальной деятельности:</b> ${result.hasIllegalActivity ? 'Да' : 'Нет'}\n`;
-      }
-      message += `🚦 ЗСК:\n`
-      message += `${statusMessage}\n`;
-      
-      await ctx.reply(message, { parse_mode: 'HTML' });
-    } else {
-      await ctx.reply(`❌ Организация с ИНН ${inn} не найдена`);
-    }
+    // Запускаем conversation для проверки
+    await ctx.conversation.enter("check");
   } catch (error) {
     logger.error('Error in handleCheck:', error);
     await ctx.reply(MESSAGES.error);
