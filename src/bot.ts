@@ -1,5 +1,6 @@
 import { Bot, session, GrammyError, HttpError } from 'grammy';
 import { run } from '@grammyjs/runner';
+import { conversations, createConversation } from '@grammyjs/conversations';
 import { MyContext, SessionData } from './types';
 import { config } from './utils/config';
 import { database } from './database';
@@ -28,6 +29,16 @@ import {
 import { handleCallback } from './handlers/callbackHandlers';
 import { handleText } from './handlers/textHandlers';
 
+// Импорт conversations
+import {
+  checkConversation,
+  addInnConversation,
+  removeInnConversation,
+  addUsersConversation,
+  removeUsersConversation,
+  addAdminsConversation
+} from './conversations/commandConversations';
+
 // Создание экземпляра бота
 const bot = new Bot<MyContext>(config.botToken);
 
@@ -42,6 +53,17 @@ bot.use(session({
     language: 'ru'
   })
 }));
+
+// Настройка conversations
+bot.use(conversations());
+
+// Регистрация conversations
+bot.use(createConversation(checkConversation, "check"));
+bot.use(createConversation(addInnConversation, "add_inn"));
+bot.use(createConversation(removeInnConversation, "remove_inn"));
+bot.use(createConversation(addUsersConversation, "add_users"));
+bot.use(createConversation(removeUsersConversation, "remove_users"));
+bot.use(createConversation(addAdminsConversation, "add_admins"));
 
 // Middleware для обновления данных сессии из базы данных
 bot.use(async (ctx, next) => {

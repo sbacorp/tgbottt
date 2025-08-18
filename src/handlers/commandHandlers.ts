@@ -56,7 +56,7 @@ export async function handleStart(ctx: MyContext): Promise<void> {
 
     // Обновление сессии с правильными данными из базы
     ctx.session.isRegistered = true;
-    ctx.session.isAdmin = user?.is_admin || isAdmin;
+    ctx.session.isAdmin = (user?.is_admin || isAdmin) ?? false;
     ctx.session.language = 'ru';
 
     // Создание клавиатуры с кнопками согласно ТЗ
@@ -240,52 +240,8 @@ export async function handleRemoveInn(ctx: MyContext): Promise<void> {
       return;
     }
 
-    const text = ctx.message?.text;
-    if (!text) {
-      await ctx.reply('Пожалуйста, укажите ИНН для удаления. Например: /remove_inn 1234567890 1234567891');
-      return;
-    }
-
-    const inns = text.replace('/remove_inn', '').trim();
-    if (!inns) {
-      await ctx.reply('Пожалуйста, укажите ИНН для удаления. Например: /remove_inn 1234567890 1234567891');
-      return;
-    }
-
-    const { valid, invalid } = validateInnList(inns);
-    
-    if (invalid.length > 0) {
-      await ctx.reply(`❌ Неверный формат ИНН: ${invalid.join(', ')}`);
-      return;
-    }
-
-    if (valid.length === 0) {
-      await ctx.reply('Не найдено валидных ИНН для удаления.');
-      return;
-    }
-
-    // Удаление организаций
-    const removedOrganizations = [];
-    for (const inn of valid) {
-      try {
-        const org = await database.getOrganizationByInn(inn);
-        if (org) {
-          await database.deleteOrganization(inn);
-          removedOrganizations.push({ inn, name: org.name });
-        }
-      } catch (error) {
-        logger.error(`Error removing organization ${inn}:`, error);
-      }
-    }
-
-    if (removedOrganizations.length > 0) {
-      await ctx.reply(MESSAGES.innRemoved(removedOrganizations.map(org => org.inn)));
-      
-      // Уведомление администраторов
-      await getNotificationService().sendRemovedOrganizationsNotification(removedOrganizations);
-    } else {
-      await ctx.reply('Не удалось удалить ни одной организации.');
-    }
+    // Запускаем conversation для удаления ИНН
+    await ctx.conversation.enter("remove_inn");
   } catch (error) {
     logger.error('Error in handleRemoveInn:', error);
     await ctx.reply(MESSAGES.error);
@@ -335,55 +291,8 @@ export async function handleAddUsers(ctx: MyContext): Promise<void> {
       return;
     }
 
-    const text = ctx.message?.text;
-    if (!text) {
-      await ctx.reply('Пожалуйста, укажите telegram_id для добавления. Например: /add_users 123456789 987654321');
-      return;
-    }
-
-    const telegramIds = text.replace('/add_users', '').trim();
-    if (!telegramIds) {
-      await ctx.reply('Пожалуйста, укажите telegram_id для добавления. Например: /add_users 123456789 987654321');
-      return;
-    }
-
-    const { valid, invalid } = validateTelegramIdList(telegramIds);
-    
-    if (invalid.length > 0) {
-      await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}`);
-      return;
-    }
-
-    if (valid.length === 0) {
-      await ctx.reply('Не найдено валидных telegram_id для добавления.');
-      return;
-    }
-
-    // Добавление пользователей
-    const addedUsers = [];
-    for (const telegramId of valid) {
-      try {
-        // Проверяем, существует ли уже пользователь
-        const existingUser = await database.getUserByTelegramId(telegramId);
-        if (existingUser) {
-          logger.info(`User with telegram_id ${telegramId} already exists`);
-          continue;
-        }
-
-        // Создаем нового пользователя
-        await database.createUser(telegramId, undefined, false);
-        addedUsers.push(telegramId.toString());
-        logger.info(`Added user with telegram_id: ${telegramId}`);
-      } catch (error) {
-        logger.error(`Error adding user ${telegramId}:`, error);
-      }
-    }
-
-    if (addedUsers.length > 0) {
-      await ctx.reply(`✅ Пользователи успешно добавлены: ${addedUsers.join(', ')}`);
-    } else {
-      await ctx.reply('Не удалось добавить ни одного пользователя.');
-    }
+    // Запускаем conversation для добавления пользователей
+    await ctx.conversation.enter("add_users");
   } catch (error) {
     logger.error('Error in handleAddUsers:', error);
     await ctx.reply(MESSAGES.error);
@@ -400,55 +309,8 @@ export async function handleRemoveUsers(ctx: MyContext): Promise<void> {
       return;
     }
 
-    const text = ctx.message?.text;
-    if (!text) {
-      await ctx.reply('Пожалуйста, укажите telegram_id для удаления. Например: /remove_users 123456789 987654321');
-      return;
-    }
-
-    const telegramIds = text.replace('/remove_users', '').trim();
-    if (!telegramIds) {
-      await ctx.reply('Пожалуйста, укажите telegram_id для удаления. Например: /remove_users 123456789 987654321');
-      return;
-    }
-
-    const { valid, invalid } = validateTelegramIdList(telegramIds);
-    
-    if (invalid.length > 0) {
-      await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}`);
-      return;
-    }
-
-    if (valid.length === 0) {
-      await ctx.reply('Не найдено валидных telegram_id для удаления.');
-      return;
-    }
-
-    // Удаление пользователей
-    const removedUsers = [];
-    for (const telegramId of valid) {
-      try {
-        // Проверяем, существует ли пользователь
-        const existingUser = await database.getUserByTelegramId(telegramId);
-        if (!existingUser) {
-          logger.info(`User with telegram_id ${telegramId} does not exist`);
-          continue;
-        }
-
-        // Удаляем пользователя
-        await database.deleteUser(telegramId);
-        removedUsers.push(telegramId.toString());
-        logger.info(`Removed user with telegram_id: ${telegramId}`);
-      } catch (error) {
-        logger.error(`Error removing user ${telegramId}:`, error);
-      }
-    }
-
-    if (removedUsers.length > 0) {
-      await ctx.reply(`✅ Пользователи успешно удалены: ${removedUsers.join(', ')}`);
-    } else {
-      await ctx.reply('Не удалось удалить ни одного пользователя.');
-    }
+    // Запускаем conversation для удаления пользователей
+    await ctx.conversation.enter("remove_users");
   } catch (error) {
     logger.error('Error in handleRemoveUsers:', error);
     await ctx.reply(MESSAGES.error);
@@ -614,56 +476,8 @@ export async function handleAddAdmins(ctx: MyContext): Promise<void> {
       return;
     }
 
-    const text = ctx.message?.text;
-    if (!text) {
-      await ctx.reply('Пожалуйста, укажите telegram_id для назначения администратором. Например: /add_admins 123456789 987654321');
-      return;
-    }
-
-    const telegramIds = text.replace('/add_admins', '').trim();
-    if (!telegramIds) {
-      await ctx.reply('Пожалуйста, укажите telegram_id для назначения администратором. Например: /add_admins 123456789 987654321');
-      return;
-    }
-
-    const { valid, invalid } = validateTelegramIdList(telegramIds);
-    
-    if (invalid.length > 0) {
-      await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}`);
-      return;
-    }
-
-    if (valid.length === 0) {
-      await ctx.reply('Не найдено валидных telegram_id для назначения администратором.');
-      return;
-    }
-
-    // Назначение администраторов
-    const addedAdmins = [];
-    for (const telegramId of valid) {
-      try {
-        // Проверяем, существует ли пользователь
-        const existingUser = await database.getUserByTelegramId(telegramId);
-        if (!existingUser) {
-          // Создаем нового пользователя-администратора
-          await database.createUser(telegramId, undefined, true);
-          logger.info(`Created new admin user with telegram_id: ${telegramId}`);
-        } else {
-          // Обновляем существующего пользователя до администратора
-          await database.updateUserAdminStatus(telegramId, true);
-          logger.info(`Updated user ${telegramId} to admin`);
-        }
-        addedAdmins.push(telegramId.toString());
-      } catch (error) {
-        logger.error(`Error making ${telegramId} admin:`, error);
-      }
-    }
-
-    if (addedAdmins.length > 0) {
-      await ctx.reply(`✅ Администраторы успешно назначены: ${addedAdmins.join(', ')}`);
-    } else {
-      await ctx.reply('Не удалось назначить ни одного администратора.');
-    }
+    // Запускаем conversation для добавления администраторов
+    await ctx.conversation.enter("add_admins");
   } catch (error) {
     logger.error('Error in handleAddAdmins:', error);
     await ctx.reply(MESSAGES.error);

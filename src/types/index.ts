@@ -1,4 +1,6 @@
 import { Context, SessionFlavor } from "grammy";
+import { Conversation, ConversationFlavor } from "@grammyjs/conversations";
+// import { HydrateFlavor } from "@grammyjs/hydrate";
 
 // Расширенный контекст с сессией
 export interface SessionData {
@@ -8,8 +10,15 @@ export interface SessionData {
   currentAction?: string | null;
   tempData?: Record<string, any>;
 }
+export type ContextSession = 
+    Context &
+    SessionFlavor<SessionData>
 
-export type MyContext = Context & SessionFlavor<SessionData>;
+
+export type MyContext = ConversationFlavor<ContextSession>;
+export type MyConversation = Conversation<MyContext, Context>;
+
+
 
 // Типы для организаций
 export interface Organization {
