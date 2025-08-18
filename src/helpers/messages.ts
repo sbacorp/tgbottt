@@ -43,7 +43,7 @@ export function formatUsersList(users: any[]): string {
 export function formatCheckResult(inn: string, result: any): string {
   let riskEmoji = '❓';
   if (result.riskLevel === 'high') riskEmoji = '🔴';
-  else if (result.riskLevel === 'medium') riskEmoji = '🟠';
+  else if (result.riskLevel === 'medium') riskEmoji = '🟡';
   else if (result.riskLevel === 'low') riskEmoji = '🟢';
   
   let message = `📊 <b>Результат проверки ИНН ${inn}</b>\n\n`;
@@ -56,7 +56,7 @@ export function formatCheckResult(inn: string, result: any): string {
       message += `🔴 Факты ликвидации/банкротства: ${result.details.liquidationFacts}\n`;
     }
     if (result.details.attentionFacts && result.details.attentionFacts > 0) {
-      message += `🟠 Факты внимания: ${result.details.attentionFacts}\n`;
+      message += `� Факты внимания: ${result.details.attentionFacts}\n`;
     }
     if (result.details.favorableFacts && result.details.favorableFacts > 0) {
       message += `🟢 Благоприятные факты: ${result.details.favorableFacts}\n`;
@@ -81,7 +81,7 @@ export function formatSystemStatus(status: any, organizations: any[], users: any
   message += `\n📈 Статистика:\n`;
   message += `🏢 Организаций: ${organizations.length}\n`;
   message += `🔴 Красный список: ${redCount}\n`;
-  message += `🟠 Оранжевый список: ${orangeCount}\n`;
+  message += `🟡 Желтый список: ${orangeCount}\n`;
   message += `🟢 Зелёный список: ${greenCount}\n`;
   message += `👥 Пользователей: ${users.length}`;
 

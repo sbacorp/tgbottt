@@ -554,7 +554,7 @@ export async function handleStatus(ctx: MyContext): Promise<void> {
     message += `\n📈 Статистика:\n`;
     message += `🏢 Организаций: ${organizations.length}\n`;
     message += `🔴 Красный список: ${redCount}\n`;
-    message += `🟠 Оранжевый список: ${orangeCount}\n`;
+    message += `🟡 Желтый список: ${orangeCount}\n`;
     message += `🟢 Зелёный список: ${greenCount}\n`;
     message += `👥 Пользователей: ${users.length}`;
 

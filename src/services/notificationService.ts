@@ -185,7 +185,7 @@ class NotificationService {
       `🏢 Организации:\n` +
       `• Всего: ${stats.totalOrganizations}\n` +
       `• 🔴 Красный список: ${stats.redOrganizations}\n` +
-      `• 🟠 Оранжевый список: ${stats.orangeOrganizations}\n` +
+      `• 🟡 Желтый список: ${stats.orangeOrganizations}\n` +
       `• 🟢 Зелёный список: ${stats.greenOrganizations}\n\n` +
       `👥 Пользователи:\n` +
       `• Всего: ${stats.totalUsers}\n` +
