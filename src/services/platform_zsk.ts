@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import sharp from 'sharp';
+import { config } from '../utils/config';
 
 export class PlatformZskService {
     private browser: Browser | null = null;
@@ -11,7 +12,7 @@ export class PlatformZskService {
     private anthropic: Anthropic | null = null;
 
     constructor() {
-        const apiKey = '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';
+        const apiKey = config.ANTHROPIC_API_KEY
         if (apiKey) {
             this.anthropic = new Anthropic({ apiKey });
         }

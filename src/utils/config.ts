@@ -20,7 +20,7 @@ export const config = {
   monitoringInterval: parseInt(process.env['MONITORING_INTERVAL'] || '2700000'),
   adminUserIds: process.env['ADMIN_USER_IDS']?.split(',').map(id => parseInt(id.trim())) || [],
   logLevel: process.env['LOG_LEVEL'] || 'info',
-  
+  ANTHROPIC_API_KEY: process.env['ANTHROPIC_API_KEY'] || '',
   MESSAGES: {
     welcome: `Привет, коллега! 🚦
 
