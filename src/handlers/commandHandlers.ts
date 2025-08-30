@@ -271,6 +271,24 @@ export async function handleCheck(ctx: MyContext): Promise<void> {
 }
 
 /**
+ * Обработчик команды /check_cbr
+ */
+export async function handleCheckCbr(ctx: MyContext): Promise<void> {
+  try {
+    if (!ctx.session.isRegistered) {
+      await ctx.reply(MESSAGES.notRegistered);
+      return;
+    }
+
+    // Запускаем conversation для проверки ЦБР
+    await ctx.conversation.enter("check_cbr");
+  } catch (error) {
+    logger.error('Error in handleCheckCbr:', error);
+    await ctx.reply(MESSAGES.error);
+  }
+}
+
+/**
  * Обработчик команды /status
  */
 export async function handleStatus(ctx: MyContext): Promise<void> {
@@ -318,7 +336,8 @@ export async function handleHelp(ctx: MyContext): Promise<void> {
       `/menu - Главное меню\n` +
       `/organizations - Список организаций\n` +
       `/add_inn ИНН1 ИНН2 - Добавить ИНН для отслеживания\n` +
-      `/check ИНН - Проверить конкретную организацию\n` +
+      `/check - Проверить конкретную организацию\n` +
+      `/check_cbr - Проверить организацию по зск ЦБР\n` +
       `/status - Статус системы\n` +
       `/help - Эта справка\n\n` +
       
@@ -332,7 +351,8 @@ export async function handleHelp(ctx: MyContext): Promise<void> {
       
       `<b>Примеры:</b>\n` +
       `/add_inn 1234567890 1234567891\n` +
-      `/check 1234567890\n` +
+      `/check\n` +
+      `/check_cbr\n` +
       `/add_users 123456789 987654321\n` +
       `/add_admins 123456789 987654321`;
 
@@ -443,6 +463,7 @@ export async function handleSetCommands(ctx: MyContext): Promise<void> {
       { command: "organizations", description: "Список организаций" },
       { command: "add_inn", description: "Добавить ИНН для отслеживания" },
       { command: "check", description: "Проверить организацию" },
+      { command: "check_cbr", description: "Проверить ЦБР" },
       { command: "status", description: "Статус системы" },
       { command: "help", description: "Справка по командам" },
     ], {
@@ -458,6 +479,7 @@ export async function handleSetCommands(ctx: MyContext): Promise<void> {
       { command: "organizations", description: "Список организаций" },
       { command: "add_inn", description: "Добавить ИНН для отслеживания" },
       { command: "check", description: "Проверить организацию" },
+      { command: "check_cbr", description: "Проверить ЦБР" },
       { command: "status", description: "Статус системы" },
       { command: "help", description: "Справка по командам" },
       { command: "users", description: "Список получателей" },

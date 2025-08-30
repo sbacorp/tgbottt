@@ -6,6 +6,7 @@ import { getNotificationService } from '../services/notificationService';
 import { MESSAGES, config } from '../utils/config';
 import logger from '../utils/logger';
 import { Context } from "grammy";
+import { PlatformZskService } from '../services/platform_zsk';
 
 /**
  * Conversation для команды /check
@@ -504,5 +505,71 @@ export async function removeAdminsConversation(
     await ctx.reply(`✅ Права администратора сняты у: ${removedAdmins.join(', ')}`);
   } else {
     await ctx.reply('Не удалось снять права ни у одного администратора.');
+  }
+}
+
+/**
+ * Conversation для команды /check_cbr
+ * Запрашивает ИНН у пользователя и выполняет проверку ЦБР с валидацией
+ */
+export async function checkCbrConversation(
+  conversation: MyConversation,
+  ctx: Context
+) {
+  let inn: string;
+  
+  // Валидация ИНН с помощью do while
+  do {
+    await ctx.reply('🔍 Введите ИНН организации для проверки ЦБР:');
+    const { message } = await conversation.waitFor("message:text");
+    inn = message.text?.trim() || '';
+    
+    if (!inn) {
+      await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.');
+      continue;
+    }
+    
+    if (!validateInn(inn)) {
+      await ctx.reply(MESSAGES.invalidInn + '\nПопробуйте еще раз.');
+      continue;
+    }
+    
+    break;
+  } while (true);
+  
+  await ctx.reply('🔍 Начинаю проверку ЦБР...');
+
+  try {
+    await ctx.reply('📦 Создаю экземпляр сервиса...');
+    logger.info('Creating Platform ZSK service instance...');
+    // Создаем экземпляр сервиса
+    const platformZskService = new PlatformZskService();
+    
+    await ctx.reply('🚀 Инициализирую сервис...');
+    logger.info('Initializing Platform ZSK service...');
+    // Инициализируем сервис
+    await platformZskService.init();
+    
+    await ctx.reply(`🔍 Проверяю ИНН: ${inn}`);
+    
+    // Выполняем проверку
+    const result = await platformZskService.checkInn(inn);
+    
+    await ctx.reply('🔒 Закрываю сервис...');
+    // Закрываем сервис
+    await platformZskService.close();
+    
+    // Отправляем результат
+    await ctx.reply(`📊 Результат получен: ${result.success ? '✅ Успех' : '❌ Ошибка'}`);
+    
+    if (result.success) {
+      await ctx.reply(`✅ Проверка ЦБР завершена!\n\n📋 Результат:\n${result.result}`);
+    } else {
+      await ctx.reply(`❌ Ошибка при проверке ЦБР:\n${result.result}`);
+    }
+  } catch (error) {
+    logger.error('Error in Platform ZSK service:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+    await ctx.reply(`❌ Произошла ошибка при проверке ЦБР: ${errorMessage}`);
   }
 }

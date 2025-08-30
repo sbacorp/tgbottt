@@ -28,6 +28,10 @@ function getPrivateChatCommands(): BotCommand[] {
       description: "Проверить организацию",
     },
     {
+      command: "check_cbr",
+      description: "Проверить ЦБР",
+    },
+    {
       command: "status",
       description: "Статус системы",
     },

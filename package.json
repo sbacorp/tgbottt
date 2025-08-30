@@ -23,6 +23,7 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.60.0",
     "@google-cloud/vision": "^5.3.3",
     "@grammyjs/conversations": "^2.1.0",
     "@grammyjs/hydrate": "^1.6.0",
@@ -31,11 +32,13 @@
     "@grammyjs/runner": "^2.0.3",
     "@mendable/firecrawl-js": "^1.29.3",
     "axios": "^1.6.2",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.6.1",
     "grammy": "^1.21.1",
     "grammy-guard": "^0.5.0",
     "node-cron": "^3.0.3",
     "pg": "^8.11.3",
+    "playwright": "^1.55.0",
+    "sharp": "^0.34.3",
     "winston": "^3.11.0"
   },
   "devDependencies": {

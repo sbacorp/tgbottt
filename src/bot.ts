@@ -21,6 +21,7 @@ import {
   handleAddAdmins,
   handleRemoveAdmins,
   handleCheck,
+  handleCheckCbr,
   handleStatus,
   handleHelp,
   handleSetCommands
@@ -32,6 +33,7 @@ import { handleText } from './handlers/textHandlers';
 // Импорт conversations
 import {
   checkConversation,
+  checkCbrConversation,
   addInnConversation,
   removeInnConversation,
   addUsersConversation,
@@ -60,6 +62,7 @@ bot.use(conversations());
 
 // Регистрация conversations
 bot.use(createConversation(checkConversation, "check"));
+bot.use(createConversation(checkCbrConversation, "check_cbr"));
 bot.use(createConversation(addInnConversation, "add_inn"));
 bot.use(createConversation(removeInnConversation, "remove_inn"));
 bot.use(createConversation(addUsersConversation, "add_users"));
@@ -123,6 +126,7 @@ bot.command('remove_users', handleRemoveUsers);
 bot.command('add_admins', handleAddAdmins);
 bot.command('remove_admins', handleRemoveAdmins);
 bot.command('check', handleCheck);
+bot.command('check_cbr', handleCheckCbr);
 bot.command('status', handleStatus);
 bot.command('help', handleHelp);
 bot.command('setcommands', handleSetCommands);

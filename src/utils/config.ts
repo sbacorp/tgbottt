@@ -1,7 +1,8 @@
 import dotenv from 'dotenv';
+import path from 'path';
 
 // Загрузка переменных окружения
-dotenv.config();
+dotenv.config({ path: path.resolve(process.cwd(), 'env.local') });
 
 // Проверка обязательных переменных окружения
 const requiredEnvVars = ['BOT_TOKEN', 'DATABASE_URL', 'FIRECRAWL_API_KEY'];
