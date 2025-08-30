@@ -536,16 +536,12 @@ export async function checkCbrConversation(
     
     break;
   } while (true);
-  
-  await ctx.reply('🔍 Начинаю проверку ЦБР...');
 
   try {
-    await ctx.reply('📦 Создаю экземпляр сервиса...');
     logger.info('Creating Platform ZSK service instance...');
     // Создаем экземпляр сервиса
     const platformZskService = new PlatformZskService();
     
-    await ctx.reply('🚀 Инициализирую сервис...');
     logger.info('Initializing Platform ZSK service...');
     // Инициализируем сервис
     await platformZskService.init();
@@ -555,17 +551,13 @@ export async function checkCbrConversation(
     // Выполняем проверку
     const result = await platformZskService.checkInn(inn);
     
-    await ctx.reply('🔒 Закрываю сервис...');
     // Закрываем сервис
     await platformZskService.close();
-    
-    // Отправляем результат
-    await ctx.reply(`📊 Результат получен: ${result.success ? '✅ Успех' : '❌ Ошибка'}`);
     
     if (result.success) {
       await ctx.reply(`✅ Проверка ЦБР завершена!\n\n📋 Результат:\n${result.result}`);
     } else {
-      await ctx.reply(`❌ Ошибка при проверке ЦБР:\n${result.result}`);
+      await ctx.reply(`❌ Ошибка при проверке ЦБР:\n Попробуйте позже`);
     }
   } catch (error) {
     logger.error('Error in Platform ZSK service:', error);

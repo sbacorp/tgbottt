@@ -18,41 +18,32 @@ services:
       - cbr_bot_network
     restart: unless-stopped
 
-  # pgAdmin - Web UI for PostgreSQL
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: cbr_bot_pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@cbrbot.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - "5050:5050"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    networks:
-      - cbr_bot_network
-    depends_on:
-      - postgres
-    restart: unless-stopped
-
   # CBR Bot Application
   cbr-bot:
     build: .
     container_name: cbr_bot_app
     environment:
       - NODE_ENV=production
-      - BOT_TOKEN=6580792733:AAGpV2R1UPCbo4304iwFXAUEow6hBKd4-hg
-      - FIRECRAWL_API_KEY=fc-ab1e434c66f143b0a0f09c2ba98b8381
+      - BOT_TOKEN=${BOT_TOKEN}
+      - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
       - DATABASE_URL=postgresql://cbr_user:cbr_password@postgres:5432/cbr_bot
       - MONITORING_INTERVAL=${MONITORING_INTERVAL:-2700000}
       - ADMIN_USER_IDS=${ADMIN_USER_IDS:-1856156198,145328014}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      # Playwright environment variables
+      - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+      - PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome
+      - DISPLAY=:99
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
     depends_on:
       - postgres
     networks:
       - cbr_bot_network
     restart: unless-stopped
+    # Добавляем привилегии для работы с браузером
+    privileged: true
+    # Добавляем shared memory для браузера
+    shm_size: '2gb'
 
 volumes:
   postgres_data:

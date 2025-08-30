@@ -1,15 +1,9 @@
-FROM node:18-alpine
+# Используем официальный образ Playwright
+FROM mcr.microsoft.com/playwright:v1.55.0-jammy
 
-# Установка базовых зависимостей
-RUN apk add --no-cache \
-    ca-certificates \
-    chromium \
-    nss \
-    freetype \
-    freetype-dev \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont
+# Установка Node.js 18
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt-get install -y nodejs
 
 # Создание рабочей директории
 WORKDIR /app
@@ -17,11 +11,8 @@ WORKDIR /app
 # Копирование файлов зависимостей
 COPY package*.json ./
 
-# Установка всех зависимостей (включая dev-зависимости для сборки)
-RUN npm install
-
-# Установка браузеров Playwright
-RUN npx playwright install chromium
+# Установка зависимостей
+RUN npm ci --only=production
 
 # Копирование исходного кода
 COPY . .
@@ -29,20 +20,14 @@ COPY . .
 # Сборка TypeScript
 RUN npm run build
 
-# Удаление dev-зависимостей для уменьшения размера образа
-RUN npm prune --production
-
 # Создание пользователя для безопасности
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S bot -u 1001
+RUN groupadd -r bot && useradd -r -g bot bot
+RUN chown -R bot:bot /app
+USER bot
 
 # Установка переменных окружения для Playwright
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
-# Изменение владельца файлов
-RUN chown -R bot:nodejs /app
-USER bot
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome
 
 # Открытие порта
 EXPOSE 3000
