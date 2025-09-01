@@ -52,9 +52,10 @@ services:
     # Отключаем песочницу для Chrome
     security_opt:
       - seccomp:unconfined
-    # Пробрасываем порт для удаленного дебага Chrome
+    # Пробрасываем порты для удаленного дебага Chrome и VNC
     ports:
-      - "9222:9222"
+      - "9222:9222"  # Chrome DevTools
+      - "5900:5900"  # VNC Server
     # Монтируем том для отладки
     volumes:
       - ./logs:/app/logs
