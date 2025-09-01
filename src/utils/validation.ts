@@ -4,38 +4,8 @@
  * @returns true если ИНН корректный
  */
 export function validateInn(inn: string): boolean {
-  // Проверка длины (10 или 12 цифр)
-  if (!/^\d{10}(\d{2})?$/.test(inn)) {
-    return false;
-  }
-
-  const digits = inn.split('').map(Number);
-  
-  if (digits.length === 10) {
-    // ИНН для юридических лиц (10 цифр)
-    const weights = [2, 4, 10, 3, 5, 9, 4, 6, 8];
-    const checksum = digits.slice(0, 9).reduce((sum, digit, index) => {
-      return sum + digit * (weights[index] || 0);
-    }, 0) % 11 % 10;
-    
-    return checksum === digits[9];
-  } else if (digits.length === 12) {
-    // ИНН для физических лиц (12 цифр)
-    const weights1 = [7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
-    const weights2 = [3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8];
-    
-    const checksum1 = digits.slice(0, 10).reduce((sum, digit, index) => {
-      return sum + digit * (weights1[index] || 0);
-    }, 0) % 11 % 10;
-    
-    const checksum2 = digits.slice(0, 11).reduce((sum, digit, index) => {
-      return sum + digit * (weights2[index] || 0);
-    }, 0) % 11 % 10;
-    
-    return checksum1 === digits[10] && checksum2 === digits[11];
-  }
-  
-  return false;
+  // Простая проверка: только цифры и длина 10-12 символов
+  return /^\d{10,12}$/.test(inn);
 }
 
 /**

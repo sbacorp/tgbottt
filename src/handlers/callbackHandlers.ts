@@ -46,6 +46,9 @@ export async function handleCallback(ctx: MyContext): Promise<void> {
       case 'remove_admins':
         await handleRemoveAdminsCallback(ctx);
         break;
+      case 'cancel_conversation':
+        await handleCancelConversationCallback(ctx);
+        break;
       default:
         await ctx.answerCallbackQuery('Неизвестная команда');
     }
@@ -340,5 +343,18 @@ async function handleRemoveAdminsCallback(ctx: MyContext): Promise<void> {
   } catch (error) {
     logger.error('Error in handleRemoveAdminsCallback:', error);
     await ctx.answerCallbackQuery('Ошибка при запуске снятия прав администраторов');
+  }
+}
+
+/**
+ * Обработчик callback для отмены conversation
+ */
+async function handleCancelConversationCallback(ctx: MyContext): Promise<void> {
+  try {
+    await ctx.answerCallbackQuery('❌ Операция отменена');
+    await ctx.conversation.exit('cancel');
+  } catch (error) {
+    logger.error('Error in handleCancelConversationCallback:', error);
+    await ctx.answerCallbackQuery('Ошибка при отмене операции');
   }
 }

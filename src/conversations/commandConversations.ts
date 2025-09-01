@@ -8,6 +8,7 @@ import logger from '../utils/logger';
 import { Context } from "grammy";
 import { PlatformZskService } from '../services/platform_zsk';
 import { formatCheckResult } from '../helpers/messages';
+import { createCancelKeyboard } from '../helpers/keyboard';
 
 /**
  * Conversation для команды /check
@@ -21,17 +22,24 @@ export async function checkConversation(
   
   // Валидация ИНН с помощью do while
   do {
-    await ctx.reply('🔍 Введите ИНН организации для проверки:');
+    await ctx.reply('🔍 Введите ИНН организации для проверки:', {
+      reply_markup: createCancelKeyboard()
+    });
+    
     const { message } = await conversation.waitFor("message:text");
     inn = message.text?.trim() || '';
     
     if (!inn) {
-      await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.');
+      await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     if (!validateInn(inn)) {
-      await ctx.reply(MESSAGES.invalidInn + '\nПопробуйте еще раз.');
+      await ctx.reply(MESSAGES.invalidInn + '\nПопробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
@@ -96,24 +104,32 @@ export async function addInnConversation(
   
   // Валидация ИНН с помощью do while
   do {
-    await ctx.reply('➕ Введите ИНН организации(й) для добавления (можно несколько через пробел):');
+    await ctx.reply('➕ Введите ИНН организации(й) для добавления (можно несколько через пробел):', {
+      reply_markup: createCancelKeyboard()
+    });
     const { message } = await conversation.waitFor("message:text");
     inns = message.text || '';
     
     if (!inns) {
-      await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.');
+      await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     const { valid, invalid } = validateInnList(inns);
     
     if (invalid.length > 0) {
-      await ctx.reply(`❌ Неверный формат ИНН: ${invalid.join(', ')}\nПопробуйте еще раз.`);
+      await ctx.reply(`❌ Неверный формат ИНН: ${invalid.join(', ')}\nПопробуйте еще раз.`, {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     if (valid.length === 0) {
-      await ctx.reply('❌ Не найдено валидных ИНН. Попробуйте еще раз.');
+      await ctx.reply('❌ Не найдено валидных ИНН. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
@@ -181,24 +197,32 @@ export async function removeInnConversation(
   let validInns: string[] = [];
   
   do {
-    await ctx.reply('🗑️ Введите ИНН организации(й) для удаления (можно несколько через пробел):');
+    await ctx.reply('🗑️ Введите ИНН организации(й) для удаления (можно несколько через пробел):', {
+      reply_markup: createCancelKeyboard()
+    });
     const { message } = await conversation.waitFor("message:text");
     inns = message.text?.trim() || '';
     
     if (!inns) {
-      await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.');
+      await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     const { valid, invalid } = validateInnList(inns);
     
     if (invalid.length > 0) {
-      await ctx.reply(`❌ Неверный формат ИНН: ${invalid.join(', ')}\nПопробуйте еще раз.`);
+      await ctx.reply(`❌ Неверный формат ИНН: ${invalid.join(', ')}\nПопробуйте еще раз.`, {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     if (valid.length === 0) {
-      await ctx.reply('❌ Не найдено валидных ИНН. Попробуйте еще раз.');
+      await ctx.reply('❌ Не найдено валидных ИНН. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
@@ -246,24 +270,32 @@ export async function addUsersConversation(
   let validIds: number[] = [];
   
   do {
-    await ctx.reply('👥 Введите telegram_id пользователей для добавления (можно несколько через пробел):');
+    await ctx.reply('👥 Введите telegram_id пользователей для добавления (можно несколько через пробел):', {
+      reply_markup: createCancelKeyboard()
+    });
     const { message } = await conversation.waitFor("message:text");
     telegramIdsStr = message.text?.trim() || '';
     
     if (!telegramIdsStr) {
-      await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.');
+      await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     const { valid, invalid } = validateTelegramIdList(telegramIdsStr);
     
     if (invalid.length > 0) {
-      await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`);
+      await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`, {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     if (valid.length === 0) {
-      await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.');
+      await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
@@ -314,24 +346,32 @@ export async function removeUsersConversation(
   let validIds: number[] = [];
   
   do {
-    await ctx.reply('🗑️ Введите telegram_id пользователей для удаления (можно несколько через пробел):');
+    await ctx.reply('🗑️ Введите telegram_id пользователей для удаления (можно несколько через пробел):', {
+      reply_markup: createCancelKeyboard()
+    });
     const { message } = await conversation.waitFor("message:text");
     telegramIdsStr = message.text?.trim() || '';
     
     if (!telegramIdsStr) {
-      await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.');
+      await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     const { valid, invalid } = validateTelegramIdList(telegramIdsStr);
     
     if (invalid.length > 0) {
-      await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`);
+      await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`, {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     if (valid.length === 0) {
-      await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.');
+      await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
@@ -382,24 +422,32 @@ export async function addAdminsConversation(
   let validIds: number[] = [];
   
   do {
-    await ctx.reply('👑 Введите telegram_id пользователей для назначения администраторами (можно несколько через пробел):');
+    await ctx.reply('👑 Введите telegram_id пользователей для назначения администраторами (можно несколько через пробел):', {
+      reply_markup: createCancelKeyboard()
+    });
     const { message } = await conversation.waitFor("message:text");
     telegramIdsStr = message.text || '';
     
     if (!telegramIdsStr) {
-      await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.');
+      await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     const { valid, invalid } = validateTelegramIdList(telegramIdsStr);
     
     if (invalid.length > 0) {
-      await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`);
+      await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`, {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     if (valid.length === 0) {
-      await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.');
+      await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
@@ -451,24 +499,32 @@ export async function removeAdminsConversation(
   let validIds: number[] = [];
   
   do {
-    await ctx.reply('➖ Введите telegram_id администраторов для снятия прав (можно несколько через пробел):');
+    await ctx.reply('➖ Введите telegram_id администраторов для снятия прав (можно несколько через пробел):', {
+      reply_markup: createCancelKeyboard()
+    });
     const { message } = await conversation.waitFor("message:text");
     telegramIdsStr = message.text || '';
     
     if (!telegramIdsStr) {
-      await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.');
+      await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     const { valid, invalid } = validateTelegramIdList(telegramIdsStr);
     
     if (invalid.length > 0) {
-      await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`);
+      await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`, {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     if (valid.length === 0) {
-      await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.');
+      await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
@@ -519,17 +575,23 @@ export async function checkCbrConversation(
   
   // Валидация ИНН с помощью do while
   do {
-    await ctx.reply('🔍 Введите ИНН организации для проверки ЦБР:');
+    await ctx.reply('🔍 Введите ИНН организации для проверки ЦБР:', {
+      reply_markup: createCancelKeyboard()
+    });
     const { message } = await conversation.waitFor("message:text");
     inn = message.text?.trim() || '';
     
     if (!inn) {
-      await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.');
+      await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     
     if (!validateInn(inn)) {
-      await ctx.reply(MESSAGES.invalidInn + '\nПопробуйте еще раз.');
+      await ctx.reply(MESSAGES.invalidInn + '\nПопробуйте еще раз.', {
+        reply_markup: createCancelKeyboard()
+      });
       continue;
     }
     

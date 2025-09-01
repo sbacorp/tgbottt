@@ -38,3 +38,8 @@ export function createManageAdminsKeyboard() {
     .row()
     .text("🔙 Назад", "menu");
 }
+
+export function createCancelKeyboard() {
+  return new InlineKeyboard()
+    .text("❌ Отменить", "cancel_conversation");
+}
