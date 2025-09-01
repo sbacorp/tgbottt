@@ -19,59 +19,62 @@ export async function checkConversation(
   ctx: Context
 ) {
   let inn: string;
-  
+  await ctx.reply('🔍 Введите ИНН организации для проверки:', {
+    reply_markup: createCancelKeyboard()
+  });
   // Валидация ИНН с помощью do while
   do {
-    await ctx.reply('🔍 Введите ИНН организации для проверки:', {
-      reply_markup: createCancelKeyboard()
-    });
-    
-    const { message } = await conversation.waitFor("message:text");
-    inn = message.text?.trim() || '';
-    
+
+    const context = await conversation.wait()
+
+    if (context.callbackQuery?.data === 'cancel_conversation') {
+      await ctx.reply('❌ Операция отменена');
+      return;
+    }
+    // @ts-expect-error
+    inn = context.message.text?.trim() || '';
+
     if (!inn) {
       await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
-    }
-    
-    if (!validateInn(inn)) {
+    } else if (!validateInn(inn)) {
       await ctx.reply(MESSAGES.invalidInn + '\nПопробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     break;
   } while (true);
-  
+
   await ctx.reply('🔍 Выполняется проверка организации через Контур.Фокус...');
-  
+
   try {
     const result = await monitoringService.checkOrganization(inn);
-    
+
     if (result) {
-      
+
       let message = `📊 <b>Результат проверки ИНН ${inn}</b>\n\n`;
       message += `🏢 <b>Актуальное название компании:</b> ${result.name}\n`;
-      
+
       if (result.address) {
         message += `📍 <b>Адрес:</b> ${result.address}\n`;
       }
-      
+
       if (result.registrationDate) {
         message += `📅 <b>Дата регистрации:</b> ${result.registrationDate}\n`;
       }
-      
+
       if (result.isLiquidated && result.liquidationDate) {
         message += `⚠️ <b>Ликвидация:</b> ${result.liquidationDate}\n`;
       }
-      
+
       if (result.illegalitySigns && result.illegalitySigns.length > 0) {
         message += `🚨 <b>Санкции:</b> ${result.illegalitySigns.join(', ')}\n`;
       }
-      
+
       if (result.activities && result.activities.length > 0) {
         message += `🏢 <b>Деятельность:</b> ${result.activities[0]}\n`;
       }
@@ -79,8 +82,8 @@ export async function checkConversation(
 
       const riskInfo = formatCheckResult(result.status);
       message += riskInfo;
-      
-      
+
+
       await ctx.reply(message, { parse_mode: 'HTML' });
     } else {
       await ctx.reply(`❌ Организация с ИНН ${inn} не найдена`);
@@ -101,44 +104,48 @@ export async function addInnConversation(
 ) {
   let inns: string;
   let validInns: string[] = [];
-  
+  await ctx.reply('➕ Введите ИНН организации(й) для добавления (можно несколько через пробел):', {
+    reply_markup: createCancelKeyboard()
+  });
+
   // Валидация ИНН с помощью do while
   do {
-    await ctx.reply('➕ Введите ИНН организации(й) для добавления (можно несколько через пробел):', {
-      reply_markup: createCancelKeyboard()
-    });
-    const { message } = await conversation.waitFor("message:text");
-    inns = message.text || '';
-    
+    const context = await conversation.wait()
+    if (context.callbackQuery?.data === 'cancel_conversation') {
+      await ctx.reply('❌ Операция отменена');
+      return;
+    }
+    inns = context.message?.text || '';
+
     if (!inns) {
       await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     const { valid, invalid } = validateInnList(inns);
-    
+
     if (invalid.length > 0) {
       await ctx.reply(`❌ Неверный формат ИНН: ${invalid.join(', ')}\nПопробуйте еще раз.`, {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     if (valid.length === 0) {
       await ctx.reply('❌ Не найдено валидных ИНН. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     validInns = valid;
     break;
   } while (true);
-  
+
   await ctx.reply(`🔄 Добавляю ${validInns.length} организацию(й)...`);
-  
+
   // Добавление организаций
   const addedOrganizations = [];
   for (const inn of validInns) {
@@ -148,27 +155,27 @@ export async function addInnConversation(
         name: `Организация ${inn}`,
         status: 'green'
       });
-      
+
       if (!addedOrg) {
         logger.info(`Organization with INN ${inn} already exists, skipping addition`);
         addedOrganizations.push(inn);
         continue;
       }
-      
+
       const orgData = await monitoringService.checkOrganization(inn);
       if (orgData) {
         logger.info(`Получены актуальные данные для организации ${inn}: ${orgData.name}`);
       }
-      
+
       addedOrganizations.push(inn);
     } catch (error) {
       logger.error(`Error adding organization ${inn}:`, error);
     }
   }
-  
+
   if (addedOrganizations.length > 0) {
     await ctx.reply(MESSAGES.innAdded(addedOrganizations));
-    
+
     const session = await conversation.external((ctx) => ctx.session);
     if (session.isAdmin) {
       await getNotificationService().sendNewOrganizationsNotification(
@@ -192,46 +199,52 @@ export async function removeInnConversation(
     await ctx.reply(MESSAGES.adminOnly);
     return;
   }
-  
+
   let inns: string;
   let validInns: string[] = [];
-  
+  await ctx.reply('🗑️ Введите ИНН организации(й) для удаления (можно несколько через пробел):', {
+    reply_markup: createCancelKeyboard()
+  });
+
   do {
-    await ctx.reply('🗑️ Введите ИНН организации(й) для удаления (можно несколько через пробел):', {
-      reply_markup: createCancelKeyboard()
-    });
-    const { message } = await conversation.waitFor("message:text");
-    inns = message.text?.trim() || '';
-    
+    const context = await conversation.wait()
+    if (context.callbackQuery?.data === 'cancel_conversation') {
+      await ctx.reply('❌ Операция отменена');
+      return;
+    }
+
+    inns = context.message?.text || '';
+
+
     if (!inns) {
       await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     const { valid, invalid } = validateInnList(inns);
-    
+
     if (invalid.length > 0) {
       await ctx.reply(`❌ Неверный формат ИНН: ${invalid.join(', ')}\nПопробуйте еще раз.`, {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     if (valid.length === 0) {
       await ctx.reply('❌ Не найдено валидных ИНН. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     validInns = valid;
     break;
   } while (true);
-  
+
   await ctx.reply(`🔄 Удаляю ${validInns.length} организацию(й)...`);
-  
+
   const removedOrganizations = [];
   for (const inn of validInns) {
     try {
@@ -244,7 +257,7 @@ export async function removeInnConversation(
       logger.error(`Error removing organization ${inn}:`, error);
     }
   }
-  
+
   if (removedOrganizations.length > 0) {
     await ctx.reply(MESSAGES.innRemoved(removedOrganizations.map(org => org.inn)));
     await getNotificationService().sendRemovedOrganizationsNotification(removedOrganizations);
@@ -265,46 +278,50 @@ export async function addUsersConversation(
     await ctx.reply(MESSAGES.adminOnly);
     return;
   }
-  
+
   let telegramIdsStr: string;
   let validIds: number[] = [];
-  
+  await ctx.reply('👥 Введите telegram_id пользователей для добавления (можно несколько через пробел):', {
+    reply_markup: createCancelKeyboard()
+  });
+
   do {
-    await ctx.reply('👥 Введите telegram_id пользователей для добавления (можно несколько через пробел):', {
-      reply_markup: createCancelKeyboard()
-    });
-    const { message } = await conversation.waitFor("message:text");
-    telegramIdsStr = message.text?.trim() || '';
-    
+    const context = await conversation.wait()
+    if (context.callbackQuery?.data === 'cancel_conversation') {
+      await ctx.reply('❌ Операция отменена');
+      return;
+    }
+    telegramIdsStr = context.message?.text || '';
+
     if (!telegramIdsStr) {
       await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     const { valid, invalid } = validateTelegramIdList(telegramIdsStr);
-    
+
     if (invalid.length > 0) {
       await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`, {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     if (valid.length === 0) {
       await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     validIds = valid;
     break;
   } while (true);
-  
+
   await ctx.reply(`🔄 Добавляю ${validIds.length} пользователя(ей)...`);
-  
+
   const addedUsers = [];
   for (const telegramId of validIds) {
     try {
@@ -313,7 +330,7 @@ export async function addUsersConversation(
         logger.info(`User with telegram_id ${telegramId} already exists`);
         continue;
       }
-      
+
       await database.createUser(telegramId, undefined, false);
       addedUsers.push(telegramId.toString());
       logger.info(`Added user with telegram_id: ${telegramId}`);
@@ -321,7 +338,7 @@ export async function addUsersConversation(
       logger.error(`Error adding user ${telegramId}:`, error);
     }
   }
-  
+
   if (addedUsers.length > 0) {
     await ctx.reply(`✅ Пользователи успешно добавлены: ${addedUsers.join(', ')}`);
   } else {
@@ -341,46 +358,50 @@ export async function removeUsersConversation(
     await ctx.reply(MESSAGES.adminOnly);
     return;
   }
-  
+
   let telegramIdsStr: string;
   let validIds: number[] = [];
-  
+  await ctx.reply('🗑️ Введите telegram_id пользователей для удаления (можно несколько через пробел):', {
+    reply_markup: createCancelKeyboard()
+  });
+
   do {
-    await ctx.reply('🗑️ Введите telegram_id пользователей для удаления (можно несколько через пробел):', {
-      reply_markup: createCancelKeyboard()
-    });
-    const { message } = await conversation.waitFor("message:text");
-    telegramIdsStr = message.text?.trim() || '';
-    
+    const context = await conversation.wait()
+    if (context.callbackQuery?.data === 'cancel_conversation') {
+      await ctx.reply('❌ Операция отменена');
+      return;
+    }
+    telegramIdsStr = context.message?.text || '';
+
     if (!telegramIdsStr) {
       await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     const { valid, invalid } = validateTelegramIdList(telegramIdsStr);
-    
+
     if (invalid.length > 0) {
       await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`, {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     if (valid.length === 0) {
       await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     validIds = valid;
     break;
   } while (true);
-  
+
   await ctx.reply(`🔄 Удаляю ${validIds.length} пользователя(ей)...`);
-  
+
   const removedUsers = [];
   for (const telegramId of validIds) {
     try {
@@ -389,7 +410,7 @@ export async function removeUsersConversation(
         logger.info(`User with telegram_id ${telegramId} does not exist`);
         continue;
       }
-      
+
       await database.deleteUser(telegramId);
       removedUsers.push(telegramId.toString());
       logger.info(`Removed user with telegram_id: ${telegramId}`);
@@ -397,7 +418,7 @@ export async function removeUsersConversation(
       logger.error(`Error removing user ${telegramId}:`, error);
     }
   }
-  
+
   if (removedUsers.length > 0) {
     await ctx.reply(`✅ Пользователи успешно удалены: ${removedUsers.join(', ')}`);
   } else {
@@ -417,46 +438,50 @@ export async function addAdminsConversation(
     await ctx.reply(MESSAGES.adminOnly);
     return;
   }
-  
+
   let telegramIdsStr: string;
   let validIds: number[] = [];
-  
+  await ctx.reply('👑 Введите telegram_id пользователей для назначения администраторами (можно несколько через пробел):', {
+    reply_markup: createCancelKeyboard()
+  });
+
   do {
-    await ctx.reply('👑 Введите telegram_id пользователей для назначения администраторами (можно несколько через пробел):', {
-      reply_markup: createCancelKeyboard()
-    });
-    const { message } = await conversation.waitFor("message:text");
-    telegramIdsStr = message.text || '';
-    
+    const context = await conversation.wait()
+    if (context.callbackQuery?.data === 'cancel_conversation') {
+      await ctx.reply('❌ Операция отменена');
+      return;
+    }
+    telegramIdsStr = context.message?.text || '';
+
     if (!telegramIdsStr) {
       await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     const { valid, invalid } = validateTelegramIdList(telegramIdsStr);
-    
+
     if (invalid.length > 0) {
       await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`, {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     if (valid.length === 0) {
       await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     validIds = valid;
     break;
   } while (true);
-  
+
   await ctx.reply(`🔄 Назначаю ${validIds.length} администратора(ов)...`);
-  
+
   const addedAdmins = [];
   for (const telegramId of validIds) {
     try {
@@ -473,7 +498,7 @@ export async function addAdminsConversation(
       logger.error(`Error making ${telegramId} admin:`, error);
     }
   }
-  
+
   if (addedAdmins.length > 0) {
     await ctx.reply(`✅ Администраторы успешно назначены: ${addedAdmins.join(', ')}`);
   } else {
@@ -494,46 +519,46 @@ export async function removeAdminsConversation(
     await ctx.reply(MESSAGES.adminOnly);
     return;
   }
-  
+
   let telegramIdsStr: string;
   let validIds: number[] = [];
-  
+
   do {
     await ctx.reply('➖ Введите telegram_id администраторов для снятия прав (можно несколько через пробел):', {
       reply_markup: createCancelKeyboard()
     });
     const { message } = await conversation.waitFor("message:text");
     telegramIdsStr = message.text || '';
-    
+
     if (!telegramIdsStr) {
       await ctx.reply('❌ telegram_id не может быть пустым. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     const { valid, invalid } = validateTelegramIdList(telegramIdsStr);
-    
+
     if (invalid.length > 0) {
       await ctx.reply(`❌ Неверный формат telegram_id: ${invalid.join(', ')}\nПопробуйте еще раз.`, {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     if (valid.length === 0) {
       await ctx.reply('❌ Не найдено валидных telegram_id. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     validIds = valid;
     break;
   } while (true);
-  
+
   await ctx.reply(`🔄 Снимаю права администратора у ${validIds.length} пользователя(ей)...`);
-  
+
   const removedAdmins = [];
   for (const telegramId of validIds) {
     try {
@@ -542,12 +567,12 @@ export async function removeAdminsConversation(
         logger.info(`User with telegram_id ${telegramId} does not exist`);
         continue;
       }
-      
+
       if (!existingUser.is_admin) {
         logger.info(`User with telegram_id ${telegramId} is not an admin`);
         continue;
       }
-      
+
       await database.updateUserAdminStatus(telegramId, false);
       removedAdmins.push(telegramId.toString());
       logger.info(`Removed admin rights from user ${telegramId}`);
@@ -555,7 +580,7 @@ export async function removeAdminsConversation(
       logger.error(`Error removing admin rights from ${telegramId}:`, error);
     }
   }
-  
+
   if (removedAdmins.length > 0) {
     await ctx.reply(`✅ Права администратора сняты у: ${removedAdmins.join(', ')}`);
   } else {
@@ -572,85 +597,89 @@ export async function checkCbrConversation(
   ctx: Context
 ) {
   let inn: string;
-  
+  await ctx.reply('🔍 Введите ИНН организации для проверки ЦБР:', {
+    reply_markup: createCancelKeyboard()
+  });
+
   // Валидация ИНН с помощью do while
   do {
-    await ctx.reply('🔍 Введите ИНН организации для проверки ЦБР:', {
-      reply_markup: createCancelKeyboard()
-    });
-    const { message } = await conversation.waitFor("message:text");
-    inn = message.text?.trim() || '';
-    
+    const context = await conversation.wait()
+    if (context.callbackQuery?.data === 'cancel_conversation') {
+      await ctx.reply('❌ Операция отменена');
+      return;
+    }
+    inn = context.message?.text || '';
+
     if (!inn) {
       await ctx.reply('❌ ИНН не может быть пустым. Попробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     if (!validateInn(inn)) {
       await ctx.reply(MESSAGES.invalidInn + '\nПопробуйте еще раз.', {
         reply_markup: createCancelKeyboard()
       });
       continue;
     }
-    
+
     break;
   } while (true);
 
   try {
     logger.info('Creating Platform ZSK service instance...');
-    
-    
+
+
     // Выполняем проверку с 3 попытками
     let result: any = null;
     const maxAttempts = 3;
-    
+
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        try {
-            if (attempt > 1) {
-                await ctx.reply(`🔄 Попытка #${attempt} из ${maxAttempts}...`);
-            }
-            const platformZskService = new PlatformZskService();
-            await platformZskService.init();
-    
-            await ctx.reply(`🔍 Проверяю ИНН: ${inn}`);
-            result = await platformZskService.checkInn(inn);
-            
-            // Если получили результат без ошибки, выходим из цикла
-            if (result && !result.error) {
-                break;
-            }
-            await platformZskService.close();
-            // Если есть ошибка и это не последняя попытка
-            if (attempt < maxAttempts) {
-                await ctx.reply(`⚠️ Ошибка на попытке #${attempt}. Повторяю через 3 секунды...`);
-                await new Promise(resolve => setTimeout(resolve, 3000));
-            }
-            
-        } catch (error) {
-            logger.error(`Ошибка при проверке ИНН ${inn}, попытка ${attempt}:`, error);
-            
-            if (attempt < maxAttempts) {
-                await ctx.reply(`❌ Ошибка на попытке #${attempt}. Повторяю через 3 секунды...`);
-                await new Promise(resolve => setTimeout(resolve, 3000));
-            } else {
-                result = { error: `Ошибка после ${maxAttempts} попыток: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}` };
-            }
+      try {
+        if (attempt > 1) {
+          await ctx.reply(`🔄 Попытка #${attempt} из ${maxAttempts}...`);
         }
+        const platformZskService = new PlatformZskService();
+        await platformZskService.init();
+
+        await ctx.reply(`🔍 Проверяю ИНН: ${inn}`);
+        result = await platformZskService.checkInn(inn);
+
+        // Если получили результат без ошибки, выходим из цикла
+        if (result && !result.error) {
+          break;
+        }
+        await platformZskService.close();
+        // Если есть ошибка и это не последняя попытка
+        if (attempt < maxAttempts) {
+          await ctx.reply(`⚠️ Ошибка на попытке #${attempt}. Повторяю через 3 секунды...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+
+      } catch (error) {
+        logger.error(`Ошибка при проверке ИНН ${inn}, попытка ${attempt}:`, error);
+
+        if (attempt < maxAttempts) {
+          await ctx.reply(`❌ Ошибка на попытке #${attempt}. Повторяю через 3 секунды...`);
+          await new Promise(resolve => setTimeout(resolve, 3000));
+        } else {
+          result = { error: `Ошибка после ${maxAttempts} попыток: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}` };
+        }
+      }
     }
-    
+
     console.log(result, 'result');
     if (result.success) {
-        // Проверяем наличие слова "имеются" в результате
-        const hasIllegalActivity = result.result.toLowerCase().includes('имеются');
-        const statusIcon = hasIllegalActivity ? '🔴' : '🟢';
-        //удаляю Проверить ещё один ИНН из сообщения
-        const resMessage = result.result.replace('Проверить ещё один ИНН', '');
-        
-        await ctx.reply(`${statusIcon} Проверка ЦБР завершена!\n\n📋 Результат:\n${resMessage}`);
-      } else {
-        await ctx.reply(`❌ Ошибка при проверке ЦБР: Попробуйте позже`);
+      // Проверяем наличие слова "имеются" в результате
+      const hasIllegalActivity = result.result.toLowerCase().includes('имеются');
+      const statusIcon = hasIllegalActivity ? '🔴' : '🟢';
+      //удаляю Проверить ещё один ИНН из сообщения
+      const resMessage = result.result.replace('Проверить ещё один ИНН', '');
+
+      await ctx.reply(`${statusIcon} Проверка ЦБР завершена!\n\n📋 Результат:\n${resMessage}`);
+    } else {
+      await ctx.reply(`❌ Ошибка при проверке ЦБР: Попробуйте позже`);
     }
   } catch (error) {
     logger.error('Error in Platform ZSK service:', error);
