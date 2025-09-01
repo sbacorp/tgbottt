@@ -4,45 +4,45 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: cbr_bot_postgres
+    container_name: cbr_bot_postgres_dev
     environment:
       POSTGRES_DB: cbr_bot
       POSTGRES_USER: cbr_user
       POSTGRES_PASSWORD: cbr_password
     ports:
-      - "5435:5432"
+      - "5436:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_dev:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
-      - cbr_bot_network
+      - cbr_bot_network_dev
     restart: unless-stopped
 
-  # CBR Bot Application
-  cbr-bot:
+  # CBR Bot Application (Development Mode)
+  cbr-bot-dev:
     build: .
-    container_name: cbr_bot_app
+    container_name: cbr_bot_app_dev
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - BOT_TOKEN=${BOT_TOKEN}
       - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
       - DATABASE_URL=postgresql://cbr_user:cbr_password@postgres:5432/cbr_bot
       - MONITORING_INTERVAL=${MONITORING_INTERVAL:-2700000}
       - ADMIN_USER_IDS=${ADMIN_USER_IDS:-1856156198,145328014}
-      - LOG_LEVEL=${LOG_LEVEL:-info}
-      # Playwright environment variables
+      - LOG_LEVEL=debug
+      # Playwright environment variables (NON-HEADLESS MODE)
       - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
       - PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome
-      - PLAYWRIGHT_HEADLESS=${PLAYWRIGHT_HEADLESS:-true}
+      - PLAYWRIGHT_HEADLESS=false
       - DISPLAY=:99
       - CLAUDE_API_KEY=${CLAUDE_API_KEY}
 
     depends_on:
       - postgres
     networks:
-      - cbr_bot_network
+      - cbr_bot_network_dev
     restart: unless-stopped
-    # Добавляем привилегии для работы с браузером
+    # Добавляем привилегии для работы с браузером и GUI
     privileged: true
     # Добавляем shared memory для браузера
     shm_size: '2gb'
@@ -52,11 +52,16 @@ services:
     # Отключаем песочницу для Chrome
     security_opt:
       - seccomp:unconfined
+    # Пробрасываем порт для удаленного дебага Chrome
+    ports:
+      - "9222:9222"
+    # Монтируем том для отладки
+    volumes:
+      - ./logs:/app/logs
 
 volumes:
-  postgres_data:
-  pgadmin_data:
+  postgres_data_dev:
 
 networks:
-  cbr_bot_network:
+  cbr_bot_network_dev:
     driver: bridge

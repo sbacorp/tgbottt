@@ -5,12 +5,14 @@ FROM mcr.microsoft.com/playwright:v1.55.0-jammy
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y nodejs
 
-# Установка базовых зависимостей
+# Установка базовых зависимостей и Xvfb для GUI браузера
 RUN apt-get update && apt-get install -y \
     build-essential \
     python3 \
     make \
     g++ \
+    xvfb \
+    x11vnc \
     && rm -rf /var/lib/apt/lists/*
 
 # Создание рабочей директории
@@ -35,8 +37,13 @@ RUN npm prune --production
 RUN groupadd -r bot && useradd -r -g bot bot
 RUN chown -R bot:bot /app
 
-# Создаем простой скрипт запуска
+# Создаем улучшенный скрипт запуска с Xvfb
 RUN echo '#!/bin/bash\n\
+echo "Запускаем виртуальный дисплей..."\n\
+Xvfb :99 -screen 0 1920x1080x24 > /dev/null 2>&1 &\n\
+export DISPLAY=:99\n\
+echo "Ждем запуска X-сервера..."\n\
+sleep 3\n\
 echo "Запускаем приложение..."\n\
 exec "$@"' > /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh && \

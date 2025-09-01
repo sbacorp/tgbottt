@@ -20,8 +20,12 @@ export class PlatformZskService {
 
     async init(): Promise<void> {
         try {
+            // Проверяем переменную окружения для режима браузера
+            const isHeadless = false;
+            logger.info(`Browser mode: ${isHeadless ? 'headless' : 'non-headless'}`);
+            
             this.browser = await chromium.launch({
-                headless: true,
+                headless: isHeadless,
                 slowMo: 1000,
                 args: [
                     '--no-sandbox',
@@ -29,7 +33,8 @@ export class PlatformZskService {
                     '--disable-dev-shm-usage',
                     '--disable-gpu',
                     '--disable-web-security',
-                    '--disable-blink-features=AutomationControlled'
+                    '--disable-blink-features=AutomationControlled',
+                    '--remote-debugging-port=9222'
                 ]
             });
 
