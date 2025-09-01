@@ -578,8 +578,8 @@ export async function checkCbrConversation(
         }
     }
     
-    
-          if (result.success) {
+    console.log(result, 'result');
+    if (result.success) {
         // Проверяем наличие слова "имеются" в результате
         const hasIllegalActivity = result.result.toLowerCase().includes('имеются');
         const statusIcon = hasIllegalActivity ? '🔴' : '🟢';
@@ -588,7 +588,7 @@ export async function checkCbrConversation(
         
         await ctx.reply(`${statusIcon} Проверка ЦБР завершена!\n\n📋 Результат:\n${resMessage}`);
       } else {
-        await ctx.reply(`❌ Ошибка при проверке ЦБР:\n Попробуйте позже`);
+        await ctx.reply(`❌ Ошибка при проверке ЦБР: Попробуйте позже`);
     }
   } catch (error) {
     logger.error('Error in Platform ZSK service:', error);
