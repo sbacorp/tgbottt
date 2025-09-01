@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 import { config } from '../utils/config';
 import logger from '../utils/logger';
-import { User, Organization, OrganizationCheck } from '../types';
+import { User, Organization, OrganizationCheck, ZskCheck } from '../types';
 import { INITIAL_INNS } from '../utils/config';
 
 class Database {
@@ -70,6 +70,7 @@ class Database {
         inn VARCHAR(12) UNIQUE NOT NULL,
         name VARCHAR(500),
         status VARCHAR(20) DEFAULT 'green',
+        zsk_status VARCHAR(20) DEFAULT 'green',
         address TEXT,
         websites TEXT[],
         is_liquidated BOOLEAN DEFAULT FALSE,
@@ -95,6 +96,18 @@ class Database {
       );
     `;
 
+    const createZskChecksTable = `
+      CREATE TABLE IF NOT EXISTS zsk_checks (
+        id SERIAL PRIMARY KEY,
+        inn VARCHAR(12) NOT NULL,
+        check_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        status VARCHAR(20) NOT NULL,
+        result_text TEXT,
+        notified BOOLEAN DEFAULT FALSE,
+        FOREIGN KEY (inn) REFERENCES tracked_organizations(inn) ON DELETE CASCADE
+      );
+    `;
+
     const createUserOrganizationsTable = `
       CREATE TABLE IF NOT EXISTS user_organizations (
         user_id INTEGER NOT NULL,
@@ -115,13 +128,20 @@ class Database {
       ALTER TABLE tracked_organizations ADD COLUMN IF NOT EXISTS has_illegal_activity BOOLEAN DEFAULT FALSE;
     `;
 
+    // Добавляем поле zsk_status в таблицу tracked_organizations если его нет
+    const addZskStatusColumn = `
+      ALTER TABLE tracked_organizations ADD COLUMN IF NOT EXISTS zsk_status VARCHAR(20) DEFAULT 'green';
+    `;
+
     try {
       await this.client.query(createUsersTable);
       await this.client.query(createOrganizationsTable);
       await this.client.query(createChecksTable);
+      await this.client.query(createZskChecksTable);
       await this.client.query(createUserOrganizationsTable);
       await this.client.query(addRiskInfoColumn);
       await this.client.query(addIllegalActivityColumn);
+      await this.client.query(addZskStatusColumn);
       
       logger.info('Database tables created successfully');
     } catch (error) {
@@ -327,6 +347,7 @@ class Database {
           inn: row.inn,
           name: row.name,
           status: row.status,
+          zskStatus: row.zsk_status,
           address: row.address,
           websites: row.websites,
           isLiquidated: row.is_liquidated,
@@ -362,6 +383,7 @@ class Database {
         inn: row.inn,
         name: row.name,
         status: row.status,
+        zskStatus: row.zsk_status,
         address: row.address,
         websites: row.websites,
         isLiquidated: row.is_liquidated,
@@ -404,21 +426,23 @@ class Database {
         `UPDATE tracked_organizations SET
          name = COALESCE($1, name),
          status = COALESCE($2, status),
-         address = COALESCE($3, address),
-         websites = COALESCE($4, websites),
-         is_liquidated = COALESCE($5, is_liquidated),
-         illegality_signs = COALESCE($6, illegality_signs),
-         region = COALESCE($7, region),
-         additional_info = COALESCE($8, additional_info),
-         comment = COALESCE($9, comment),
-         risk_info = COALESCE($10, risk_info),
-         has_illegal_activity = COALESCE($11, has_illegal_activity),
+         zsk_status = COALESCE($3, zsk_status),
+         address = COALESCE($4, address),
+         websites = COALESCE($5, websites),
+         is_liquidated = COALESCE($6, is_liquidated),
+         illegality_signs = COALESCE($7, illegality_signs),
+         region = COALESCE($8, region),
+         additional_info = COALESCE($9, additional_info),
+         comment = COALESCE($10, comment),
+         risk_info = COALESCE($11, risk_info),
+         has_illegal_activity = COALESCE($12, has_illegal_activity),
          updated_at = CURRENT_TIMESTAMP
-         WHERE inn = $12
+         WHERE inn = $13
          RETURNING *`,
         [
           organizationData.name,
           organizationData.status,
+          organizationData.zskStatus,
           organizationData.address,
           organizationData.websites,
           organizationData.isLiquidated,
@@ -590,6 +614,74 @@ class Database {
       return result.rows;
     } catch (error) {
       logger.error('Error getting organization users:', error);
+      throw error;
+    }
+  }
+
+  // Методы для работы с проверками ЗСК
+
+  /**
+   * Добавление записи о проверке ЗСК
+   */
+  async addZskCheck(check: Partial<ZskCheck>): Promise<ZskCheck> {
+    try {
+      const result = await this.client.query(
+        `INSERT INTO zsk_checks (inn, status, result_text)
+         VALUES ($1, $2, $3)
+         RETURNING *`,
+        [check.inn, check.status, check.resultText]
+      );
+      
+      return result.rows[0];
+    } catch (error) {
+      logger.error('Error adding ZSK check:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Получение последней проверки ЗСК организации
+   */
+  async getLastZskCheck(inn: string): Promise<ZskCheck | null> {
+    try {
+      const result = await this.client.query(
+        'SELECT * FROM zsk_checks WHERE inn = $1 ORDER BY check_date DESC LIMIT 1',
+        [inn]
+      );
+      
+      return result.rows[0] || null;
+    } catch (error) {
+      logger.error('Error getting last ZSK check:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Отметка проверки ЗСК как уведомленной
+   */
+  async markZskCheckAsNotified(inn: string, status: string): Promise<void> {
+    try {
+      await this.client.query(
+        'UPDATE zsk_checks SET notified = true WHERE inn = $1 AND status = $2',
+        [inn, status]
+      );
+    } catch (error) {
+      logger.error('Error marking ZSK check as notified:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Обновление статуса ЗСК организации
+   */
+  async updateOrganizationZskStatus(inn: string, zskStatus: string): Promise<void> {
+    try {
+      await this.client.query(
+        'UPDATE tracked_organizations SET zsk_status = $1, updated_at = CURRENT_TIMESTAMP WHERE inn = $2',
+        [zskStatus, inn]
+      );
+    } catch (error) {
+      logger.error('Error updating organization ZSK status:', error);
       throw error;
     }
   }

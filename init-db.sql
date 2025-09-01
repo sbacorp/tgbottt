@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS tracked_organizations (
   inn VARCHAR(12) UNIQUE NOT NULL,
   name VARCHAR(500),
   status VARCHAR(20) DEFAULT 'green',
+  zsk_status VARCHAR(20) DEFAULT 'green',
   address TEXT,
   websites TEXT[],
   is_liquidated BOOLEAN DEFAULT FALSE,
@@ -53,6 +54,17 @@ CREATE TABLE IF NOT EXISTS organization_checks (
   FOREIGN KEY (inn) REFERENCES tracked_organizations(inn) ON DELETE CASCADE
 );
 
+-- Создание таблицы проверок ЗСК
+CREATE TABLE IF NOT EXISTS zsk_checks (
+  id SERIAL PRIMARY KEY,
+  inn VARCHAR(12) NOT NULL,
+  check_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  status VARCHAR(20) NOT NULL,
+  result_text TEXT,
+  notified BOOLEAN DEFAULT FALSE,
+  FOREIGN KEY (inn) REFERENCES tracked_organizations(inn) ON DELETE CASCADE
+);
+
 -- Создание таблицы связи пользователь-организация
 CREATE TABLE IF NOT EXISTS user_organizations (
   user_id INTEGER NOT NULL,
@@ -66,7 +78,10 @@ CREATE TABLE IF NOT EXISTS user_organizations (
 CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id);
 CREATE INDEX IF NOT EXISTS idx_organizations_inn ON tracked_organizations(inn);
 CREATE INDEX IF NOT EXISTS idx_organizations_status ON tracked_organizations(status);
+CREATE INDEX IF NOT EXISTS idx_organizations_zsk_status ON tracked_organizations(zsk_status);
 CREATE INDEX IF NOT EXISTS idx_checks_inn ON organization_checks(inn);
 CREATE INDEX IF NOT EXISTS idx_checks_date ON organization_checks(check_date);
+CREATE INDEX IF NOT EXISTS idx_zsk_checks_inn ON zsk_checks(inn);
+CREATE INDEX IF NOT EXISTS idx_zsk_checks_date ON zsk_checks(check_date);
 CREATE INDEX IF NOT EXISTS idx_user_organizations_user_id ON user_organizations(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_organizations_inn ON user_organizations(inn);

@@ -80,6 +80,11 @@ export class PlatformZskService {
                 }, { timeout: 10000 });
                 await this.page.waitForTimeout(3000);
             }
+            //тут добавить скриншот страницы
+            const screenshot1 = await this.page.screenshot();
+            const screenshotPath1 = path.join(process.cwd(), 'screenshot.png');
+            fs.writeFileSync(screenshotPath1, screenshot1);
+            logger.info(`Screenshot saved to: ${screenshotPath1}`);
 
             // Заполняем форму
             await this.page.waitForSelector('#BlackINN_INN', { state: 'visible' });

@@ -26,6 +26,7 @@ export interface Organization {
   inn: string;
   name: string;
   status: 'red' | 'orange' | 'green' | 'removed';
+  zskStatus: 'red' | 'green';
   address?: string;
   websites?: string[];
   isLiquidated?: boolean;
@@ -46,6 +47,16 @@ export interface OrganizationCheck {
   checkDate: Date;
   status: 'red' | 'orange' | 'green' | 'removed';
   details: Record<string, any>;
+  notified: boolean;
+}
+
+// Типы для проверок ЗСК
+export interface ZskCheck {
+  id: number;
+  inn: string;
+  checkDate: Date;
+  status: 'red' | 'green';
+  resultText: string;
   notified: boolean;
 }
 
