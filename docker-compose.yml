@@ -33,7 +33,6 @@ services:
       # Playwright environment variables
       - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
       - PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome
-      - PLAYWRIGHT_HEADLESS=${PLAYWRIGHT_HEADLESS:-true}
       - DISPLAY=:99
       - CLAUDE_API_KEY=${CLAUDE_API_KEY}
 
