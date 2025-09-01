@@ -77,7 +77,7 @@ export class PlatformZskService {
             if (cloudflareCheck > 0) {
                 await this.page.waitForFunction(() => {
                     return !document.body.textContent?.includes('Проверка браузера');
-                }, { timeout: 30000 });
+                }, { timeout: 10000 });
                 await this.page.waitForTimeout(3000);
             }
 

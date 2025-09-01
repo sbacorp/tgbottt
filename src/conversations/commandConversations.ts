@@ -539,14 +539,7 @@ export async function checkCbrConversation(
 
   try {
     logger.info('Creating Platform ZSK service instance...');
-    // Создаем экземпляр сервиса
-    const platformZskService = new PlatformZskService();
     
-    logger.info('Initializing Platform ZSK service...');
-    // Инициализируем сервис
-    await platformZskService.init();
-    
-    await ctx.reply(`🔍 Проверяю ИНН: ${inn}`);
     
     // Выполняем проверку с 3 попытками
     let result: any = null;
@@ -557,14 +550,17 @@ export async function checkCbrConversation(
             if (attempt > 1) {
                 await ctx.reply(`🔄 Попытка #${attempt} из ${maxAttempts}...`);
             }
-            
+            const platformZskService = new PlatformZskService();
+            await platformZskService.init();
+    
+            await ctx.reply(`🔍 Проверяю ИНН: ${inn}`);
             result = await platformZskService.checkInn(inn);
             
             // Если получили результат без ошибки, выходим из цикла
             if (result && !result.error) {
                 break;
             }
-            
+            await platformZskService.close();
             // Если есть ошибка и это не последняя попытка
             if (attempt < maxAttempts) {
                 await ctx.reply(`⚠️ Ошибка на попытке #${attempt}. Повторяю через 3 секунды...`);
@@ -583,8 +579,6 @@ export async function checkCbrConversation(
         }
     }
     
-    // Закрываем сервис
-    await platformZskService.close();
     
     if (result.success) {
       await ctx.reply(`✅ Проверка ЦБР завершена!\n\n📋 Результат:\n${result.result}`);
