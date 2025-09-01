@@ -22,10 +22,17 @@ const logger = winston.createLogger({
   ]
 });
 
-// Добавление консольного транспорта для разработки
-if (process.env['NODE_ENV'] !== 'production') {
+// Добавление консольного транспорта
+// В Docker всегда выводим в консоль для просмотра через docker logs
+if (process.env['NODE_ENV'] !== 'production' || process.env['DOCKER_ENV'] === 'true') {
   logger.add(new winston.transports.Console({
-    format: winston.format.simple()
+    format: winston.format.combine(
+      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+      winston.format.colorize(),
+      winston.format.printf(({ timestamp, level, message, service }) => {
+        return `${timestamp} [${service}] ${level}: ${message}`;
+      })
+    )
   }));
 }
 

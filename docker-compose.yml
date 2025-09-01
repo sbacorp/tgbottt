@@ -24,6 +24,7 @@ services:
     container_name: cbr_bot_app
     environment:
       - NODE_ENV=production
+      - DOCKER_ENV=true
       - BOT_TOKEN=${BOT_TOKEN}
       - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
       - DATABASE_URL=postgresql://cbr_user:cbr_password@postgres:5432/cbr_bot
