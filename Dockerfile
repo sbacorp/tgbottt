@@ -27,10 +27,11 @@ RUN npm ci --ignore-scripts
 # Принудительно удаляем предустановленные бинарники Sharp
 RUN rm -rf node_modules/sharp/vendor
 
-# Устанавливаем Sharp заново с компиляцией из исходников
+# Устанавливаем Sharp заново с компиляцией из исходников для старых процессоров
 RUN npm_config_sharp_binary_host="" \
     npm_config_sharp_libvips_binary_host="" \
-    npm install sharp --build-from-source --verbose
+    npm_config_sharp_ignore_global_libvips=1 \
+    npm install sharp --build-from-source --verbose --force
 
 # Копирование исходного кода
 COPY . .
@@ -58,8 +59,10 @@ USER bot
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome
 ENV NODE_ENV=production
-ENV SHARP_IGNORE_GLOBAL_LIBVIPS=0
+ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 ENV DISPLAY=:99
+ENV npm_config_sharp_binary_host=""
+ENV npm_config_sharp_libvips_binary_host=""
 
 EXPOSE 3000
 
