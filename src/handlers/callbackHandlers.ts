@@ -342,16 +342,3 @@ async function handleRemoveAdminsCallback(ctx: MyContext): Promise<void> {
     await ctx.answerCallbackQuery('Ошибка при запуске снятия прав администраторов');
   }
 }
-
-/**
- * Обработчик callback для отмены conversation
- */
-async function handleCancelConversationCallback(ctx: MyContext): Promise<void> {
-  try {
-    await ctx.answerCallbackQuery('❌ Операция отменена');
-    await ctx.conversation.exit('check');
-  } catch (error) {
-    logger.error('Error in handleCancelConversationCallback:', error);
-    await ctx.answerCallbackQuery('Ошибка при отмене операции');
-  }
-}
