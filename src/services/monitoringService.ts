@@ -3,8 +3,8 @@ import { database } from '../database/index';
 import { FireCrawlService, KonturOrganizationData } from './firecrawlService';
 import { getNotificationService } from './notificationService';
 import logger from '../utils/logger';
-import { config } from '../utils/config';
 import { Organization } from '../types';
+import { formatCheckResult } from '../helpers/messages';
 
 export class MonitoringService {
   private firecrawlService: FireCrawlService;
@@ -155,10 +155,9 @@ export class MonitoringService {
     newData: KonturOrganizationData
   ): Promise<void> {
     try {
-      const statusEmoji = config.STATUS_EMOJIS[newData.status as keyof typeof config.STATUS_EMOJIS];
-      const statusMessage = config.STATUS_MESSAGE[newData.status as keyof typeof config.STATUS_MESSAGE];
+      const statusMessage = formatCheckResult(newData.status);
 
-      let message = `${statusEmoji} **Внимание! 🚦 ЗСК:**\n\n`;
+      let message = ``;
       
       // Добавляем информацию только если поле не пустое
       if (newData.liquidationDate) {
@@ -199,11 +198,6 @@ export class MonitoringService {
         message += `💬 **Комментарий:** ${newData.comment}\n`;
       }
 
-      // Добавляем информацию о признаках нелегальной деятельности
-      if (newData.hasIllegalActivity !== undefined) {
-        message += `🚨 **Признаки нелегальной деятельности:** ${newData.hasIllegalActivity ? 'Да' : 'Нет'}\n`;
-      }
-      
       message += `\n${statusMessage}\n`;
       // Добавляем информацию о рисках для оранжевого статуса
       if (newData.status === 'orange' && newData.riskInfo) {

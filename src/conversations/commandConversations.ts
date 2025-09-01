@@ -3,10 +3,11 @@ import { validateInnList, validateTelegramIdList, validateInn } from '../utils/v
 import { database } from '../database';
 import { monitoringService } from '../services/monitoringService';
 import { getNotificationService } from '../services/notificationService';
-import { MESSAGES, config } from '../utils/config';
+import { MESSAGES } from '../utils/config';
 import logger from '../utils/logger';
 import { Context } from "grammy";
 import { PlatformZskService } from '../services/platform_zsk';
+import { formatCheckResult } from '../helpers/messages';
 
 /**
  * Conversation для команды /check
@@ -43,7 +44,6 @@ export async function checkConversation(
     const result = await monitoringService.checkOrganization(inn);
     
     if (result) {
-      const statusMessage = config.STATUS_MESSAGE[result.status];
       
       let message = `📊 <b>Результат проверки ИНН ${inn}</b>\n\n`;
       message += `🏢 <b>Актуальное название компании:</b> ${result.name}\n`;
@@ -67,12 +67,11 @@ export async function checkConversation(
       if (result.activities && result.activities.length > 0) {
         message += `🏢 <b>Деятельность:</b> ${result.activities[0]}\n`;
       }
+      logger.info(JSON.stringify(result, null, 2), 'result');
+
+      const riskInfo = formatCheckResult(result.status);
+      message += riskInfo;
       
-      if (result.hasIllegalActivity !== undefined) {
-        message += `🚨 <b>Признаки нелегальной деятельности:</b> ${result.hasIllegalActivity ? 'Да' : 'Нет'}\n`;
-      }
-      
-      message += `🚦 ЗСК:\n${statusMessage}\n`;
       
       await ctx.reply(message, { parse_mode: 'HTML' });
     } else {
@@ -580,10 +579,16 @@ export async function checkCbrConversation(
     }
     
     
-    if (result.success) {
-      await ctx.reply(`✅ Проверка ЦБР завершена!\n\n📋 Результат:\n${result.result}`);
-    } else {
-      await ctx.reply(`❌ Ошибка при проверке ЦБР:\n Попробуйте позже`);
+          if (result.success) {
+        // Проверяем наличие слова "имеются" в результате
+        const hasIllegalActivity = result.result.toLowerCase().includes('имеются');
+        const statusIcon = hasIllegalActivity ? '🔴' : '🟢';
+        //удаляю Проверить ещё один ИНН из сообщения
+        const resMessage = result.result.replace('Проверить ещё один ИНН', '');
+        
+        await ctx.reply(`${statusIcon} Проверка ЦБР завершена!\n\n📋 Результат:\n${resMessage}`);
+      } else {
+        await ctx.reply(`❌ Ошибка при проверке ЦБР:\n Попробуйте позже`);
     }
   } catch (error) {
     logger.error('Error in Platform ZSK service:', error);

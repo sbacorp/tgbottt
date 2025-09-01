@@ -1,4 +1,4 @@
-import { STATUS_EMOJIS, STATUS_MESSAGE } from "../utils/config";
+import { STATUS_EMOJIS } from "../utils/config";
 
 export function formatOrganizationList(organizations: any[]): string {
   if (organizations.length === 0) {
@@ -10,7 +10,7 @@ export function formatOrganizationList(organizations: any[]): string {
   
   for (const org of organizations) {
     const emoji = STATUS_EMOJIS[org.status as keyof typeof STATUS_EMOJIS];
-    const statusMessage = STATUS_MESSAGE[org.status as keyof typeof STATUS_MESSAGE];
+    const statusMessage = formatCheckResult(org.status);
     
     message += `${emoji} <b>${org.inn}</b>\n`;
     message += `   Актуальное название компании: ${org.name || 'Не указано'}\n`;
@@ -20,11 +20,6 @@ export function formatOrganizationList(organizations: any[]): string {
     // Добавляем информацию о рисках для оранжевого статуса
     if (org.status === 'orange' && org.riskInfo) {
       message += `   ⚠️ Риски: ${org.riskInfo}\n`;
-    }
-    
-    // Добавляем информацию о признаках нелегальной деятельности
-    if (org.hasIllegalActivity !== undefined) {
-      message += `   🚨 Признаки нелегальной деятельности: ${org.hasIllegalActivity ? 'Да' : 'Нет'}\n`;
     }
     
     message += `\n${statusMessage}\n\n`;
@@ -51,29 +46,22 @@ export function formatUsersList(users: any[]): string {
   return message;
 }
 
-export function formatCheckResult(inn: string, result: any): string {
-  let riskEmoji = '❓';
-  if (result.riskLevel === 'high') riskEmoji = '🔴';
-  else if (result.riskLevel === 'medium') riskEmoji = '🟡';
-  else if (result.riskLevel === 'low') riskEmoji = '🟢';
-  
-  let message = `📊 <b>Результат проверки ИНН ${inn}</b>\n\n`;
-  message += `${riskEmoji} <b>Уровень риска:</b> ${result.riskLevel}\n`;
-  message += `📝 <b>Сообщение:</b> ${result.message}\n`;
-  
-  if (result.details) {
-    message += `\n📈 <b>Детали:</b>\n`;
-    if (result.details.liquidationFacts && result.details.liquidationFacts > 0) {
-      message += `🔴 Факты ликвидации/банкротства: ${result.details.liquidationFacts}\n`;
-    }
-    if (result.details.attentionFacts && result.details.attentionFacts > 0) {
-      message += `� Факты внимания: ${result.details.attentionFacts}\n`;
-    }
-    if (result.details.favorableFacts && result.details.favorableFacts > 0) {
-      message += `🟢 Благоприятные факты: ${result.details.favorableFacts}\n`;
-    }
+export function formatCheckResult(status: any): string {
+
+  let message = '';
+  if (status === 'red') {
+    message += `🔴 <b>Уровень риска:</b> Внимание! Компания находится в красной зоне.\n`;
+    message += `🚫 <b>Рекомендация:</b> работать с данной компанией не рекомендуется.\n`;
+  } else if (status === 'orange') {
+    message += `🟡 <b>Уровень риска:</b> Средний уровень риска.\n`;
+    message += `⚠️ <b>Рекомендация:</b> работать с осторожностью\n`;
+  } else if (status === 'green') {
+    message += `🟢 <b>Уровень риска:</b> Низкий уровень риска.\n`;
+    message += `✅ <b>Рекомендация:</b> работа с компанией одобрена\n`;
+  } else {
+    message += `🟢 <b>Уровень риска:</b> Низкий уровень риска.\n`;
+    message += `✅ <b>Рекомендация:</b> работа с компанией одобрена\n`;
   }
-  
   return message;
 }
 

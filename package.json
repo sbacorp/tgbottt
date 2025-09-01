@@ -6,6 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/bot.js",
+    "dev": "tsc && npm start",
+    "dev:watch": "concurrently \"tsc --watch\" \"nodemon dist/bot.js\"",
     "init-db": "node scripts/init-db.js",
     "init-admin": "node scripts/init-admin.js",
     "docker:build": "docker build -t cbr-monitoring-bot .",
@@ -13,6 +15,7 @@
     "docker:stop": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
     "docker:rebuild": "docker-compose down && docker-compose build --no-cache && docker-compose up -d",
+    "docker:dev": "docker-compose down && docker-compose up --build",
     "test:playwright": "node test-playwright.js"
   },
   "keywords": [
@@ -47,6 +50,7 @@
     "@types/node": "^20.10.4",
     "@types/node-cron": "^3.0.11",
     "@types/pg": "^8.10.9",
+    "concurrently": "^8.2.2",
     "nodemon": "^3.0.2",
     "ts-node": "^10.9.1",
     "typescript": "^5.3.3"

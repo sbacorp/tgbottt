@@ -21,7 +21,7 @@ export class PlatformZskService {
     async init(): Promise<void> {
         try {
             this.browser = await chromium.launch({
-                headless: true,
+                headless: false,
                 slowMo: 1000,
                 args: [
                     '--no-sandbox',
@@ -214,7 +214,7 @@ export class PlatformZskService {
             const base64Image = imageBuffer.toString('base64');
 
             const message = await this.anthropic.messages.create({
-                model: 'claude-3-5-sonnet-20241022',
+                model: 'claude-sonnet-4-0',
                 max_tokens: 1000,
                 messages: [
                     {

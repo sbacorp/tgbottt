@@ -6,6 +6,7 @@ import { monitoringService } from '../services/monitoringService';
 import { MESSAGES, config } from '../utils/config';
 import { isBotAdmin } from '../guards/admin';
 import logger from '../utils/logger';
+import { createMainMenuKeyboard } from '../helpers/keyboard';
 
 /**
  * Обработчик команды /start
@@ -58,30 +59,15 @@ export async function handleStart(ctx: MyContext): Promise<void> {
     ctx.session.isAdmin = (user?.is_admin || isAdmin) ?? false;
     ctx.session.language = 'ru';
 
-    // Создание клавиатуры с кнопками согласно ТЗ
-    const keyboard = {
-      inline_keyboard: [
-        [
-          { text: '📋 Меню', callback_data: 'menu' },
-          { text: '➕ Добавить ИНН', callback_data: 'add_inn' }
-        ]
-      ]
-    };
-
-    // Добавление административных кнопок
-    if (ctx.session.isAdmin) {
-      keyboard.inline_keyboard.push([
-        { text: '👥 Список получателей', callback_data: 'users_list' },
-        { text: '⚙️ Управление получателями', callback_data: 'manage_users' }
-      ]);
-      keyboard.inline_keyboard.push([
-        { text: '🔧 Управление администраторами', callback_data: 'manage_admins' }
-      ]);
-    }
+    const keyboard = createMainMenuKeyboard(ctx.session.isAdmin);
 
     // Отправка приветственного сообщения с кнопками
-    await ctx.reply(MESSAGES.welcome, { reply_markup: keyboard });
-    
+    if (ctx.session.isAdmin) {
+      await ctx.reply(MESSAGES.welcome, { reply_markup: keyboard });
+    } else {
+      await ctx.reply(MESSAGES.welcome);
+    }
+
     logger.info(`User ${telegramId} (@${username}) started the bot (isAdmin: ${ctx.session.isAdmin})`);
   } catch (error) {
     logger.error('Error in handleStart:', error);
@@ -94,30 +80,12 @@ export async function handleStart(ctx: MyContext): Promise<void> {
  */
 export async function handleMenu(ctx: MyContext): Promise<void> {
   try {
-    if (!ctx.session.isRegistered) {
-      await ctx.reply(MESSAGES.notRegistered);
+    if (!ctx.session.isAdmin) {
+      await ctx.reply('команда доступна только для администраторов');
       return;
     }
 
-    const keyboard = {
-      inline_keyboard: [
-        [
-          { text: '📋 Список организаций', callback_data: 'organizations_list' },
-          { text: '➕ Добавить ИНН', callback_data: 'add_inn' }
-        ]
-      ]
-    };
-
-    // Добавление административных кнопок
-    if (ctx.session.isAdmin) {
-      keyboard.inline_keyboard.push([
-        { text: '👥 Список получателей', callback_data: 'users_list' },
-        { text: '⚙️ Управление получателями', callback_data: 'manage_users' }
-      ]);
-      keyboard.inline_keyboard.push([
-        { text: '🔧 Управление администраторами', callback_data: 'manage_admins' }
-      ]);
-    }
+    const keyboard = createMainMenuKeyboard(ctx.session.isAdmin);
 
     await ctx.reply('Выберите действие:', { reply_markup: keyboard });
   } catch (error) {
@@ -131,8 +99,8 @@ export async function handleMenu(ctx: MyContext): Promise<void> {
  */
 export async function handleOrganizations(ctx: MyContext): Promise<void> {
   try {
-    if (!ctx.session.isRegistered) {
-      await ctx.reply(MESSAGES.notRegistered);
+    if (!ctx.session.isAdmin) {
+      await ctx.reply('команда доступна только для администраторов');
       return;
     }
 
@@ -152,8 +120,8 @@ export async function handleOrganizations(ctx: MyContext): Promise<void> {
  */
 export async function handleAddInn(ctx: MyContext): Promise<void> {
   try {
-    if (!ctx.session.isRegistered) {
-      await ctx.reply(MESSAGES.notRegistered);
+    if (!ctx.session.isAdmin) {
+      await ctx.reply('команда доступна только для администраторов');
       return;
     }
 
@@ -170,8 +138,8 @@ export async function handleAddInn(ctx: MyContext): Promise<void> {
  */
 export async function handleRemoveInn(ctx: MyContext): Promise<void> {
   try {
-    if (!ctx.session.isRegistered || !ctx.session.isAdmin) {
-      await ctx.reply(MESSAGES.adminOnly);
+    if (!ctx.session.isAdmin) {
+      await ctx.reply('команда доступна только для администраторов');
       return;
     }
 
@@ -188,8 +156,8 @@ export async function handleRemoveInn(ctx: MyContext): Promise<void> {
  */
 export async function handleUsers(ctx: MyContext): Promise<void> {
   try {
-    if (!ctx.session.isRegistered || !ctx.session.isAdmin) {
-      await ctx.reply(MESSAGES.adminOnly);
+    if (!ctx.session.isAdmin) {
+      await ctx.reply('команда доступна только для администраторов');
       return;
     }
 
@@ -330,7 +298,8 @@ export async function handleStatus(ctx: MyContext): Promise<void> {
  */
 export async function handleHelp(ctx: MyContext): Promise<void> {
   try {
-    const helpMessage = `🤖 <b>Справка по командам бота</b>\n\n` +
+
+    const helpMessageAdmin = `🤖 <b>Справка по командам бота</b>\n\n` +
       `<b>Основные команды:</b>\n` +
       `/start - Запуск бота\n` +
       `/menu - Главное меню\n` +
@@ -356,7 +325,19 @@ export async function handleHelp(ctx: MyContext): Promise<void> {
       `/add_users 123456789 987654321\n` +
       `/add_admins 123456789 987654321`;
 
-    await ctx.reply(helpMessage, { parse_mode: 'HTML' });
+    const helpMessage = `🤖 <b>Справка по командам бота</b>\n\n` +
+      `<b>Основные команды:</b>\n` +
+      `/start - Запуск бота\n` +
+      `/check - Проверить конкретную организацию\n` +
+      `/check_cbr - Проверить организацию по зск ЦБР\n` +
+      `/help - Эта справка\n\n`;
+    
+    if (ctx.session.isAdmin) {
+      await ctx.reply(helpMessageAdmin, { parse_mode: 'HTML' });
+    } else {
+      await ctx.reply(helpMessage, { parse_mode: 'HTML' });
+    }
+
   } catch (error) {
     logger.error('Error in handleHelp:', error);
     await ctx.reply(MESSAGES.error);

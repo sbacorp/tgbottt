@@ -12,28 +12,12 @@ function getPrivateChatCommands(): BotCommand[] {
       description: "Запуск бота",
     },
     {
-      command: "menu",
-      description: "Главное меню",
-    },
-    {
-      command: "organizations",
-      description: "Список организаций",
-    },
-    {
-      command: "add_inn",
-      description: "Добавить ИНН для отслеживания",
-    },
-    {
       command: "check",
       description: "Проверить организацию",
     },
     {
       command: "check_cbr",
       description: "Проверить ЦБР",
-    },
-    {
-      command: "status",
-      description: "Статус системы",
     },
     {
       command: "help",
@@ -67,6 +51,18 @@ function getPrivateChatAdminCommands(): BotCommand[] {
     {
       command: "remove_inn",
       description: "Удалить ИНН из отслеживания",
+    },
+    {
+      command: "organizations",
+      description: "Список организаций",
+    },
+    {
+      command: "add_inn",
+      description: "Добавить ИНН для отслеживания",
+    },
+    {
+      command: "status",
+      description: "Статус системы",
     },
     {
       command: "setcommands",
