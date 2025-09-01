@@ -35,6 +35,8 @@ services:
       - PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome
       - DISPLAY=:99
       - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      # Sharp environment variables
+      - SHARP_IGNORE_GLOBAL_LIBVIPS=0
     depends_on:
       - postgres
     networks:
@@ -44,6 +46,12 @@ services:
     privileged: true
     # Добавляем shared memory для браузера
     shm_size: '2gb'
+    # Добавляем возможности для работы с браузером
+    cap_add:
+      - SYS_ADMIN
+    # Отключаем песочницу для Chrome
+    security_opt:
+      - seccomp:unconfined
 
 volumes:
   postgres_data:

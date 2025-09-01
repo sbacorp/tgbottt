@@ -11,7 +11,9 @@
     "docker:build": "docker build -t cbr-monitoring-bot .",
     "docker:run": "docker-compose up -d",
     "docker:stop": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "docker:logs": "docker-compose logs -f",
+    "docker:rebuild": "docker-compose down && docker-compose build --no-cache && docker-compose up -d",
+    "test:playwright": "node test-playwright.js"
   },
   "keywords": [
     "telegram",

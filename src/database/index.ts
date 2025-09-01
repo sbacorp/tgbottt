@@ -10,6 +10,10 @@ class Database {
   constructor() {
     this.client = new Pool({
       connectionString: config.databaseUrl,
+      // Дополнительные настройки для стабильности соединения
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000,
     });
   }
 
@@ -18,7 +22,9 @@ class Database {
    */
   async connect(): Promise<void> {
     try {
-      await this.client.connect();
+      // Проверяем соединение
+      const client = await this.client.connect();
+      client.release();
       logger.info('Connected to PostgreSQL database');
       
       // Создание таблиц
