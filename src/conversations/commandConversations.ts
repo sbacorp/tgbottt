@@ -548,8 +548,40 @@ export async function checkCbrConversation(
     
     await ctx.reply(`🔍 Проверяю ИНН: ${inn}`);
     
-    // Выполняем проверку
-    const result = await platformZskService.checkInn(inn);
+    // Выполняем проверку с 3 попытками
+    let result: any = null;
+    const maxAttempts = 3;
+    
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+            if (attempt > 1) {
+                await ctx.reply(`🔄 Попытка #${attempt} из ${maxAttempts}...`);
+            }
+            
+            result = await platformZskService.checkInn(inn);
+            
+            // Если получили результат без ошибки, выходим из цикла
+            if (result && !result.error) {
+                break;
+            }
+            
+            // Если есть ошибка и это не последняя попытка
+            if (attempt < maxAttempts) {
+                await ctx.reply(`⚠️ Ошибка на попытке #${attempt}. Повторяю через 3 секунды...`);
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            }
+            
+        } catch (error) {
+            logger.error(`Ошибка при проверке ИНН ${inn}, попытка ${attempt}:`, error);
+            
+            if (attempt < maxAttempts) {
+                await ctx.reply(`❌ Ошибка на попытке #${attempt}. Повторяю через 3 секунды...`);
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            } else {
+                result = { error: `Ошибка после ${maxAttempts} попыток: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}` };
+            }
+        }
+    }
     
     // Закрываем сервис
     await platformZskService.close();

@@ -5,10 +5,8 @@ FROM mcr.microsoft.com/playwright:v1.55.0-jammy
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y nodejs
 
-# КРИТИЧНО: Установка libvips для Sharp
+# Установка базовых зависимостей
 RUN apt-get update && apt-get install -y \
-    libvips-dev \
-    libvips42 \
     build-essential \
     python3 \
     make \
@@ -21,17 +19,8 @@ WORKDIR /app
 # Копирование файлов зависимостей
 COPY package*.json ./
 
-# Установка всех зависимостей включая Sharp (но игнорируем скрипты установки)
-RUN npm ci --ignore-scripts
-
-# Принудительно удаляем предустановленные бинарники Sharp
-RUN rm -rf node_modules/sharp/vendor
-
-# Устанавливаем Sharp заново с компиляцией из исходников для старых процессоров
-RUN npm_config_sharp_binary_host="" \
-    npm_config_sharp_libvips_binary_host="" \
-    npm_config_sharp_ignore_global_libvips=1 \
-    npm install sharp --build-from-source --verbose --force
+# Установка зависимостей
+RUN npm ci
 
 # Копирование исходного кода
 COPY . .
@@ -39,8 +28,8 @@ COPY . .
 # Сборка TypeScript
 RUN npm run build
 
-# Удаление dev-зависимостей (но оставляем build tools для Sharp)
-RUN npm prune --production --ignore-scripts
+# Удаление dev-зависимостей
+RUN npm prune --production
 
 # Создание пользователя для безопасности  
 RUN groupadd -r bot && useradd -r -g bot bot
@@ -59,13 +48,10 @@ USER bot
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome
 ENV NODE_ENV=production
-ENV SHARP_IGNORE_GLOBAL_LIBVIPS=1
 ENV DISPLAY=:99
-ENV npm_config_sharp_binary_host=""
-ENV npm_config_sharp_libvips_binary_host=""
 
 EXPOSE 3000
 
-# Используем entrypoint для установки Sharp в runtime
+# Используем entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["npm", "start"]

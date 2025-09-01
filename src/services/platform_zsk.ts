@@ -3,7 +3,7 @@ import logger from '../utils/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
-import sharp from 'sharp';
+import Jimp from 'jimp';
 import { config } from '../utils/config';
 
 export class PlatformZskService {
@@ -181,13 +181,15 @@ export class PlatformZskService {
 
     async enhanceImageForOCR(inputPath: string, outputPath: string): Promise<boolean> {
         try {
-            await sharp(inputPath)
-                .modulate({ brightness: 1.2, saturation: 0.5 })
-                .linear(1.5, -(128 * 1.5) + 128)
-                .sharpen(1, 1, 2)
-                .grayscale()
-                .resize(undefined, 800, { height: 800, withoutEnlargement: false })
-                .toFile(outputPath);
+            const image = await Jimp.read(inputPath);
+            
+            await image
+                .brightness(0.2)        // Увеличиваем яркость (+20%)
+                .contrast(0.5)          // Увеличиваем контрастность (+50%)
+                .greyscale()            // Делаем черно-белым
+                .resize(Jimp.AUTO, 800) // Изменяем размер до высоты 800px
+                .writeAsync(outputPath);
+                
             return true;
         } catch (error) {
             logger.error('Ошибка обработки изображения:', error);

@@ -35,10 +35,7 @@ services:
       - PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome
       - DISPLAY=:99
       - CLAUDE_API_KEY=${CLAUDE_API_KEY}
-      # Sharp environment variables
-      - SHARP_IGNORE_GLOBAL_LIBVIPS=1
-      - npm_config_sharp_binary_host=""
-      - npm_config_sharp_libvips_binary_host=""
+
     depends_on:
       - postgres
     networks:
