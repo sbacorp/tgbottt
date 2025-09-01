@@ -15,7 +15,7 @@ class NotificationService {
   async sendNotification(userId: number, message: string): Promise<boolean> {
     try {
       await this.bot.api.sendMessage(userId, message, {
-        parse_mode: 'Markdown'
+        parse_mode: 'HTML'
       });
       
       logger.info(`Notification sent to user ${userId}`);

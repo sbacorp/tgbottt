@@ -168,40 +168,40 @@ export class MonitoringService {
         message += `🏢 **Актуальное название компании:** ${newData.name}\n`;
       }
       
-      message += `🔢 **ИНН:** ${inn}\n`;
+      message += `🔢 <b>ИНН:</b> ${inn}\n`;
       
       if (newData.address) {
-        message += `📍 **Адрес:** ${newData.address}\n`;
+        message += `📍 <b>Адрес:</b> ${newData.address}\n`;
       }
       
       if (newData.websites && newData.websites.length > 0) {
-        message += `🌐 **Список веб-сайтов компании:** ${newData.websites.join(', ')}\n`;
+        message += `🌐 <b>Список веб-сайтов компании:</b> ${newData.websites.join(', ')}\n`;
       }
       
       if (newData.isLiquidated !== undefined) {
-        message += `⚠️ **Ликвидирована ли организация:** ${newData.isLiquidated ? 'Да' : 'Нет'}\n`;
+        message += `⚠️ <b>Ликвидирована ли организация:</b> ${newData.isLiquidated ? 'Да' : 'Нет'}\n`;
       }
       
       if (newData.illegalitySigns && newData.illegalitySigns.length > 0) {
-        message += `🚨 **Санкции:** ${newData.illegalitySigns.join(', ')}\n`;
+        message += `🚨 <b>Санкции:</b> ${newData.illegalitySigns.join(', ')}\n`;
       }
       
       if (newData.region) {
-        message += `🗺 **Регион:** ${newData.region}\n`;
+        message += `🗺 <b>Регион:</b> ${newData.region}\n`;
       }
       
       if (newData.additionalInfo) {
-        message += `📋 **Доп информация:** ${newData.additionalInfo}\n`;
+        message += `📋 <b>Доп информация:</b> ${newData.additionalInfo}\n`;
       }
       
       if (newData.comment) {
-        message += `💬 **Комментарий:** ${newData.comment}\n`;
+        message += `💬 <b>Комментарий:</b> ${newData.comment}\n`;
       }
 
       message += `\n${statusMessage}\n`;
       // Добавляем информацию о рисках для оранжевого статуса
       if (newData.status === 'orange' && newData.riskInfo) {
-        message += `\n⚠️ **Риски:**\n${newData.riskInfo}\n`;
+        message += `\n⚠️ <b>Риски:</b>\n${newData.riskInfo}\n`;
       }
 
 
