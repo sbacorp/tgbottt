@@ -21,7 +21,7 @@ export class PlatformZskService {
     async init(): Promise<void> {
         try {
             this.browser = await chromium.launch({
-                headless: false,
+                headless: true,
                 slowMo: 1000,
                 args: [
                     '--no-sandbox',
