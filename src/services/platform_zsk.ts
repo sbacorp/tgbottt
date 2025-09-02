@@ -34,16 +34,21 @@ export class PlatformZskService {
             });
 
             this.page = await this.browser.newPage({
-                userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             });
 
             await this.page.setExtraHTTPHeaders({
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                 'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8',
                 'Accept-Encoding': 'gzip, deflate, br',
+                'Cache-Control': 'max-age=0',
                 'DNT': '1',
                 'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1'
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Sec-Fetch-User': '?1'
             });
 
             await this.page.addInitScript(() => {
@@ -72,14 +77,8 @@ export class PlatformZskService {
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(3000);
 
-            // Проверяем Cloudflare
-            const cloudflareCheck = await this.page.locator('text="Проверка браузера"').count();
-            if (cloudflareCheck > 0) {
-                await this.page.waitForFunction(() => {
-                    return !document.body.textContent?.includes('Проверка браузера');
-                }, { timeout: 10000 });
-                await this.page.waitForTimeout(3000);
-            }
+            // Улучшенная проверка и обход Cloudflare/DDoS-GUARD
+            await this.handleCloudflareProtection();
             //тут добавить скриншот страницы
             const screenshot1 = await this.page.screenshot();
             const screenshotPath1 = path.join(process.cwd(), 'screenshot.png');
@@ -272,6 +271,78 @@ export class PlatformZskService {
                 success: false, 
                 error: error instanceof Error ? error.message : String(error) 
             };
+        }
+    }
+
+    /**
+     * Обрабатывает Cloudflare/DDoS-GUARD защиту
+     */
+    private async handleCloudflareProtection(): Promise<void> {
+        try {
+            logger.info('Проверяем наличие Cloudflare/DDoS-GUARD защиты...');
+            
+            // Ждем появления защиты или основного контента
+            await this.page?.waitForTimeout(2000);
+            
+            // Проверяем различные типы защиты
+            const protectionSelectors = [
+                'text="Проверка браузера"',
+                'text="Checking your browser"',
+                'text="DDOS-GUARD"',
+                'text="I\'m not a robot"',
+                '[data-testid="checkbox-iframe"]',
+                '.cf-browser-verification',
+                '#cf-please-wait'
+            ];
+            
+            let hasProtection = false;
+            for (const selector of protectionSelectors) {
+                try {
+                    const count = await this.page?.locator(selector).count() || 0;
+                    if (count > 0) {
+                        hasProtection = true;
+                        logger.info(`Обнаружена защита: ${selector}`);
+                        break;
+                    }
+                } catch (e) {
+                    // Игнорируем ошибки для несуществующих селекторов
+                }
+            }
+            
+            if (hasProtection) {
+                logger.info('Ожидаем прохождения проверки защиты...');
+                
+                // Ждем исчезновения защиты или появления основного контента
+                await this.page?.waitForFunction(() => {
+                    const bodyText = document.body.textContent || '';
+                    const hasProtection = bodyText.includes('Проверка браузера') || 
+                                        bodyText.includes('Checking your browser') ||
+                                        bodyText.includes('DDOS-GUARD') ||
+                                        bodyText.includes('not a robot');
+                    
+                    const hasMainContent = document.querySelector('#BlackINN_INN') !== null;
+                    
+                    return !hasProtection || hasMainContent;
+                }, { timeout: 30000 });
+                
+                // Дополнительная пауза после прохождения защиты
+                await this.page?.waitForTimeout(5000);
+                
+                logger.info('Защита пройдена успешно');
+            } else {
+                logger.info('Защита не обнаружена, продолжаем...');
+            }
+            
+            // Проверяем, что основная форма загрузилась
+            await this.page?.waitForSelector('#BlackINN_INN', { 
+                state: 'visible', 
+                timeout: 15000 
+            });
+            
+        } catch (error) {
+            logger.error('Ошибка при обработке Cloudflare защиты:', error);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            throw new Error(`Не удалось пройти Cloudflare защиту: ${errorMessage}`);
         }
     }
 
