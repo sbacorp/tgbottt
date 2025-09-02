@@ -34,7 +34,9 @@ export class PlatformZskService {
             });
 
             this.page = await this.browser.newPage({
-                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                locale: 'ru-RU',
+                timezoneId: 'Europe/Moscow'
             });
 
             await this.page.setExtraHTTPHeaders({
@@ -49,6 +51,27 @@ export class PlatformZskService {
                 'Sec-Fetch-Mode': 'navigate',
                 'Sec-Fetch-Site': 'none',
                 'Sec-Fetch-User': '?1'
+            });
+
+            // Устанавливаем русский язык и часовой пояс
+            await this.page.addInitScript(() => {
+                // Устанавливаем русский язык
+                Object.defineProperty(navigator, 'language', {
+                    get: () => 'ru-RU',
+                });
+                Object.defineProperty(navigator, 'languages', {
+                    get: () => ['ru-RU', 'ru', 'en-US', 'en'],
+                });
+                
+                // Устанавливаем русский часовой пояс
+                Object.defineProperty(Intl, 'DateTimeFormat', {
+                    get: () => function(locale: string, options: any) {
+                        if (locale === 'ru-RU') {
+                            return new Intl.DateTimeFormat('ru-RU', { ...options, timeZone: 'Europe/Moscow' });
+                        }
+                        return new Intl.DateTimeFormat(locale, options);
+                    }
+                });
             });
 
             await this.page.addInitScript(() => {
@@ -290,22 +313,73 @@ export class PlatformZskService {
                 'text="Checking your browser"',
                 'text="DDOS-GUARD"',
                 'text="I\'m not a robot"',
+                'text="Sorry, we could not verify"',
+                'text="Complete the manual check"',
                 '[data-testid="checkbox-iframe"]',
                 '.cf-browser-verification',
-                '#cf-please-wait'
+                '#cf-please-wait',
+                'iframe[src*="ddos-guard"]',
+                'iframe[src*="cloudflare"]',
+                '.ddos-guard',
+                '.cloudflare'
             ];
             
             let hasProtection = false;
+            
+            // Проверяем по селекторам
             for (const selector of protectionSelectors) {
                 try {
                     const count = await this.page?.locator(selector).count() || 0;
                     if (count > 0) {
                         hasProtection = true;
-                        logger.info(`Обнаружена защита: ${selector}`);
+                        logger.info(`Обнаружена защита по селектору: ${selector}`);
                         break;
                     }
                 } catch (e) {
                     // Игнорируем ошибки для несуществующих селекторов
+                }
+            }
+            
+            // Дополнительная проверка по содержимому страницы
+            if (!hasProtection) {
+                try {
+                    const pageContent = await this.page?.content() || '';
+                    const protectionKeywords = [
+                        'Проверка браузера',
+                        'Checking your browser',
+                        'DDOS-GUARD',
+                        'I\'m not a robot',
+                        'Sorry, we could not verify',
+                        'Complete the manual check',
+                        'verify your browser',
+                        'manual check',
+                        'cloudflare',
+                        'ddos-guard'
+                    ];
+                    
+                    for (const keyword of protectionKeywords) {
+                        if (pageContent.toLowerCase().includes(keyword.toLowerCase())) {
+                            hasProtection = true;
+                            logger.info(`Обнаружена защита по ключевому слову: ${keyword}`);
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    logger.warn('Не удалось проверить содержимое страницы:', e);
+                }
+            }
+            
+            // Проверяем наличие iframe'ов (часто признак защиты)
+            if (!hasProtection) {
+                try {
+                    const iframeCount = await this.page?.locator('iframe').count() || 0;
+                    if (iframeCount > 0) {
+                        logger.info(`Обнаружено ${iframeCount} iframe'ов, возможна защита`);
+                        // Если есть iframe'ы, считаем что защита есть
+                        hasProtection = true;
+                    }
+                } catch (e) {
+                    logger.warn('Не удалось проверить iframe\'ы:', e);
                 }
             }
             
@@ -331,6 +405,18 @@ export class PlatformZskService {
                 logger.info('Защита пройдена успешно');
             } else {
                 logger.info('Защита не обнаружена, продолжаем...');
+                
+                // Делаем скриншот для диагностики
+                try {
+                    const screenshot = await this.page?.screenshot();
+                    if (screenshot) {
+                        const screenshotPath = path.join(process.cwd(), 'no_protection_detected.png');
+                        fs.writeFileSync(screenshotPath, screenshot);
+                        logger.info(`Скриншот сохранен для диагностики: ${screenshotPath}`);
+                    }
+                } catch (e) {
+                    logger.warn('Не удалось сделать скриншот для диагностики:', e);
+                }
             }
             
             // Проверяем, что основная форма загрузилась
