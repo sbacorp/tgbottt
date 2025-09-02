@@ -16,7 +16,8 @@
     "docker:logs": "docker-compose logs -f",
     "docker:rebuild": "docker-compose down && docker-compose build --no-cache && docker-compose up -d",
     "docker:dev": "docker-compose down && docker-compose up --build",
-    "test:playwright": "node test-playwright.js"
+    "test:playwright": "node test-playwright.js",
+    "test:proxy": "node test-proxy.js"
   },
   "keywords": [
     "telegram",

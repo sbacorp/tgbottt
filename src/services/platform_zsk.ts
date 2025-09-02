@@ -20,7 +20,7 @@ export class PlatformZskService {
 
     async init(): Promise<void> {
         try {
-            this.browser = await chromium.launch({
+            const launchOptions: any = {
                 headless: true,
                 slowMo: 1000,
                 args: [
@@ -31,47 +31,42 @@ export class PlatformZskService {
                     '--disable-web-security',
                     '--disable-blink-features=AutomationControlled'
                 ]
-            });
+            };
+
+            // Добавляем прокси если он включен
+            // Поддерживаются HTTP/HTTPS, SOCKS4/SOCKS5 прокси с аутентификацией
+            if (config.proxy.enabled && config.proxy.server) {
+                launchOptions.proxy = {
+                    server: config.proxy.server
+                };
+                
+                // Добавляем аутентификацию прокси если указаны учетные данные
+                if (config.proxy.username && config.proxy.password) {
+                    launchOptions.proxy.username = config.proxy.username;
+                    launchOptions.proxy.password = config.proxy.password;
+                }
+                
+                // Добавляем исключения для прокси если указаны
+                if (config.proxy.bypass) {
+                    launchOptions.proxy.bypass = config.proxy.bypass;
+                }
+                
+                logger.info(`Proxy enabled: ${config.proxy.server}`);
+            }
+
+            this.browser = await chromium.launch(launchOptions);
 
             this.page = await this.browser.newPage({
-                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                locale: 'ru-RU',
-                timezoneId: 'Europe/Moscow'
+                userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             });
 
             await this.page.setExtraHTTPHeaders({
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                 'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8',
                 'Accept-Encoding': 'gzip, deflate, br',
-                'Cache-Control': 'max-age=0',
                 'DNT': '1',
                 'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1',
-                'Sec-Fetch-Dest': 'document',
-                'Sec-Fetch-Mode': 'navigate',
-                'Sec-Fetch-Site': 'none',
-                'Sec-Fetch-User': '?1'
-            });
-
-            // Устанавливаем русский язык и часовой пояс
-            await this.page.addInitScript(() => {
-                // Устанавливаем русский язык
-                Object.defineProperty(navigator, 'language', {
-                    get: () => 'ru-RU',
-                });
-                Object.defineProperty(navigator, 'languages', {
-                    get: () => ['ru-RU', 'ru', 'en-US', 'en'],
-                });
-                
-                // Устанавливаем русский часовой пояс
-                Object.defineProperty(Intl, 'DateTimeFormat', {
-                    get: () => function(locale: string, options: any) {
-                        if (locale === 'ru-RU') {
-                            return new Intl.DateTimeFormat('ru-RU', { ...options, timeZone: 'Europe/Moscow' });
-                        }
-                        return new Intl.DateTimeFormat(locale, options);
-                    }
-                });
+                'Upgrade-Insecure-Requests': '1'
             });
 
             await this.page.addInitScript(() => {
@@ -100,8 +95,14 @@ export class PlatformZskService {
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(3000);
 
-            // Улучшенная проверка и обход Cloudflare/DDoS-GUARD
-            await this.handleCloudflareProtection();
+            // Проверяем Cloudflare
+            const cloudflareCheck = await this.page.locator('text="Проверка браузера"').count();
+            if (cloudflareCheck > 0) {
+                await this.page.waitForFunction(() => {
+                    return !document.body.textContent?.includes('Проверка браузера');
+                }, { timeout: 10000 });
+                await this.page.waitForTimeout(3000);
+            }
             //тут добавить скриншот страницы
             const screenshot1 = await this.page.screenshot();
             const screenshotPath1 = path.join(process.cwd(), 'screenshot.png');
@@ -294,141 +295,6 @@ export class PlatformZskService {
                 success: false, 
                 error: error instanceof Error ? error.message : String(error) 
             };
-        }
-    }
-
-    /**
-     * Обрабатывает Cloudflare/DDoS-GUARD защиту
-     */
-    private async handleCloudflareProtection(): Promise<void> {
-        try {
-            logger.info('Проверяем наличие Cloudflare/DDoS-GUARD защиты...');
-            
-            // Ждем появления защиты или основного контента
-            await this.page?.waitForTimeout(2000);
-            
-            // Проверяем различные типы защиты
-            const protectionSelectors = [
-                'text="Проверка браузера"',
-                'text="Checking your browser"',
-                'text="DDOS-GUARD"',
-                'text="I\'m not a robot"',
-                'text="Sorry, we could not verify"',
-                'text="Complete the manual check"',
-                '[data-testid="checkbox-iframe"]',
-                '.cf-browser-verification',
-                '#cf-please-wait',
-                'iframe[src*="ddos-guard"]',
-                'iframe[src*="cloudflare"]',
-                '.ddos-guard',
-                '.cloudflare'
-            ];
-            
-            let hasProtection = false;
-            
-            // Проверяем по селекторам
-            for (const selector of protectionSelectors) {
-                try {
-                    const count = await this.page?.locator(selector).count() || 0;
-                    if (count > 0) {
-                        hasProtection = true;
-                        logger.info(`Обнаружена защита по селектору: ${selector}`);
-                        break;
-                    }
-                } catch (e) {
-                    // Игнорируем ошибки для несуществующих селекторов
-                }
-            }
-            
-            // Дополнительная проверка по содержимому страницы
-            if (!hasProtection) {
-                try {
-                    const pageContent = await this.page?.content() || '';
-                    const protectionKeywords = [
-                        'Проверка браузера',
-                        'Checking your browser',
-                        'DDOS-GUARD',
-                        'I\'m not a robot',
-                        'Sorry, we could not verify',
-                        'Complete the manual check',
-                        'verify your browser',
-                        'manual check',
-                        'cloudflare',
-                        'ddos-guard'
-                    ];
-                    
-                    for (const keyword of protectionKeywords) {
-                        if (pageContent.toLowerCase().includes(keyword.toLowerCase())) {
-                            hasProtection = true;
-                            logger.info(`Обнаружена защита по ключевому слову: ${keyword}`);
-                            break;
-                        }
-                    }
-                } catch (e) {
-                    logger.warn('Не удалось проверить содержимое страницы:', e);
-                }
-            }
-            
-            // Проверяем наличие iframe'ов (часто признак защиты)
-            if (!hasProtection) {
-                try {
-                    const iframeCount = await this.page?.locator('iframe').count() || 0;
-                    if (iframeCount > 0) {
-                        logger.info(`Обнаружено ${iframeCount} iframe'ов, возможна защита`);
-                        // Если есть iframe'ы, считаем что защита есть
-                        hasProtection = true;
-                    }
-                } catch (e) {
-                    logger.warn('Не удалось проверить iframe\'ы:', e);
-                }
-            }
-            
-            if (hasProtection) {
-                logger.info('Ожидаем прохождения проверки защиты...');
-                
-                // Ждем исчезновения защиты или появления основного контента
-                await this.page?.waitForFunction(() => {
-                    const bodyText = document.body.textContent || '';
-                    const hasProtection = bodyText.includes('Проверка браузера') || 
-                                        bodyText.includes('Checking your browser') ||
-                                        bodyText.includes('DDOS-GUARD') ||
-                                        bodyText.includes('not a robot');
-                    
-                    const hasMainContent = document.querySelector('#BlackINN_INN') !== null;
-                    
-                    return !hasProtection || hasMainContent;
-                }, { timeout: 30000 });
-                
-                // Дополнительная пауза после прохождения защиты
-                await this.page?.waitForTimeout(5000);
-                
-                logger.info('Защита пройдена успешно');
-            } else {
-                logger.info('Защита не обнаружена, продолжаем...');
-                
-                // Делаем скриншот для диагностики
-                try {
-                    const screenshot = await this.page?.screenshot();
-                    if (screenshot) {
-                        const screenshotPath = path.join(process.cwd(), 'no_protection_detected.png');
-                        fs.writeFileSync(screenshotPath, screenshot);
-                        logger.info(`Скриншот сохранен для диагностики: ${screenshotPath}`);
-                    }
-                } catch (e) {
-                    logger.warn('Не удалось сделать скриншот для диагностики:', e);
-                }
-            }
-            
-            // Проверяем, что основная форма загрузилась
-            await this.page?.waitForSelector('#BlackINN_INN', { 
-                state: 'visible', 
-                timeout: 15000 
-            });
-            
-        } catch (error) {
-            logger.error('Ошибка при обработке Cloudflare защиты:', error);
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            throw new Error(`Не удалось пройти Cloudflare защиту: ${errorMessage}`);
         }
     }
 

@@ -20,6 +20,16 @@ export const config = {
   adminUserIds: process.env['ADMIN_USER_IDS']?.split(',').map(id => parseInt(id.trim())) || [],
   logLevel: process.env['LOG_LEVEL'] || 'info',
   ANTHROPIC_API_KEY: process.env['CLAUDE_API_KEY'] || '',
+  
+  // Настройки прокси для Playwright
+  proxy: {
+    enabled: process.env['PROXY_ENABLED'] === 'true',
+    server: process.env['PROXY_SERVER'] || '',
+    username: process.env['PROXY_USERNAME'] || '',
+    password: process.env['PROXY_PASSWORD'] || '',
+    bypass: process.env['PROXY_BYPASS'] || ''
+  },
+  
   MESSAGES: {
     notRegistered: 'Вы не зарегистрированы в системе. Обратитесь к администратору.',
     help: `📋 Доступные команды:
