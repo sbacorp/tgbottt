@@ -1,14 +1,14 @@
-import { chromium, Browser, Page } from 'playwright';
+import { chromium, Browser, Page, BrowserContext } from 'playwright';
 import logger from '../utils/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import Jimp from 'jimp';
 import { config } from '../utils/config';
+import { BrowserRandomizer } from '../helpers/browserRandomizer';
 
 export class PlatformZskService {
     private browser: Browser | null = null;
-    private page: Page | null = null;
     private anthropic: Anthropic | null = null;
 
     constructor() {
@@ -23,14 +23,7 @@ export class PlatformZskService {
             const launchOptions: any = {
                 headless: true,
                 slowMo: 1000,
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    '--disable-web-security',
-                    '--disable-blink-features=AutomationControlled'
-                ]
+                args: BrowserRandomizer.getRandomLaunchArgs()
             };
 
             // Добавляем прокси если он включен
@@ -55,26 +48,6 @@ export class PlatformZskService {
             }
 
             this.browser = await chromium.launch(launchOptions);
-
-            this.page = await this.browser.newPage({
-                userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            });
-
-            await this.page.setExtraHTTPHeaders({
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'DNT': '1',
-                'Connection': 'keep-alive',
-                'Upgrade-Insecure-Requests': '1'
-            });
-
-            await this.page.addInitScript(() => {
-                Object.defineProperty(navigator, 'webdriver', {
-                    get: () => undefined,
-                });
-            });
-
             logger.info('Platform ZSK service initialized');
         } catch (error) {
             logger.error('Error initializing Platform ZSK service:', error);
@@ -82,43 +55,96 @@ export class PlatformZskService {
         }
     }
 
-    async checkInn(inn: string): Promise<{ success: boolean; result: string }> {
-        try {
-            if (!this.page) {
-                throw new Error('Browser not initialized');
+    private async createNewContext(): Promise<{ context: BrowserContext; page: Page }> {
+        if (!this.browser) {
+            throw new Error('Browser not initialized');
+        }
+
+        // Генерируем случайные данные браузера для каждого запроса
+        const randomBrowserData = BrowserRandomizer.generateRandomBrowserData();
+        const contextOptions = BrowserRandomizer.getRandomContextOptions(randomBrowserData);
+
+        logger.info(`Creating new browser context with random data: ${randomBrowserData.userAgent.substring(0, 50)}...`);
+
+        const context = await this.browser.newContext(contextOptions);
+        const page = await context.newPage();
+
+        // Добавляем скрипты для маскировки автоматизации
+        await page.addInitScript(() => {
+            // Маскируем webdriver
+            Object.defineProperty(navigator, 'webdriver', {
+                get: () => undefined,
+            });
+
+            // Маскируем автоматизацию
+            Object.defineProperty(navigator, 'plugins', {
+                get: () => [1, 2, 3, 4, 5],
+            });
+
+            Object.defineProperty(navigator, 'languages', {
+                get: () => ['ru-RU', 'ru', 'en-US', 'en'],
+            });
+
+            // Маскируем Chrome runtime
+            if ((window as any).chrome) {
+                Object.defineProperty((window as any).chrome, 'runtime', {
+                    get: () => undefined,
+                });
             }
 
-            logger.info(`Starting INN check for: ${inn}`);
+            // Маскируем Permissions API
+            const originalQuery = window.navigator.permissions.query;
+            (window.navigator.permissions as any).query = (parameters: any) => (
+                parameters.name === 'notifications' ?
+                    Promise.resolve({ state: Notification.permission }) :
+                    originalQuery(parameters)
+            );
+        });
+
+        return { context, page };
+    }
+
+    async checkInn(inn: string): Promise<{ success: boolean; result: string }> {
+        let context: BrowserContext | null = null;
+        let page: Page | null = null;
+
+        try {
+            // Создаем новый контекст с рандомными данными для каждого запроса
+            const browserContext = await this.createNewContext();
+            context = browserContext.context;
+            page = browserContext.page;
+
+            logger.info(`Starting INN check for: ${inn} with new browser context`);
 
             // Переходим на страницу
-            await this.page.goto('https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/');
-            await this.page.waitForLoadState('networkidle');
-            await this.page.waitForTimeout(3000);
+            await page.goto('https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/');
+            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(3000);
 
             // Проверяем Cloudflare
-            const cloudflareCheck = await this.page.locator('text="Проверка браузера"').count();
+            const cloudflareCheck = await page.locator('text="accessing"').count();
             if (cloudflareCheck > 0) {
-                await this.page.waitForFunction(() => {
-                    return !document.body.textContent?.includes('Проверка браузера');
+                await page.waitForFunction(() => {
+                    return !document.body.textContent?.includes('accessing');
                 }, { timeout: 10000 });
-                await this.page.waitForTimeout(3000);
+                await page.waitForTimeout(10000);
             }
             //тут добавить скриншот страницы
-            const screenshot1 = await this.page.screenshot();
+            const screenshot1 = await page.screenshot();
             const screenshotPath1 = path.join(process.cwd(), 'screenshot.png');
             fs.writeFileSync(screenshotPath1, screenshot1);
             logger.info(`Screenshot saved to: ${screenshotPath1}`);
 
             // Заполняем форму
-            await this.page.waitForSelector('#BlackINN_INN', { state: 'visible' });
-            await this.page.locator('#BlackINN_INN').fill(inn);
+            await page.waitForSelector('#BlackINN_INN', { state: 'visible' });
+            await page.locator('#BlackINN_INN').fill(inn);
 
-            await this.page.locator('#BlackINN_AuthorType').selectOption('Other');
+            await page.locator('#BlackINN_AuthorType').selectOption('Other');
 
-            await this.page.evaluate(() => window.scrollBy(0, 400));
+            await page.evaluate(() => window.scrollBy(0, 400));
 
             // Работаем с капчей
-            const checkboxIframe = this.page.locator('[data-testid="checkbox-iframe"]').contentFrame();
+            const checkboxIframe = page.locator('[data-testid="checkbox-iframe"]').contentFrame();
             if (checkboxIframe) {
                 await checkboxIframe.getByRole('checkbox', { name: 'Я не робот' }).click();
             } else {
@@ -126,8 +152,8 @@ export class PlatformZskService {
             }
 
             // Работаем с advanced капчей
-            await this.page.waitForSelector('[data-testid="advanced-iframe"]', {timeout: 5000, state: 'visible' });
-            const advancedIframe = this.page.locator('[data-testid="advanced-iframe"]').contentFrame();
+            await page.waitForSelector('[data-testid="advanced-iframe"]', {timeout: 5000, state: 'visible' });
+            const advancedIframe = page.locator('[data-testid="advanced-iframe"]').contentFrame();
             if (!advancedIframe) {
                 throw new Error('Advanced капча не найдена');
             }
@@ -152,23 +178,23 @@ export class PlatformZskService {
                     await advancedIframe.getByRole('textbox', { name: 'Введите текст с картинки' }).fill(analysis.text);
                     await advancedIframe.getByTestId('submit').click();
 
-                    await this.page.waitForTimeout(3000);
+                    await page.waitForTimeout(3000);
 
-                    const originalCheckbox = this.page.locator('[data-testid="checkbox-iframe"]').contentFrame()?.getByRole('checkbox', { name: 'Я не робот' });
+                    const originalCheckbox = page.locator('[data-testid="checkbox-iframe"]').contentFrame()?.getByRole('checkbox', { name: 'Я не робот' });
                     const ariaChecked = await originalCheckbox?.getAttribute('aria-checked');
 
                     if (ariaChecked === 'true') {
                         success = true;
                         break;
                     } else {
-                        await this.page.waitForTimeout(3000);
+                        await page.waitForTimeout(3000);
                         const newCaptchaView = advancedIframe.locator('.AdvancedCaptcha-View');
                         await newCaptchaView.waitFor({ timeout: 10000 });
                         const newScreenshot = await newCaptchaView.screenshot();
                         fs.writeFileSync(screenshotPath, newScreenshot);
                     }
                 } else {
-                    await this.page.waitForTimeout(3000);
+                    await page.waitForTimeout(3000);
                     const newCaptchaView = advancedIframe.locator('.AdvancedCaptcha-View');
                     await newCaptchaView.waitFor({ timeout: 10000 });
                     const newScreenshot = await newCaptchaView.screenshot();
@@ -178,11 +204,11 @@ export class PlatformZskService {
 
             if (success) {
                 // Нажимаем кнопку поиска
-                await this.page.locator('#BlackINN_searchbtn').click();
-                await this.page.waitForTimeout(3000);
+                await page.locator('#BlackINN_searchbtn').click();
+                await page.waitForTimeout(3000);
 
                 // Извлекаем результат
-                const resultBlock = this.page.locator('.block-part');
+                const resultBlock = page.locator('.block-part');
                 await resultBlock.waitFor({ timeout: 10000 });
                 const resultText = await resultBlock.textContent();
 
@@ -204,6 +230,22 @@ export class PlatformZskService {
                 success: false,
                 result: `Ошибка: ${errorMessage}`
             };
+        } finally {
+            // Закрываем контекст и страницу после каждого запроса
+            if (page) {
+                try {
+                    await page.close();
+                } catch (error) {
+                    logger.error('Error closing page:', error);
+                }
+            }
+            if (context) {
+                try {
+                    await context.close();
+                } catch (error) {
+                    logger.error('Error closing context:', error);
+                }
+            }
         }
     }
 
@@ -300,10 +342,6 @@ export class PlatformZskService {
 
     async close(): Promise<void> {
         try {
-            if (this.page) {
-                await this.page.close();
-                this.page = null;
-            }
             if (this.browser) {
                 await this.browser.close();
                 this.browser = null;
