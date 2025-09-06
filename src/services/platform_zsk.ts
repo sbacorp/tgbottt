@@ -21,7 +21,7 @@ export class PlatformZskService {
     async init(): Promise<void> {
         try {
             const launchOptions: any = {
-                headless: true,
+                headless: false,
                 slowMo: 1000,
                 args: BrowserRandomizer.getRandomLaunchArgs()
             };

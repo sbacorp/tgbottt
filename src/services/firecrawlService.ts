@@ -179,12 +179,31 @@ export class FireCrawlService {
       }
 
       // Определяем статус на основе фактов из автоматической проверки
-      const liquidationFactMatch = markdown.match(/ с ликвидацией или банкротством/);
-      const attentionFactMatch = markdown.match(/на который следует обратить внимание/);
+      // Новый формат Контур.Фокус
+      const liquidationFactMatch = markdown.match(/(\d+)\s*—\s*факт(?:ы|ов)?,?\s*связанн(?:ый|ые|ых)\s*с\s*ликвидацией\s*или\s*банкротством/i);
+      const attentionFactMatch = markdown.match(/(\d+)\s*—\s*факт(?:ы|ов)?,?\s*на\s*котор(?:ый|ые|ых)\s*следует\s*обратить\s*внимание/i);
+      const goodFactsMatch = markdown.match(/(\d+)\s*—\s*благоприятн(?:ый|ые|ых)\s*факт(?:ы|ов)?/i);
 
-      if (liquidationFactMatch) {
+      // Отладочное логирование
+      logger.info(`Parsing facts for ${inn}:`);
+      logger.info(`Liquidation match: ${liquidationFactMatch ? liquidationFactMatch[0] + ' -> ' + liquidationFactMatch[1] : 'none'}`);
+      logger.info(`Attention match: ${attentionFactMatch ? attentionFactMatch[0] + ' -> ' + attentionFactMatch[1] : 'none'}`);
+      logger.info(`Good facts match: ${goodFactsMatch ? goodFactsMatch[0] + ' -> ' + goodFactsMatch[1] : 'none'}`);
+
+      // Старый формат (для совместимости)
+      const oldLiquidationMatch = markdown.match(/ с ликвидацией или банкротством/);
+      const oldAttentionMatch = markdown.match(/на который следует обратить внимание/);
+
+      // Приоритет: красный > оранжевый > зеленый
+      if (liquidationFactMatch && liquidationFactMatch[1] && parseInt(liquidationFactMatch[1]) > 0) {
         data.status = 'red';
-      } else if (attentionFactMatch) {
+        data.riskInfo = `Обнаружено ${liquidationFactMatch[1]} фактов ликвидации/банкротства`;
+      } else if (oldLiquidationMatch) {
+        data.status = 'red';
+      } else if (attentionFactMatch && attentionFactMatch[1] && parseInt(attentionFactMatch[1]) > 0) {
+        data.status = 'orange';
+        data.riskInfo = `Обнаружено ${attentionFactMatch[1]} фактов требующих внимания`;
+      } else if (oldAttentionMatch) {
         data.status = 'orange';
         
         // Извлекаем информацию о рисках для оранжевого статуса
@@ -219,7 +238,25 @@ export class FireCrawlService {
         }
       } else {
         data.status = 'green';
+        if (goodFactsMatch) {
+          data.riskInfo = `Обнаружено ${goodFactsMatch[1]} благоприятных фактов`;
+        }
       }
+
+      // Дополнительная информация о проверке
+      if (liquidationFactMatch || attentionFactMatch || goodFactsMatch) {
+        const facts = [];
+        if (liquidationFactMatch) facts.push(`🔴 ${liquidationFactMatch[1]} - ликвидация/банкротство`);
+        if (attentionFactMatch) facts.push(`🟡 ${attentionFactMatch[1]} - требует внимания`);
+        if (goodFactsMatch) facts.push(`🟢 ${goodFactsMatch[1]} - благоприятные`);
+        
+        if (facts.length > 0) {
+          data.additionalInfo = `Автоматическая проверка: ${facts.join(', ')}`;
+        }
+      }
+
+      // Логируем итоговый статус
+      logger.info(`Final status for ${inn}: ${data.status} (liquidation: ${liquidationFactMatch?.[1] || 0}, attention: ${attentionFactMatch?.[1] || 0}, good: ${goodFactsMatch?.[1] || 0})`);
 
       // Извлекаем дополнительные признаки нелегальности
       const illegalitySigns: string[] = [];
