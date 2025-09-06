@@ -1,24 +1,7 @@
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: cbr_bot_postgres
-    environment:
-      POSTGRES_DB: cbr_bot
-      POSTGRES_USER: cbr_user
-      POSTGRES_PASSWORD: cbr_password
-    ports:
-      - "5435:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
-    networks:
-      - cbr_bot_network
-    restart: unless-stopped
-
-  # CBR Bot Application
+  # CBR Bot Application with Supabase
   cbr-bot:
     build: .
     container_name: cbr_bot_app
@@ -27,18 +10,26 @@ services:
       - DOCKER_ENV=true
       - BOT_TOKEN=${BOT_TOKEN}
       - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
-      - DATABASE_URL=postgresql://cbr_user:cbr_password@postgres:5432/cbr_bot
+      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
+      # Supabase configuration
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      # Monitoring and admin settings
       - MONITORING_INTERVAL=${MONITORING_INTERVAL:-2700000}
-      - ADMIN_USER_IDS=${ADMIN_USER_IDS:-1856156198,145328014}
+      - ADMIN_USER_IDS=${ADMIN_USER_IDS}
       - LOG_LEVEL=${LOG_LEVEL:-info}
+      # Proxy settings (if needed)
+      - PROXY_ENABLED=${PROXY_ENABLED:-false}
+      - PROXY_SERVER=${PROXY_SERVER}
+      - PROXY_USERNAME=${PROXY_USERNAME}
+      - PROXY_PASSWORD=${PROXY_PASSWORD}
+      - PROXY_BYPASS=${PROXY_BYPASS}
       # Playwright environment variables
       - PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
       - PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/google-chrome
       - DISPLAY=:99
-      - CLAUDE_API_KEY=${CLAUDE_API_KEY}
 
-    depends_on:
-      - postgres
     networks:
       - cbr_bot_network
     restart: unless-stopped
@@ -52,10 +43,6 @@ services:
     # Отключаем песочницу для Chrome
     security_opt:
       - seccomp:unconfined
-
-volumes:
-  postgres_data:
-  pgadmin_data:
 
 networks:
   cbr_bot_network:

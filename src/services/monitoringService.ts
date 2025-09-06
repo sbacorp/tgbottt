@@ -216,8 +216,8 @@ export class MonitoringService {
 
       message += '➕ Обновлено в системе: ' + new Date().toLocaleDateString('ru-RU');
 
-      // Отправляем уведомление всем пользователям
-      await getNotificationService().sendNotificationToAllUsers(message);
+      // Отправляем уведомление пользователям, отслеживающим организацию
+      await getNotificationService().sendOrganizationNotification(inn, message);
 
       logger.info(`Уведомление об изменении статуса отправлено для ИНН ${inn}`);
 
@@ -416,8 +416,8 @@ export class MonitoringService {
       message += `📋 **Результат проверки:**\n${resultText}\n\n`;
       message += '➕ Обновлено в системе: ' + new Date().toLocaleDateString('ru-RU');
 
-      // Отправляем уведомление всем пользователям
-      await getNotificationService().sendNotificationToAllUsers(message);
+      // Отправляем уведомление пользователям, отслеживающим организацию
+      await getNotificationService().sendOrganizationNotification(inn, message);
 
       logger.info(`Уведомление об изменении статуса ЗСК отправлено для ИНН ${inn}`);
 

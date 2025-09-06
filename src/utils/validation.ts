@@ -1,11 +1,81 @@
+import logger from "./logger";
+
 /**
- * Валидация ИНН
+ * Интерфейс для ошибки валидации
+ */
+export interface ValidationError {
+  code: number;
+  message: string;
+}
+
+/**
+ * Валидация ИНН с проверкой контрольных чисел
  * @param inn - ИНН для проверки
+ * @param error - объект для записи ошибки
  * @returns true если ИНН корректный
  */
-export function validateInn(inn: string): boolean {
-  // Простая проверка: только цифры и длина 10-12 символов
-  return /^\d{10,12}$/.test(inn);
+export function validateInn(inn: string | number, error?: ValidationError): boolean {
+  let result = false;
+  
+  // Приводим к строке
+  if (typeof inn === 'number') {
+    inn = inn.toString();
+  } else if (typeof inn !== 'string') {
+    inn = '';
+  }
+
+  // Создаем временный объект ошибки, если не передан
+  const tempError: ValidationError = error || { code: 0, message: '' };
+
+  if (!inn.length) {
+    tempError.code = 1;
+    tempError.message = 'ИНН пуст';
+  } else if (/[^0-9]/.test(inn)) {
+    tempError.code = 2;
+    tempError.message = 'ИНН может состоять только из цифр';
+  } else if ([10, 12].indexOf(inn.length) === -1) {
+    tempError.code = 3;
+    tempError.message = 'ИНН может состоять только из 10 или 12 цифр';
+  } else {
+    const checkDigit = function (inn: string, coefficients: number[]) {
+      let n = 0;
+      for (let i = 0; i < coefficients.length; i++) {
+        const digit = inn[i];
+        const coeff = coefficients[i];
+        if (digit !== undefined && coeff !== undefined) {
+          n += coeff * parseInt(digit);
+        }
+      }
+      return parseInt((n % 11 % 10).toString());
+    };
+
+    switch (inn.length) {
+      case 10:
+        const n10 = checkDigit(inn, [2, 4, 10, 3, 5, 9, 4, 6, 8]);
+        const lastDigit10 = inn[9];
+        if (lastDigit10 !== undefined && n10 === parseInt(lastDigit10)) {
+          result = true;
+        }
+        break;
+      case 12:
+        const n11 = checkDigit(inn, [7, 2, 4, 10, 3, 5, 9, 4, 6, 8]);
+        const n12 = checkDigit(inn, [3, 7, 2, 4, 10, 3, 5, 9, 4, 6, 8]);
+        const lastDigit11 = inn[10];
+        const lastDigit12 = inn[11];
+        if (lastDigit11 !== undefined && lastDigit12 !== undefined && 
+            (n11 === parseInt(lastDigit11)) && (n12 === parseInt(lastDigit12))) {
+          result = true;
+        }
+        break;
+    }
+    
+    if (!result) {
+      tempError.code = 4;
+      tempError.message = 'Неправильное контрольное число';
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -41,7 +111,8 @@ export function validateInnList(inns: string): {
   const invalid: string[] = [];
 
   for (const inn of innList) {
-    if (validateInn(inn)) {
+    const error: ValidationError = { code: 0, message: '' };
+    if (validateInn(inn, error)) {
       valid.push(inn);
     } else {
       invalid.push(inn);
@@ -157,4 +228,28 @@ export function truncateString(str: string, maxLength: number): string {
  */
 export function isEmptyString(str: string): boolean {
   return !str || str.trim().length === 0;
+}
+
+/**
+ * Проверяет, содержит ли ответ от Firecrawl сообщение о том, что компания не найдена
+ * @param markdown - markdown текст от Firecrawl
+ * @param inn - ИНН для поиска в сообщении
+ * @returns true если компания не найдена
+ */
+export function isOrganizationNotFound(markdown: string, inn: string): boolean {
+  if (!markdown || !inn) {
+    return false;
+  }
+
+  const text = markdown.toLowerCase();
+  
+  // Ищем паттерны "не найдено" с ИНН
+  const notFoundPatterns = [
+    `компаний по запросу\n«${inn}»\nне найдено`,
+    `компаний по запросу «${inn}» не найдено`,
+  ];
+  logger.info(`Проверяем наличие паттернов в тексте: ${text}`);
+  const result = notFoundPatterns.some(pattern => text.includes(pattern.toLowerCase()));
+  logger.info(`Результат проверки: ${result}`);
+  return result;
 }

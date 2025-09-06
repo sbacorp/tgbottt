@@ -1,34 +1,71 @@
 import dotenv from 'dotenv';
+import { z } from 'zod';
 
 // Загрузка переменных окружения
 dotenv.config();
 
-// Проверка обязательных переменных окружения
-const requiredEnvVars = ['BOT_TOKEN', 'DATABASE_URL', 'FIRECRAWL_API_KEY'];
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
-  }
-}
-
-// Конфигурация приложения
-export const config = {
-  botToken: process.env['BOT_TOKEN']!,
-  databaseUrl: process.env['DATABASE_URL']!,
-  firecrawlApiKey: process.env['FIRECRAWL_API_KEY'] || '',
-  monitoringInterval: parseInt(process.env['MONITORING_INTERVAL'] || '2700000'),
-  adminUserIds: process.env['ADMIN_USER_IDS']?.split(',').map(id => parseInt(id.trim())) || [],
-  logLevel: process.env['LOG_LEVEL'] || 'info',
-  ANTHROPIC_API_KEY: process.env['CLAUDE_API_KEY'] || '',
+// Схема конфигурации с Zod
+const configSchema = z.object({
+  BOT_TOKEN: z.string().min(1, "BOT_TOKEN is required"),
+  NODE_ENV: z.enum(["development", "production"]).default("development"),
   
-  // Настройки прокси для Playwright
-  proxy: {
-    enabled: process.env['PROXY_ENABLED'] === 'true',
-    server: process.env['PROXY_SERVER'] || '',
-    username: process.env['PROXY_USERNAME'] || '',
-    password: process.env['PROXY_PASSWORD'] || '',
-    bypass: process.env['PROXY_BYPASS'] || ''
-  },
+  // Supabase конфигурация (обязательная)
+  SUPABASE_URL: z.string().min(1, "SUPABASE_URL is required"),
+  SUPABASE_ANON_KEY: z.string().min(1, "SUPABASE_ANON_KEY is required"),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  
+  // Другие API ключи
+  FIRECRAWL_API_KEY: z.string().default(''),
+  CLAUDE_API_KEY: z.string().default(''),
+  
+  // Настройки мониторинга
+  MONITORING_INTERVAL: z.string().default('2700000'),
+  ADMIN_USER_IDS: z.string().default(''),
+  LOG_LEVEL: z.string().default('info'),
+  
+  // Настройки прокси
+  PROXY_ENABLED: z.string().default('false'),
+  PROXY_SERVER: z.string().default(''),
+  PROXY_USERNAME: z.string().default(''),
+  PROXY_PASSWORD: z.string().default(''),
+  PROXY_BYPASS: z.string().default('')
+});
+
+const parseConfig = (environment: NodeJS.ProcessEnv) => {
+  const parsed = configSchema.parse(environment);
+  
+  return {
+    ...parsed,
+    isDev: parsed.NODE_ENV === "development",
+    isProd: parsed.NODE_ENV === "production",
+    monitoringInterval: parseInt(parsed.MONITORING_INTERVAL),
+    adminUserIds: parsed.ADMIN_USER_IDS.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id)),
+    
+    // Настройки прокси
+    proxy: {
+      enabled: parsed.PROXY_ENABLED === 'true',
+      server: parsed.PROXY_SERVER,
+      username: parsed.PROXY_USERNAME,
+      password: parsed.PROXY_PASSWORD,
+      bypass: parsed.PROXY_BYPASS
+    }
+  };
+};
+
+export type Config = ReturnType<typeof parseConfig>;
+export const config = parseConfig(process.env);
+
+// Конфигурация приложения (для обратной совместимости)
+export const legacyConfig = {
+  botToken: config.BOT_TOKEN,
+  firecrawlApiKey: config.FIRECRAWL_API_KEY,
+  monitoringInterval: config.monitoringInterval,
+  adminUserIds: config.adminUserIds,
+  logLevel: config.LOG_LEVEL,
+  ANTHROPIC_API_KEY: config.CLAUDE_API_KEY,
+  
+  // Настройки прокси для Playwright (для обратной совместимости)
+  proxy: config.proxy,
   
   MESSAGES: {
     notRegistered: 'Вы не зарегистрированы в системе. Обратитесь к администратору.',
@@ -101,19 +138,11 @@ export const INITIAL_INNS = [];
 
 // Сообщения бота
 export const MESSAGES = {
-  welcome: `Привет, коллега! 🚦
-Этот бот работает как "светофор" для организаций
-🔴 Красный — организация в чёрном списке ЦБ РФ.
-🟡 Желтый — есть риски, но организация пока не заблокирована
-🟢 Зелёный — всё чисто, рисков нет.
+  welcome: `Для разовой проверки воспользуйтесь кнопкой "разовая проверка" или командой /check
 
-Если организация попала в 🔴красный или 🟡 желтый списки вы получите оповещение в виде сообщения. Если организация находится в 🟢 Зелёном списке - все супер, вы оповещение не получаете.
-
-Посмотреть актуальный список организаций можно по кнопке меню "меню"
-Чтобы добавить организацию нажмите "добавить инн" (несколько организаций добавляете через "пробел")
-Доступные команды:
-/check - Проверить организацию
-/check_cbr - Проверить организацию по зск ЦБР`,
+Для подписки организаций на постоянное отслеживание воспользуйтесь кнопкой "отслеживание".
+В структуре меню на отслеживание вы можете назначить группу организаций и указать пользователей-получателей отчетов,
+просматривать списки пользователей-получателей уведомлений и редактировать их.`,
 
   notRegistered: `❌ Вы не зарегистрированы в системе.
 Обратитесь к администратору для получения доступа.`,

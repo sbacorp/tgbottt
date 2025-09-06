@@ -1,8 +1,9 @@
-import { MyContext } from '../types';
-import { database } from '../database';
-import { MESSAGES, STATUS_EMOJIS } from '../utils/config';
-import logger from '../utils/logger';
-
+import { MyContext } from "../types";
+import { database } from "../database";
+import { MESSAGES, STATUS_EMOJIS } from "../utils/config";
+import logger from "../utils/logger";
+import { createBackKeyboard, createCancelKeyboard, createMainMenuKeyboard } from "../helpers";
+import { createTrackingMenuKeyboard } from "../features/tracking"
 /**
  * Обработчик callback запросов
  */
@@ -10,48 +11,54 @@ export async function handleCallback(ctx: MyContext): Promise<void> {
   try {
     const callbackData = ctx.callbackQuery?.data;
     if (!callbackData) {
-      await ctx.answerCallbackQuery('Ошибка: нет данных');
+      await ctx.answerCallbackQuery("Ошибка: нет данных");
       return;
     }
 
     // Обработка различных типов callback
     switch (callbackData) {
-      case 'menu':
+      case "menu":
         await handleMenuCallback(ctx);
         break;
-      case 'add_inn':
+      case "add_inn":
         await handleAddInnCallback(ctx);
         break;
-      case 'users_list':
+      case "users_list":
         await handleUsersListCallback(ctx);
         break;
-      case 'manage_users':
+      case "manage_users":
         await handleManageUsersCallback(ctx);
         break;
-      case 'manage_admins':
+      case "manage_admins":
         await handleManageAdminsCallback(ctx);
         break;
-      case 'organizations_list':
+      case "organizations_list":
         await handleOrganizationsListCallback(ctx);
         break;
-      case 'add_users':
+      case "add_users":
         await handleAddUsersCallback(ctx);
         break;
-      case 'remove_users':
+      case "remove_users":
         await handleRemoveUsersCallback(ctx);
         break;
-      case 'add_admins':
+      case "add_admins":
         await handleAddAdminsCallback(ctx);
         break;
-      case 'remove_admins':
+      case "remove_admins":
         await handleRemoveAdminsCallback(ctx);
         break;
+      case "tracking_menu":
+        await handleTrackingMenuCallback(ctx);
+        break;
+      case "single_check":
+        await handleSingleCheckCallback(ctx);
+        break;
       default:
-        await ctx.answerCallbackQuery('Неизвестная команда');
+        await ctx.answerCallbackQuery("Неизвестная команда");
     }
   } catch (error) {
-    logger.error('Error in handleCallback:', error);
-    await ctx.answerCallbackQuery('Произошла ошибка');
+    logger.error("Error in handleCallback:", error);
+    await ctx.answerCallbackQuery("Произошла ошибка");
   }
 }
 
@@ -61,35 +68,15 @@ export async function handleCallback(ctx: MyContext): Promise<void> {
 async function handleMenuCallback(ctx: MyContext): Promise<void> {
   try {
     if (!ctx.session.isRegistered) {
-      await ctx.answerCallbackQuery('Вы не зарегистрированы');
+      await ctx.answerCallbackQuery("Вы не зарегистрированы");
       return;
     }
-
-    const keyboard = {
-      inline_keyboard: [
-        [
-          { text: '📋 Список организаций', callback_data: 'organizations_list' },
-          { text: '➕ Добавить ИНН', callback_data: 'add_inn' }
-        ]
-      ]
-    };
-
-    // Добавление административных кнопок
-    if (ctx.session.isAdmin) {
-      keyboard.inline_keyboard.push([
-        { text: '👥 Список получателей', callback_data: 'users_list' },
-        { text: '⚙️ Управление получателями', callback_data: 'manage_users' }
-      ]);
-      keyboard.inline_keyboard.push([
-        { text: '🔧 Управление администраторами', callback_data: 'manage_admins' }
-      ]);
-    }
-
-    await ctx.editMessageText('Выберите действие:', { reply_markup: keyboard });
-    await ctx.answerCallbackQuery();
+    await ctx.editMessageText("Главное меню", {
+      reply_markup: createMainMenuKeyboard(),
+    });
+    await ctx.answerCallbackQuery("Главное меню");
   } catch (error) {
-    logger.error('Error in handleMenuCallback:', error);
-    await ctx.answerCallbackQuery('Ошибка при отображении меню');
+    logger.error("Error in handleMenuCallback:", error);
   }
 }
 
@@ -99,15 +86,15 @@ async function handleMenuCallback(ctx: MyContext): Promise<void> {
 async function handleAddInnCallback(ctx: MyContext): Promise<void> {
   try {
     if (!ctx.session.isRegistered) {
-      await ctx.answerCallbackQuery('Вы не зарегистрированы');
+      await ctx.answerCallbackQuery("Вы не зарегистрированы");
       return;
     }
 
     await ctx.answerCallbackQuery();
     await ctx.conversation.enter("add_inn");
   } catch (error) {
-    logger.error('Error in handleAddInnCallback:', error);
-    await ctx.answerCallbackQuery('Ошибка при запуске добавления ИНН');
+    logger.error("Error in handleAddInnCallback:", error);
+    await ctx.answerCallbackQuery("Ошибка при запуске добавления ИНН");
   }
 }
 
@@ -117,32 +104,34 @@ async function handleAddInnCallback(ctx: MyContext): Promise<void> {
 async function handleUsersListCallback(ctx: MyContext): Promise<void> {
   try {
     if (!ctx.session.isRegistered || !ctx.session.isAdmin) {
-      await ctx.answerCallbackQuery('Недостаточно прав');
+      await ctx.answerCallbackQuery("Недостаточно прав");
       return;
     }
 
     const users = await database.getAllUsers();
-    
+
     if (users.length === 0) {
       await ctx.editMessageText(MESSAGES.noUsers);
       await ctx.answerCallbackQuery();
       return;
     }
 
-    let message = '👥 Список получателей (актуальный):\n\n';
-    
+    let message = "👥 Список получателей (актуальный):\n\n";
+
     for (const user of users) {
-      const adminBadge = user.is_admin ? ' 👑' : '';
-      const username = user.username ? `@${user.username}` : `ID: ${user.telegram_id}`;
-      
+      const adminBadge = user.is_admin ? " 👑" : "";
+      const username = user.username
+        ? `@${user.username}`
+        : `ID: ${user.telegram_id}`;
+
       message += `${username}${adminBadge}\n`;
     }
 
     await ctx.editMessageText(message);
     await ctx.answerCallbackQuery();
   } catch (error) {
-    logger.error('Error in handleUsersListCallback:', error);
-    await ctx.answerCallbackQuery('Ошибка при получении списка пользователей');
+    logger.error("Error in handleUsersListCallback:", error);
+    await ctx.answerCallbackQuery("Ошибка при получении списка пользователей");
   }
 }
 
@@ -152,27 +141,29 @@ async function handleUsersListCallback(ctx: MyContext): Promise<void> {
 async function handleManageUsersCallback(ctx: MyContext): Promise<void> {
   try {
     if (!ctx.session.isRegistered || !ctx.session.isAdmin) {
-      await ctx.answerCallbackQuery('Недостаточно прав');
+      await ctx.answerCallbackQuery("Недостаточно прав");
       return;
     }
 
     const keyboard = {
       inline_keyboard: [
         [
-          { text: '➕ Добавить пользователей', callback_data: 'add_users' },
-          { text: '➖ Удалить пользователей', callback_data: 'remove_users' }
+          { text: "➕ Добавить пользователей", callback_data: "add_users" },
+          { text: "➖ Удалить пользователей", callback_data: "remove_users" },
         ],
-        [
-          { text: '🔙 Назад в меню', callback_data: 'menu' }
-        ]
-      ]
+        [{ text: "🔙 Назад в меню", callback_data: "menu" }],
+      ],
     };
 
-    await ctx.editMessageText('Управление получателями:', { reply_markup: keyboard });
+    await ctx.editMessageText("Управление получателями:", {
+      reply_markup: keyboard,
+    });
     await ctx.answerCallbackQuery();
   } catch (error) {
-    logger.error('Error in handleManageUsersCallback:', error);
-    await ctx.answerCallbackQuery('Ошибка при отображении управления пользователями');
+    logger.error("Error in handleManageUsersCallback:", error);
+    await ctx.answerCallbackQuery(
+      "Ошибка при отображении управления пользователями"
+    );
   }
 }
 
@@ -182,27 +173,29 @@ async function handleManageUsersCallback(ctx: MyContext): Promise<void> {
 async function handleManageAdminsCallback(ctx: MyContext): Promise<void> {
   try {
     if (!ctx.session.isRegistered || !ctx.session.isAdmin) {
-      await ctx.answerCallbackQuery('Недостаточно прав');
+      await ctx.answerCallbackQuery("Недостаточно прав");
       return;
     }
 
     const keyboard = {
       inline_keyboard: [
         [
-          { text: '👑 Назначить администраторов', callback_data: 'add_admins' },
-          { text: '➖ Снять права админа', callback_data: 'remove_admins' }
+          { text: "👑 Назначить администраторов", callback_data: "add_admins" },
+          { text: "➖ Снять права админа", callback_data: "remove_admins" },
         ],
-        [
-          { text: '🔙 Назад в меню', callback_data: 'menu' }
-        ]
-      ]
+        [{ text: "🔙 Назад в меню", callback_data: "menu" }],
+      ],
     };
 
-    await ctx.editMessageText('Управление администраторами:', { reply_markup: keyboard });
+    await ctx.editMessageText("Управление администраторами:", {
+      reply_markup: keyboard,
+    });
     await ctx.answerCallbackQuery();
   } catch (error) {
-    logger.error('Error in handleManageAdminsCallback:', error);
-    await ctx.answerCallbackQuery('Ошибка при отображении управления администраторами');
+    logger.error("Error in handleManageAdminsCallback:", error);
+    await ctx.answerCallbackQuery(
+      "Ошибка при отображении управления администраторами"
+    );
   }
 }
 
@@ -212,45 +205,48 @@ async function handleManageAdminsCallback(ctx: MyContext): Promise<void> {
 async function handleOrganizationsListCallback(ctx: MyContext): Promise<void> {
   try {
     if (!ctx.session.isRegistered) {
-      await ctx.answerCallbackQuery('Вы не зарегистрированы');
+      await ctx.answerCallbackQuery("Вы не зарегистрированы");
       return;
     }
 
     const organizations = await database.getAllOrganizations();
-    
+
     if (organizations.length === 0) {
-      await ctx.editMessageText('📋 <b>Список организаций пуст</b>\n\nДобавьте организации для мониторинга с помощью команды /add_inn', 
-        { parse_mode: 'HTML' });
+      await ctx.editMessageText(
+        "📋 <b>Список организаций пуст</b>\n\nДобавьте организации для мониторинга с помощью команды /add_inn",
+        { parse_mode: "HTML", reply_markup: createCancelKeyboard() }
+      );
       await ctx.answerCallbackQuery();
       return;
     }
 
-    let message = '📋 <b>Отслеживаемые организации:</b>\n\n';
-    
+    let message = "📋 <b>Отслеживаемые организации:</b>\n\n";
+
     // Группировка по статусам
-    const redOrgs = organizations.filter(org => org.status === 'red');
-    const orangeOrgs = organizations.filter(org => org.status === 'orange');
-    const greenOrgs = organizations.filter(org => org.status === 'green');
+    const redOrgs = organizations.filter((org) => org.status === "red");
+    const orangeOrgs = organizations.filter((org) => org.status === "orange");
+    const greenOrgs = organizations.filter((org) => org.status === "green");
 
     if (redOrgs.length > 0) {
       message += `🔴 <b>Красный список (${redOrgs.length}):</b>\n`;
-      redOrgs.forEach(org => {
+      redOrgs.forEach((org) => {
         message += `${STATUS_EMOJIS.red} ${org.name} (${org.inn})\n`;
       });
-      message += '\n';
+      message += "\n";
     }
 
     if (orangeOrgs.length > 0) {
       message += `🟡 <b>Желтый список (${orangeOrgs.length}):</b>\n`;
-      orangeOrgs.forEach(org => {
+      orangeOrgs.forEach((org) => {
         message += `${STATUS_EMOJIS.orange} ${org.name} (${org.inn})\n`;
       });
-      message += '\n';
+      message += "\n";
     }
 
     if (greenOrgs.length > 0) {
       message += `🟢 <b>Зелёный список (${greenOrgs.length}):</b>\n`;
-      greenOrgs.slice(0, 10).forEach(org => { // Показываем только первые 10
+      greenOrgs.slice(0, 10).forEach((org) => {
+        // Показываем только первые 10
         message += `${STATUS_EMOJIS.green} ${org.name} (${org.inn})\n`;
       });
       if (greenOrgs.length > 10) {
@@ -260,14 +256,17 @@ async function handleOrganizationsListCallback(ctx: MyContext): Promise<void> {
 
     // Ограничиваем длину сообщения
     if (message.length > 4096) {
-      message = message.substring(0, 4090) + '...';
+      message = message.substring(0, 4090) + "...";
     }
 
-    await ctx.editMessageText(message, { parse_mode: 'HTML' });
+    await ctx.editMessageText(message, {
+      parse_mode: "HTML",
+      reply_markup: createBackKeyboard('tracking_menu'),
+    });
     await ctx.answerCallbackQuery();
   } catch (error) {
-    logger.error('Error in handleOrganizationsListCallback:', error);
-    await ctx.answerCallbackQuery('Ошибка при получении списка организаций');
+    logger.error("Error in handleOrganizationsListCallback:", error);
+    await ctx.answerCallbackQuery("Ошибка при получении списка организаций");
   }
 }
 
@@ -277,15 +276,17 @@ async function handleOrganizationsListCallback(ctx: MyContext): Promise<void> {
 async function handleAddUsersCallback(ctx: MyContext): Promise<void> {
   try {
     if (!ctx.session.isRegistered || !ctx.session.isAdmin) {
-      await ctx.answerCallbackQuery('Недостаточно прав');
+      await ctx.answerCallbackQuery("Недостаточно прав");
       return;
     }
 
     await ctx.answerCallbackQuery();
     await ctx.conversation.enter("add_users");
   } catch (error) {
-    logger.error('Error in handleAddUsersCallback:', error);
-    await ctx.answerCallbackQuery('Ошибка при запуске добавления пользователей');
+    logger.error("Error in handleAddUsersCallback:", error);
+    await ctx.answerCallbackQuery(
+      "Ошибка при запуске добавления пользователей"
+    );
   }
 }
 
@@ -295,15 +296,15 @@ async function handleAddUsersCallback(ctx: MyContext): Promise<void> {
 async function handleRemoveUsersCallback(ctx: MyContext): Promise<void> {
   try {
     if (!ctx.session.isRegistered || !ctx.session.isAdmin) {
-      await ctx.answerCallbackQuery('Недостаточно прав');
+      await ctx.answerCallbackQuery("Недостаточно прав");
       return;
     }
 
     await ctx.answerCallbackQuery();
     await ctx.conversation.enter("remove_users");
   } catch (error) {
-    logger.error('Error in handleRemoveUsersCallback:', error);
-    await ctx.answerCallbackQuery('Ошибка при запуске удаления пользователей');
+    logger.error("Error in handleRemoveUsersCallback:", error);
+    await ctx.answerCallbackQuery("Ошибка при запуске удаления пользователей");
   }
 }
 
@@ -313,15 +314,17 @@ async function handleRemoveUsersCallback(ctx: MyContext): Promise<void> {
 async function handleAddAdminsCallback(ctx: MyContext): Promise<void> {
   try {
     if (!ctx.session.isRegistered || !ctx.session.isAdmin) {
-      await ctx.answerCallbackQuery('Недостаточно прав');
+      await ctx.answerCallbackQuery("Недостаточно прав");
       return;
     }
 
     await ctx.answerCallbackQuery();
     await ctx.conversation.enter("add_admins");
   } catch (error) {
-    logger.error('Error in handleAddAdminsCallback:', error);
-    await ctx.answerCallbackQuery('Ошибка при запуске добавления администраторов');
+    logger.error("Error in handleAddAdminsCallback:", error);
+    await ctx.answerCallbackQuery(
+      "Ошибка при запуске добавления администраторов"
+    );
   }
 }
 
@@ -331,14 +334,57 @@ async function handleAddAdminsCallback(ctx: MyContext): Promise<void> {
 async function handleRemoveAdminsCallback(ctx: MyContext): Promise<void> {
   try {
     if (!ctx.session.isRegistered || !ctx.session.isAdmin) {
-      await ctx.answerCallbackQuery('Недостаточно прав');
+      await ctx.answerCallbackQuery("Недостаточно прав");
       return;
     }
 
     await ctx.answerCallbackQuery();
     await ctx.conversation.enter("remove_admins");
   } catch (error) {
-    logger.error('Error in handleRemoveAdminsCallback:', error);
-    await ctx.answerCallbackQuery('Ошибка при запуске снятия прав администраторов');
+    logger.error("Error in handleRemoveAdminsCallback:", error);
+    await ctx.answerCallbackQuery(
+      "Ошибка при запуске снятия прав администраторов"
+    );
+  }
+}
+
+/**
+ * Обработчик callback для меню отслеживания
+ */
+async function handleTrackingMenuCallback(ctx: MyContext): Promise<void> {
+  try {
+    if (!ctx.session.isRegistered) {
+      await ctx.answerCallbackQuery("Вы не зарегистрированы");
+      return;
+    }
+
+    const keyboard = createTrackingMenuKeyboard();
+    
+    await ctx.editMessageText(
+      "Составьте список организаций на отслеживание и список пользователей для получения уведомлений об изменении статуса надежности. Если список пользователей не заполнен, то уведомления будете получать только Вы.",
+      { reply_markup: keyboard }
+    );
+    await ctx.answerCallbackQuery("Меню отслеживания");
+  } catch (error) {
+    logger.error("Error in handleTrackingMenuCallback:", error);
+    await ctx.answerCallbackQuery("Ошибка при открытии меню отслеживания");
+  }
+}
+
+/**
+ * Обработчик callback для разовой проверки по ИНН
+ */
+async function handleSingleCheckCallback(ctx: MyContext): Promise<void> {
+  try {
+    if (!ctx.session.isRegistered) {
+      await ctx.answerCallbackQuery("Вы не зарегистрированы");
+      return;
+    }
+
+    await ctx.answerCallbackQuery();
+    await ctx.conversation.enter("check");
+  } catch (error) {
+    logger.error("Error in handleSingleCheckCallback:", error);
+    await ctx.answerCallbackQuery("Ошибка при запуске проверки");
   }
 }

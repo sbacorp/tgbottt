@@ -5,6 +5,15 @@ import { CommandContext } from "grammy";
 import { config } from "../utils/config";
 import type { MyContext } from "../types";
 
+// Импорт всех команд
+export { handleStart } from './start';
+export { handleCheck } from './check';
+export { handleCheckCbr } from './checkCbr';
+export { handleStatus } from './status';
+export { handleHelp } from './help';
+export { handleAddAdmins } from './addAdmins';
+export { handleRemoveAdmins } from './removeAdmins';
+
 function getPrivateChatCommands(): BotCommand[] {
   return [
     {
@@ -29,36 +38,12 @@ function getPrivateChatCommands(): BotCommand[] {
 function getPrivateChatAdminCommands(): BotCommand[] {
   return [
     {
-      command: "users",
-      description: "Список получателей",
-    },
-    {
-      command: "add_users",
-      description: "Добавить получателей по telegram_id",
-    },
-    {
-      command: "remove_users",
-      description: "Удалить получателей по telegram_id",
-    },
-    {
       command: "add_admins",
       description: "Добавить администраторов по telegram_id",
     },
     {
       command: "remove_admins",
       description: "Удалить администраторов по telegram_id",
-    },
-    {
-      command: "remove_inn",
-      description: "Удалить ИНН из отслеживания",
-    },
-    {
-      command: "organizations",
-      description: "Список организаций",
-    },
-    {
-      command: "add_inn",
-      description: "Добавить ИНН для отслеживания",
     },
     {
       command: "status",

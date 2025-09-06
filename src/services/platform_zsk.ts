@@ -12,7 +12,7 @@ export class PlatformZskService {
     private anthropic: Anthropic | null = null;
 
     constructor() {
-        const apiKey = config.ANTHROPIC_API_KEY
+        const apiKey = config.CLAUDE_API_KEY
         if (apiKey) {
             this.anthropic = new Anthropic({ apiKey });
         }
@@ -21,7 +21,7 @@ export class PlatformZskService {
     async init(): Promise<void> {
         try {
             const launchOptions: any = {
-                headless: true,
+                headless: false,
                 slowMo: 1000,
                 args: BrowserRandomizer.getRandomLaunchArgs()
             };
@@ -337,6 +337,87 @@ export class PlatformZskService {
                 success: false, 
                 error: error instanceof Error ? error.message : String(error) 
             };
+        }
+    }
+
+    /**
+     * Проверяет работоспособность прокси
+     */
+    async checkProxyStatus(): Promise<{ success: boolean; message: string; ip?: string; country?: string }> {
+        if (!config.proxy.enabled || !config.proxy.server) {
+            return {
+                success: false,
+                message: 'Прокси не настроен или отключен'
+            };
+        }
+
+        let context: BrowserContext | null = null;
+        let page: Page | null = null;
+
+        try {
+            // Создаем новый контекст с прокси
+            const browserContext = await this.createNewContext();
+            context = browserContext.context;
+            page = browserContext.page;
+
+            logger.info('Checking proxy status...');
+
+            // Проверяем IP через httpbin.org
+            await page.goto('https://httpbin.org/ip', { timeout: 15000 });
+            await page.waitForLoadState('networkidle');
+
+            const content = await page.textContent('body');
+            if (!content) {
+                throw new Error('Не удалось получить ответ от сервиса проверки IP');
+            }
+
+            const ipData = JSON.parse(content);
+            const currentIp = ipData.origin;
+
+            // Дополнительно проверяем геолокацию
+            let country = 'Неизвестно';
+            try {
+                await page.goto('https://ipapi.co/json/', { timeout: 15000 });
+                const ipApiContent = await page.textContent('body');
+                if (ipApiContent) {
+                    const ipApiData = JSON.parse(ipApiContent);
+                    country = ipApiData.country_name || 'Неизвестно';
+                }
+            } catch (error) {
+                logger.warn('Could not get country info:', error);
+            }
+
+            return {
+                success: true,
+                message: `Прокси работает корректно`,
+                ip: currentIp,
+                country: country
+            };
+
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+            logger.error('Error checking proxy status:', error);
+            
+            return {
+                success: false,
+                message: `Ошибка проверки прокси: ${errorMessage}`
+            };
+        } finally {
+            // Закрываем контекст и страницу
+            if (page) {
+                try {
+                    await page.close();
+                } catch (error) {
+                    logger.error('Error closing page:', error);
+                }
+            }
+            if (context) {
+                try {
+                    await context.close();
+                } catch (error) {
+                    logger.error('Error closing context:', error);
+                }
+            }
         }
     }
 

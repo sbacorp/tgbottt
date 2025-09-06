@@ -4,28 +4,21 @@ import { conversations, createConversation } from '@grammyjs/conversations';
 import { MyContext, SessionData } from './types';
 import { config } from './utils/config';
 import { database } from './database';
+import { createSupabaseStorageAdapter } from './services/supabase-storage-adapter';
 import { monitoringService } from './services/monitoringService';
 import { initializeNotificationService } from './services/notificationService';
 import logger from './utils/logger';
 
 // Импорт обработчиков
 import {
-  handleStart,
-  handleMenu,
-  handleOrganizations,
-  handleAddInn,
-  handleRemoveInn,
-  handleUsers,
-  handleAddUsers,
-  handleRemoveUsers,
   handleAddAdmins,
   handleRemoveAdmins,
   handleCheck,
   handleCheckCbr,
   handleStatus,
   handleHelp,
-  handleSetCommands
-} from './handlers/commandHandlers';
+  setCommandsHandler,
+} from './commands';
 
 import { handleCallback } from './handlers/callbackHandlers';
 import { handleText } from './handlers/textHandlers';
@@ -34,28 +27,40 @@ import { handleText } from './handlers/textHandlers';
 import {
   checkConversation,
   checkCbrConversation,
-  addInnConversation,
-  removeInnConversation,
-  addUsersConversation,
-  removeUsersConversation,
   addAdminsConversation,
   removeAdminsConversation
 } from './conversations/commandConversations';
+import { createGroupConversation } from './conversations/groupCreation.conversation';
+import { addInnToGroupConversation } from './conversations/addInnToGroup.conversation';
+import { removeInnFromGroupConversation } from './conversations/removeInnFromGroup.conversation';
+import { addUserToGroupConversation } from './conversations/addUserToGroup.conversation';
+import { removeUserFromGroupConversation } from './conversations/removeUserFromGroup.conversation';
+import { handleStart } from './commands/start';
+
+// Импорт features
+import { tracking } from './features/tracking';
 
 // Создание экземпляра бота
-const bot = new Bot<MyContext>(config.botToken);
+const bot = new Bot<MyContext>(config.BOT_TOKEN);
 
 // Инициализация notificationService с тем же экземпляром бота
 export const notificationService = initializeNotificationService(bot);
 
-// Настройка сессий
-bot.use(session({
+// Настройка сессий с Supabase storage (если доступен)
+const sessionConfig = {
   initial: (): SessionData => ({
     isRegistered: false,
     isAdmin: false,
-    language: 'ru'
-  })
-}));
+    language: 'ru',
+    currentAction: null,
+    tempData: {},
+    // Состояния для feature tracking (больше не используются)
+  }),
+  // Используем Supabase storage
+  storage: createSupabaseStorageAdapter("grammy_sessions")
+};
+
+bot.use(session(sessionConfig));
 
 // Настройка conversations
 bot.use(conversations());
@@ -63,12 +68,16 @@ bot.use(conversations());
 // Регистрация conversations
 bot.use(createConversation(checkConversation, "check"));
 bot.use(createConversation(checkCbrConversation, "check_cbr"));
-bot.use(createConversation(addInnConversation, "add_inn"));
-bot.use(createConversation(removeInnConversation, "remove_inn"));
-bot.use(createConversation(addUsersConversation, "add_users"));
-bot.use(createConversation(removeUsersConversation, "remove_users"));
 bot.use(createConversation(addAdminsConversation, "add_admins"));
 bot.use(createConversation(removeAdminsConversation, "remove_admins"));
+bot.use(createConversation(createGroupConversation, "create_group"));
+bot.use(createConversation(addInnToGroupConversation, "add_inn_to_group"));
+bot.use(createConversation(removeInnFromGroupConversation, "remove_inn_from_group"));
+bot.use(createConversation(addUserToGroupConversation, "add_user_to_group"));
+bot.use(createConversation(removeUserFromGroupConversation, "remove_user_from_group"));
+
+// Регистрация features
+bot.use(tracking);
 
 // Middleware для обновления данных сессии из базы данных
 bot.use(async (ctx, next) => {
@@ -101,6 +110,9 @@ bot.use(async (ctx, next) => {
   logger.info(`User ${userId} (@${username}) - ${message} - ${end - start}ms`);
 });
 
+// Обработчики команд
+bot.command('start', handleStart);
+
 // Middleware для проверки регистрации (кроме команды /start)
 bot.use(async (ctx, next) => {
   const isStartCommand = ctx.message?.text === '/start';
@@ -113,29 +125,28 @@ bot.use(async (ctx, next) => {
   await next();
 });
 
-
-// Обработчики команд
-bot.command('start', handleStart);
-bot.command('menu', handleMenu);
-bot.command('organizations', handleOrganizations);
-bot.command('add_inn', handleAddInn);
-bot.command('remove_inn', handleRemoveInn);
-bot.command('users', handleUsers);
-bot.command('add_users', handleAddUsers);
-bot.command('remove_users', handleRemoveUsers);
 bot.command('add_admins', handleAddAdmins);
 bot.command('remove_admins', handleRemoveAdmins);
 bot.command('check', handleCheck);
 bot.command('check_cbr', handleCheckCbr);
 bot.command('status', handleStatus);
 bot.command('help', handleHelp);
-bot.command('setcommands', handleSetCommands);
+bot.command('setcommands', setCommandsHandler);
 
 // Обработчик callback запросов
 bot.on('callback_query:data', handleCallback);
 
 // Обработчик текстовых сообщений
+
+
+bot.hears("➕ Разовая проверка по ИНН", async (ctx) => {
+  // Запустить conversation для ввода ИНН
+  await ctx.conversation.enter("check");
+});
+
+
 bot.on('message:text', handleText);
+
 
 // Обработчик ошибок
 bot.catch((err) => {
@@ -161,10 +172,13 @@ async function startBot(): Promise<void> {
   try {
     logger.info('Starting CBR Monitoring Bot...');
     
-    // Подключение к базе данных
-    logger.info('Connecting to database...');
-    await database.connect();
-    logger.info('Database connected successfully');
+    // Проверка подключения к Supabase
+    logger.info('Connecting to Supabase...');
+    if (database.isSupabaseEnabled()) {
+      logger.info('Supabase connected successfully');
+    } else {
+      throw new Error('Supabase not configured. Please check SUPABASE_URL and SUPABASE_ANON_KEY');
+    }
     
     // Проверка здоровья бота (пропускаем при запуске для ускорения)
     logger.info('Skipping bot health check for faster startup');
@@ -234,9 +248,8 @@ async function gracefulShutdown(signal: string): Promise<void> {
     logger.info('Monitoring service stopped');
     
     
-    // Отключение от базы данных
-    await database.disconnect();
-    logger.info('Database disconnected');
+    // Supabase не требует явного отключения
+    logger.info('Supabase disconnected');
     
     // Остановка бота
     await bot.stop();

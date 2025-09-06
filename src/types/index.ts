@@ -9,6 +9,7 @@ export interface SessionData {
   language: string;
   currentAction?: string | null;
   tempData?: Record<string, any>;
+  // Состояния для feature tracking (больше не используются)
 }
 export type ContextSession = 
     Context &
@@ -67,6 +68,30 @@ export interface User {
   username?: string;
   is_admin: boolean;
   createdAt: Date;
+}
+
+// Типы для групп отслеживания
+export interface UserGroup {
+  id: number;
+  name: string;
+  owner_id: number;
+  invite_code: string;
+  created_at: Date;
+}
+
+// Типы для участников групп
+export interface GroupMember {
+  group_id: number;
+  user_id: number;
+  joined_at: Date;
+}
+
+// Типы для организаций в группах
+export interface GroupOrganization {
+  group_id: number;
+  inn: string;
+  added_by: number;
+  added_at: Date;
 }
 
 // Типы для связи пользователь-организация

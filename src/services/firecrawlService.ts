@@ -2,6 +2,7 @@ import FireCrawlApp from '@mendable/firecrawl-js';
 import { config } from '../utils/config';
 import logger from '../utils/logger';
 import { cbrService } from './cbrService';
+import { isOrganizationNotFound } from '../utils/validation';
 
 export interface KonturOrganizationData {
   inn: string;
@@ -31,7 +32,7 @@ export class FireCrawlService {
   private app: FireCrawlApp;
 
   constructor() {
-    this.app = new FireCrawlApp({ apiKey: config.firecrawlApiKey });
+    this.app = new FireCrawlApp({ apiKey: config.FIRECRAWL_API_KEY });
   }
 
   /**
@@ -47,7 +48,7 @@ export class FireCrawlService {
         formats: ["markdown"],
         onlyMainContent: true,
         parsePDF: false,
-        waitFor: 3000,
+        waitFor: 6000,
         maxAge: 14400000
       });
       // @ts-ignore 
@@ -55,6 +56,13 @@ export class FireCrawlService {
         logger.warn(`Не удалось получить данные для ИНН ${inn}: пустой ответ`);
         return null;
       }
+      // @ts-ignore 
+      // Проверяем, найдена ли организация
+      if (isOrganizationNotFound(scrapeResult.markdown, inn)) {
+        logger.warn(`Организация с ИНН ${inn} не найдена на Контур.Фокус`);
+        return null;
+      }
+      
   // @ts-ignore 
       const konturData = this.parseKonturData(scrapeResult.markdown, inn);
       

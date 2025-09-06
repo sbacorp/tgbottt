@@ -1,34 +1,17 @@
 import { InlineKeyboard } from "grammy";
 
-export function createMainMenuKeyboard(isAdmin: boolean = false) {
+export function createMainMenuKeyboard() {
   const keyboard = new InlineKeyboard()
-    .text("📋 Список организаций", "organizations_list")
-    .text("➕ Добавить ИНН", "add_inn")
-    .row();
-
-  if (isAdmin) {
-    keyboard
-      .text("👥 Список получателей", "users_list")
-      .text("⚙️ Управление получателями", "manage_users")
-      .row()
-      .text("🔧 Управление администраторами", "manage_admins")
-      .row();
-  }
-
+    .text("📋 Отслеживание", "tracking_menu")
+    .row()
+    .text("➕ Разовая проверка по ИНН", "single_check");
   return keyboard;
 }
+
 
 export function createBackKeyboard(backAction: string = "menu") {
   return new InlineKeyboard()
     .text("🔙 Назад", backAction);
-}
-
-export function createManageUsersKeyboard() {
-  return new InlineKeyboard()
-    .text("➕ Добавить пользователей", "add_users")
-    .text("➖ Удалить пользователей", "remove_users")
-    .row()
-    .text("🔙 Назад", "menu");
 }
 
 export function createManageAdminsKeyboard() {
@@ -39,7 +22,19 @@ export function createManageAdminsKeyboard() {
     .text("🔙 Назад", "menu");
 }
 
-export function createCancelKeyboard() {
+export function createCancelKeyboard(backAction?: string, backText: string = "🔙 Назад") {
   return new InlineKeyboard()
-    .text("❌ Отменить", "cancel_conversation");
+    .text(backAction ? backText : "❌ Отменить", backAction || "cancel_conversation");
+}
+
+export function createBackToTrackingKeyboard() {
+  return new InlineKeyboard()
+    .text("🔙 Назад к управлению", "back_to_tracking");
+}
+
+export function createCheckResultKeyboard() {
+  return new InlineKeyboard()
+    .text("🔍 Проверить еще один ИНН", "single_check")
+    .row()
+    .text("🔙 В главное меню", "menu");
 }

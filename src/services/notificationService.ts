@@ -94,7 +94,7 @@ class NotificationService {
   }
 
   /**
-   * Отправка уведомления всем пользователям
+   * Отправка уведомления всем пользователям (legacy метод)
    */
   async sendNotificationToAllUsers(message: string): Promise<void> {
     try {
@@ -112,6 +112,82 @@ class NotificationService {
       logger.info(`Notification sent to ${users.length} users`);
     } catch (error) {
       logger.error('Error sending notification to all users:', error);
+    }
+  }
+
+  /**
+   * Отправка уведомления пользователям групп, которые отслеживают организацию
+   */
+  async sendNotificationToGroupsByOrganization(inn: string, message: string): Promise<void> {
+    try {
+      const { database } = await import('../database/index');
+      
+      // Получаем группы, которые отслеживают эту организацию
+      const groups = await database.getGroupsByOrganization(inn);
+      
+      if (groups.length === 0) {
+        logger.info(`No groups found tracking organization ${inn}, sending to all users`);
+        // Fallback: отправляем всем пользователям если нет групп
+        await this.sendNotificationToAllUsers(message);
+        return;
+      }
+
+      const notifiedUsers = new Set<number>();
+      
+      for (const group of groups) {
+        try {
+          // Получаем участников группы
+          const members = await database.getGroupMembers(group.id);
+          
+          for (const member of members) {
+            // Проверяем, что не отправляли уже этому пользователю
+            if (!notifiedUsers.has(member.telegram_id)) {
+              try {
+                await this.sendNotification(member.telegram_id, message);
+                notifiedUsers.add(member.telegram_id);
+              } catch (error) {
+                logger.error(`Error sending notification to user ${member.telegram_id}:`, error);
+              }
+            }
+          }
+          
+          logger.info(`Notification sent to ${members.length} members of group "${group.name}" for organization ${inn}`);
+        } catch (error) {
+          logger.error(`Error processing group ${group.id}:`, error);
+        }
+      }
+      
+      logger.info(`Organization notification for ${inn} sent to ${notifiedUsers.size} unique users across ${groups.length} groups`);
+    } catch (error) {
+      logger.error(`Error sending notification to groups for organization ${inn}:`, error);
+      // Fallback: отправляем всем пользователям при ошибке
+      await this.sendNotificationToAllUsers(message);
+    }
+  }
+
+  /**
+   * Отправка уведомления пользователям групп, отслеживающих организацию
+   * Только групповая логика - без индивидуального отслеживания
+   */
+  async sendOrganizationNotification(inn: string, message: string): Promise<void> {
+    try {
+      const { database } = await import('../database/index');
+      
+      // Ищем группы, которые отслеживают организацию
+      const groups = await database.getGroupsByOrganization(inn);
+      
+      if (groups.length > 0) {
+        // Если есть группы - отправляем через группы
+        await this.sendNotificationToGroupsByOrganization(inn, message);
+      } else {
+        // Если групп нет - отправляем только админам
+        logger.warn(`No groups tracking organization ${inn}, sending to admins only`);
+        await this.sendAdminNotification(`Организация ${inn} изменила статус, но ни одна группа её не отслеживает:\n\n${message}`);
+      }
+    } catch (error) {
+      logger.error(`Error in organization notification for ${inn}:`, error);
+      // Fallback - отправляем админам
+      await this.sendAdminNotification(`Ошибка уведомления для ${inn}:\n\n${message}`);
     }
   }
 
