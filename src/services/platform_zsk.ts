@@ -21,11 +21,10 @@ export class PlatformZskService {
     async init(): Promise<void> {
         try {
             const launchOptions: any = {
-                headless: true,
-                slowMo: 1000,
+                headless: false,
+                slowMo: 0,
                 args: [
                     '--lang=ru-RU,ru',
-                    '--disable-blink-features=AutomationControlled'
                 ]
             };
 
@@ -58,8 +57,8 @@ export class PlatformZskService {
             throw new Error('Browser not initialized');
         }
 
-        // Фиксированный профиль macOS Chrome
-        const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+        // Фиксированный профиль macOS Chrome (под реальные данные пользователя)
+        const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36';
         const contextOptions = {
             userAgent,
             viewport: { width: 1512, height: 982 },
@@ -75,7 +74,7 @@ export class PlatformZskService {
                 'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
                 'upgrade-insecure-requests': '1',
                 // UA-CH хедеры (client hints)
-                'sec-ch-ua': '"Google Chrome";v="126", "Chromium";v="126", "Not.A/Brand";v="24"',
+                'sec-ch-ua': '"Not;A=Brand";v="99", "Google Chrome";v="139", "Chromium";v="139"',
                 'sec-ch-ua-mobile': '?0',
                 'sec-ch-ua-platform': '"macOS"',
             }
@@ -84,6 +83,25 @@ export class PlatformZskService {
         logger.info(`Creating new browser context with macOS profile: ${userAgent.substring(0, 60)}...`);
 
         const context = await this.browser.newContext(contextOptions);
+
+        // Хардкод: подставляем куки пользователя для домена .cbr.ru (для обхода DDOS-Guard)
+        try {
+            const expires = Math.floor(Date.now() / 1000) + 60 * 30; // 30 минут
+            await context.addCookies([
+                { name: '__ddg8_', value: 'XUG2bFYpIMlNbWpp', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
+                { name: '__ddg10_', value: '1757359660', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
+                { name: '__ddg9_', value: '46.138.90.140', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
+                { name: '__ddg1_', value: 'prqVNhQvR0NvAAKbn0fv', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
+                { name: '_ym_uid', value: '1756333850930728211', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
+                { name: '_ym_d', value: '1756333850', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
+                { name: 'ASPNET_SessionID', value: 'dxjpnjdupbwory2yqoomrqlu', domain: '.cbr.ru', path: '/', expires, httpOnly: true, secure: true, sameSite: 'Lax' },
+                { name: 'accept', value: '1', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
+                { name: '_ym_isad', value: '1', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
+                { name: '_ym_visorc', value: 'b', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
+            ]);
+        } catch (e) {
+            logger.warn('Не удалось установить хардкод-куки для cbr.ru', e);
+        }
 
         // Убираем глобальный перехват referer: может ломать загрузку статики/CORS
 
@@ -182,17 +200,17 @@ export class PlatformZskService {
                 userAgent,
                 userAgentMetadata: {
                     brands: [
-                        { brand: 'Chromium', version: '126' },
-                        { brand: 'Google Chrome', version: '126' },
-                        { brand: 'Not.A/Brand', version: '24' },
+                        { brand: 'Chromium', version: '139' },
+                        { brand: 'Google Chrome', version: '139' },
+                        { brand: 'Not;A=Brand', version: '99' },
                     ],
                     fullVersionList: [
-                        { brand: 'Chromium', version: '126.0.0.0' },
-                        { brand: 'Google Chrome', version: '126.0.0.0' },
-                        { brand: 'Not.A/Brand', version: '24.0.0.0' },
+                        { brand: 'Chromium', version: '139.0.0.0' },
+                        { brand: 'Google Chrome', version: '139.0.0.0' },
+                        { brand: 'Not;A=Brand', version: '99.0.0.0' },
                     ],
                     platform: 'macOS',
-                    platformVersion: '14.5.0',
+                    platformVersion: '10.15.7',
                     architecture: 'x86',
                     model: '',
                     mobile: false,
@@ -224,12 +242,66 @@ export class PlatformZskService {
 
             logger.info(`Starting INN check for: ${inn} with new browser context`);
 
-            // Переходим на страницу (точечно передаем referer)
-            await page.goto('https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/', {
-                referer: 'https://cbr.ru/'
-            });
-            await page.waitForLoadState('networkidle');
-            await page.waitForTimeout(3000);
+            // Ограничим дефолтные таймауты страницы, чтобы не висеть бесконечно
+            page.setDefaultNavigationTimeout(25000);
+            page.setDefaultTimeout(25000);
+
+            // Разогрев: идём на корень, чтобы DDOS-Guard поставил нужные куки
+            await page.goto('https://www.cbr.ru/', { referer: 'https://www.google.com/' });
+            try { await page.waitForLoadState('networkidle', { timeout: 20000 }); } catch {}
+            await page.waitForTimeout(2000);
+            // Ждём появления ddos-куки
+            try {
+                for (let i = 0; i < 5; i++) {
+                    const cookies = await context.cookies('https://www.cbr.ru');
+                    const hasDdg = cookies.some(c => c.name.startsWith('__ddg'));
+                    if (hasDdg) break;
+                    await page.waitForTimeout(2000);
+                }
+            } catch {}
+
+            // Пробуем перейти к разделу через меню на главной (чисто через DOM клики)
+            let navigatedViaMenu = false;
+            try {
+                await page.waitForSelector('.header_menu', { timeout: 15000 });
+                await page.evaluate(() => {
+                    const menu = document.querySelector('.header_menu') as HTMLElement | null;
+                    if (menu) menu.click();
+                });
+                await page.waitForSelector('#menu_tab_Services', { timeout: 15000 });
+                await page.evaluate(() => {
+                    const tab = document.querySelector('#menu_tab_Services') as HTMLElement | null;
+                    if (tab) tab.click();
+                });
+                await page.waitForTimeout(500);
+                // Прямой клик через DOM, как в ручном сценарии
+                const clicked = await page.evaluate(() => {
+                    const a = document.querySelector('a[href="/counteraction_m_ter/platform_zsk/proverka-po-inn/"]') as HTMLElement | null;
+                    if (a) { a.click(); return true; }
+                    return false;
+                });
+                if (!clicked) {
+                    throw new Error('Не удалось найти ссылку на страницу проверки по ИНН через меню');
+                }
+                await page.waitForLoadState('domcontentloaded', { timeout: 20000 });
+                navigatedViaMenu = true;
+            } catch (e) {
+                // Фолбэк: прямой переход
+                await page.goto('https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/', { referer: 'https://www.cbr.ru/' });
+                try { await page.waitForLoadState('domcontentloaded', { timeout: 20000 }); } catch {}
+            }
+
+            // Если попали на экран DDOS-Guard — несколько попыток автообновления
+            for (let attempt = 1; attempt <= 4; attempt++) {
+                const guardText = await page.locator('text=Проверка браузера перед переходом на cbr.ru').count();
+                if (guardText === 0) break;
+                await page.waitForTimeout(4000 + Math.floor(Math.random() * 2000));
+                try { await page.reload({ waitUntil: 'domcontentloaded' }); } catch {}
+            }
+            await page.waitForTimeout(2000);
+
+            // Логируем способ навигации для диагностики
+            logger.info(`Navigated to target via ${navigatedViaMenu ? 'menu' : 'direct goto'}`);
 
             // Проверяем Cloudflare
             const cloudflareCheck = await page.locator('text="accessing"').count();
