@@ -25,19 +25,22 @@ export class PlatformZskService {
                 slowMo: 1000,
                 args: [
                     '--lang=ru-RU,ru',
-                    '--disable-blink-features=AutomationControlled'
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-http2'
                 ]
             };
 
             // Добавляем прокси если он включен
             // Поддерживаются HTTP/HTTPS, SOCKS4/SOCKS5 прокси с аутентификацией
             if (config.proxy.enabled && config.proxy.server) {
+                const serverRaw = config.proxy.server;
+                const server = /^(http|https):\/\//i.test(serverRaw) ? serverRaw : `http://${serverRaw}`;
                 launchOptions.proxy = {
-                    server: config.proxy.server
+                    server
                 };
                 
                 
-                logger.info(`Proxy enabled: ${config.proxy.server}`);
+                logger.info(`Proxy enabled: ${server}`);
             }
 
             this.browser = await chromium.launch(launchOptions);
@@ -69,7 +72,31 @@ export class PlatformZskService {
         logger.info(`Creating new browser context with macOS profile: ${userAgent.substring(0, 60)}...`);
 
         const context = await this.browser.newContext(contextOptions);
+
+        // Разрешаем запросы только к нужным доменам, остальное абортируем
+        await context.route('**/*', (route) => {
+            try {
+                const url = route.request().url();
+                const allowed = [
+                    'https://cbr.ru/',
+                    'https://www.cbr.ru/',
+                    'https://yandex.ru/',
+                    'https://yastatic.net/',
+                    'https://mc.yandex.ru/'
+                ];
+                const isAllowed = allowed.some(prefix => url.startsWith(prefix));
+                if (isAllowed) {
+                    return route.continue();
+                }
+                return route.abort();
+            } catch {
+                return route.abort();
+            }
+        });
+
         const page = await context.newPage();
+        page.setDefaultNavigationTimeout(60000);
+        page.setDefaultTimeout(60000);
 
         // Добавляем скрипты для маскировки автоматизации
         await page.addInitScript(() => {
@@ -124,8 +151,8 @@ export class PlatformZskService {
             logger.info(`Starting INN check for: ${inn} with new browser context`);
 
             // Переходим на страницу
-            await page.goto('https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/');
-            await page.waitForLoadState('networkidle');
+            await page.goto('https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/', { timeout: 60000, waitUntil: 'domcontentloaded' });
+            await page.waitForLoadState('domcontentloaded');
             await page.waitForTimeout(3000);
 
             // Проверяем Cloudflare
@@ -159,7 +186,7 @@ export class PlatformZskService {
             }
 
             // Работаем с advanced капчей
-            await page.waitForSelector('[data-testid="advanced-iframe"]', {timeout: 5000, state: 'visible' });
+            await page.waitForSelector('[data-testid="advanced-iframe"]', {timeout: 15000, state: 'visible' });
             const advancedIframe = page.locator('[data-testid="advanced-iframe"]').contentFrame();
             if (!advancedIframe) {
                 throw new Error('Advanced капча не найдена');

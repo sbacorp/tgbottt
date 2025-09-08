@@ -4,6 +4,7 @@ import { MESSAGES, STATUS_EMOJIS } from "../utils/config";
 import logger from "../utils/logger";
 import { createBackKeyboard, createCancelKeyboard, createMainMenuKeyboard } from "../helpers";
 import { createTrackingMenuKeyboard } from "../features/tracking"
+import { InlineKeyboard } from "grammy";
 /**
  * Обработчик callback запросов
  */
@@ -353,21 +354,45 @@ async function handleRemoveAdminsCallback(ctx: MyContext): Promise<void> {
  */
 async function handleTrackingMenuCallback(ctx: MyContext): Promise<void> {
   try {
-    if (!ctx.session.isRegistered) {
-      await ctx.answerCallbackQuery("Вы не зарегистрированы");
+    const telegramId = ctx.from?.id;
+    if (!telegramId) {
+      await ctx.reply(MESSAGES.error);
       return;
     }
 
-    const keyboard = createTrackingMenuKeyboard();
-    
-    await ctx.editMessageText(
-      "Составьте список организаций на отслеживание и список пользователей для получения уведомлений об изменении статуса надежности. Если список пользователей не заполнен, то уведомления будете получать только Вы.",
-      { reply_markup: keyboard }
-    );
-    await ctx.answerCallbackQuery("Меню отслеживания");
+    // Проверяем, есть ли у пользователя группа
+    const userGroup = await database.getUserGroup(telegramId);
+
+    if (!userGroup) {
+      await ctx.deleteMessage();
+      // У пользователя нет группы - предлагаем создать
+      const keyboard = new InlineKeyboard()
+        .text("➕ Создать группу отслеживания", "create_group")
+        .row()
+        .text("🔙 Назад в меню", "back_to_main_menu");
+
+      await ctx.reply(
+        "🏢 <b>Группы отслеживания</b>\n\nУ вас пока нет группы отслеживания. Создайте группу для мониторинга организаций и управления участниками.",
+        {
+          parse_mode: "HTML",
+          reply_markup: keyboard,
+        }
+      );
+    } else {
+      // У пользователя есть группа - показываем меню группы
+      await ctx.deleteMessage();
+      const keyboard = createTrackingMenuKeyboard();
+      await ctx.reply(
+        `🏢 <b>Группа "${userGroup.name}"</b>\n\nСоставьте список организаций на отслеживание и список участников для получения уведомлений об изменении статуса надежности.`,
+        {
+          parse_mode: "HTML",
+          reply_markup: keyboard,
+        }
+      );
+    }
   } catch (error) {
-    logger.error("Error in handleTrackingMenuCallback:", error);
-    await ctx.answerCallbackQuery("Ошибка при открытии меню отслеживания");
+    logger.error("Error in tracking menu:", error);
+    await ctx.reply(MESSAGES.error);
   }
 }
 
