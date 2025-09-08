@@ -410,10 +410,10 @@ export class MonitoringService {
       const statusIcon = newZskStatus === 'red' ? '🔴' : '🟢';
       const statusText = newZskStatus === 'red' ? 'Найдены нарушения' : 'Нарушений не найдено';
 
-      let message = `🔍 **Проверка через ЗСК**\n\n`;
-      message += `${statusIcon} **Статус:** ${statusText}\n`;
-      message += `🔢 **ИНН:** ${inn}\n\n`;
-      message += `📋 **Результат проверки:**\n${resultText}\n\n`;
+      let message = `🔍 Проверка через ЗСК\n\n`;
+      message += `${statusIcon} Статус: ${statusText}\n`;
+      message += `🔢 ИНН: ${inn}\n\n`;
+      message += `📋 Результат проверки:\n${resultText}\n\n`;
       message += '➕ Обновлено в системе: ' + new Date().toLocaleDateString('ru-RU');
 
       // Отправляем уведомление пользователям, отслеживающим организацию

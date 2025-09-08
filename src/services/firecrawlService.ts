@@ -251,7 +251,7 @@ export class FireCrawlService {
         if (goodFactsMatch) facts.push(`🟢 ${goodFactsMatch[1]} - благоприятные`);
         
         if (facts.length > 0) {
-          data.additionalInfo = `Автоматическая проверка: ${facts.join(', ')}`;
+          data.additionalInfo = `Факты о организации: ${facts.join(', ')}`;
         }
       }
 

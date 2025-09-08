@@ -70,21 +70,19 @@ export async function handleStart(ctx: MyContext): Promise<void> {
       console.log(isAdmin);
       
       if (!user) {
-        // Пользователь не зарегистрирован
-        if (isAdmin) {
-          // Автоматическая регистрация админа
-          try {
+        // Пользователь не зарегистрирован — регистрируем автоматически
+        try {
+          if (isAdmin) {
             await createAdminUser(telegramId, username);
             user = await database.getUserByTelegramId(telegramId);
             await ctx.reply('✅ Вы зарегистрированы как администратор!');
-          } catch (error) {
-            logger.error('Error auto-registering admin:', error);
-            await ctx.reply(MESSAGES.error);
-            return;
+          } else {
+            await database.createUser(telegramId, username, false);
+            user = await database.getUserByTelegramId(telegramId);
           }
-        } else {
-          // Обычный пользователь не зарегистрирован
-          await ctx.reply(MESSAGES.notRegistered);
+        } catch (error) {
+          logger.error('Error auto-registering user:', error);
+          await ctx.reply(MESSAGES.error);
           return;
         }
       } else if (isAdmin && !user.is_admin) {

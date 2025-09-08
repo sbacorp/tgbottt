@@ -150,7 +150,7 @@ export async function checkConversation(
     } else if (!konturResult.additionalInfo) {
       message += `Признаков недостоверности не обнаружено\n`;
     } else {
-      message += `Детальная информация доступна в дополнительном отчете\n`;
+      message += ``;
     }
 
     await ctx.reply(message, { 
