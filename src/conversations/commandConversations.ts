@@ -29,7 +29,7 @@ export async function checkConversation(
     if (context.callbackQuery?.data === 'menu') {
       await ctx.deleteMessage();
       await ctx.deleteMessages([startMessage.message_id]);
-      await ctx.reply('Главное меню', {
+      await ctx.reply('Для разовой проверки воспользуйтесь кнопкой "разовая проверка" или командой /check  Для подписки организаций на постоянное отслеживание воспользуйтесь кнопкой "отслеживание". В структуре меню на отслеживание вы можете назначить группу организаций и указать пользователей-получателей отчетов, просматривать списки пользователей-получателей уведомлений и редактировать их.', {
         reply_markup: createMainMenuKeyboard()
       });
       await context.answerCallbackQuery();
@@ -344,7 +344,7 @@ export async function checkCbrConversation(
     if (context.callbackQuery?.data === 'menu') {
       await ctx.deleteMessage();
       await ctx.deleteMessages([startMessage.message_id]);
-      await ctx.reply('Главное меню', {
+      await ctx.reply('Для разовой проверки воспользуйтесь кнопкой "разовая проверка" или командой /check  Для подписки организаций на постоянное отслеживание воспользуйтесь кнопкой "отслеживание". В структуре меню на отслеживание вы можете назначить группу организаций и указать пользователей-получателей отчетов, просматривать списки пользователей-получателей уведомлений и редактировать их.', {
         reply_markup: createMainMenuKeyboard()
       });
       await context.answerCallbackQuery();
