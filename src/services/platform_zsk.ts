@@ -5,7 +5,7 @@ import * as path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import Jimp from 'jimp';
 import { config } from '../utils/config';
-import { BrowserRandomizer } from '../helpers/browserRandomizer';
+// Убрана генерация браузера. Фиксированный профиль macOS.
 
 export class PlatformZskService {
     private browser: Browser | null = null;
@@ -23,7 +23,10 @@ export class PlatformZskService {
             const launchOptions: any = {
                 headless: true,
                 slowMo: 1000,
-                args: BrowserRandomizer.getRandomLaunchArgs()
+                args: [
+                    '--lang=ru-RU,ru',
+                    '--disable-blink-features=AutomationControlled'
+                ]
             };
 
             // Добавляем прокси если он включен
@@ -60,11 +63,20 @@ export class PlatformZskService {
             throw new Error('Browser not initialized');
         }
 
-        // Генерируем случайные данные браузера для каждого запроса
-        const randomBrowserData = BrowserRandomizer.generateRandomBrowserData();
-        const contextOptions = BrowserRandomizer.getRandomContextOptions(randomBrowserData);
+        // Фиксированный профиль macOS Chrome
+        const userAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36';
+        const contextOptions = {
+            userAgent,
+            viewport: { width: 1512, height: 982 },
+            deviceScaleFactor: 2,
+            locale: 'ru-RU',
+            timezoneId: 'Europe/Moscow',
+            colorScheme: 'light',
+            hasTouch: false,
+            isMobile: false,
+        } as const;
 
-        logger.info(`Creating new browser context with random data: ${randomBrowserData.userAgent.substring(0, 50)}...`);
+        logger.info(`Creating new browser context with macOS profile: ${userAgent.substring(0, 60)}...`);
 
         const context = await this.browser.newContext(contextOptions);
         const page = await context.newPage();
@@ -84,6 +96,11 @@ export class PlatformZskService {
             Object.defineProperty(navigator, 'languages', {
                 get: () => ['ru-RU', 'ru', 'en-US', 'en'],
             });
+
+            // Маскируем платформу под macOS
+            Object.defineProperty(navigator, 'platform', { get: () => 'MacIntel' });
+            Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 });
+            Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 });
 
             // Маскируем Chrome runtime
             if ((window as any).chrome) {
