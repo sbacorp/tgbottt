@@ -21,7 +21,7 @@ export class PlatformZskService {
     async init(): Promise<void> {
         try {
             const launchOptions: any = {
-                headless: true,
+                headless: false,
                 slowMo: 1000,
                 args: [
                     '--lang=ru-RU,ru',
@@ -69,11 +69,24 @@ export class PlatformZskService {
             colorScheme: 'light',
             hasTouch: false,
             isMobile: false,
+            serviceWorkers: 'allow' as const,
+            extraHTTPHeaders: {
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+                'upgrade-insecure-requests': '1',
+                // UA-CH хедеры (client hints)
+                'sec-ch-ua': '"Google Chrome";v="126", "Chromium";v="126", "Not.A/Brand";v="24"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': '"macOS"',
+            }
         } as const;
 
         logger.info(`Creating new browser context with macOS profile: ${userAgent.substring(0, 60)}...`);
 
         const context = await this.browser.newContext(contextOptions);
+
+        // Убираем глобальный перехват referer: может ломать загрузку статики/CORS
+
         const page = await context.newPage();
 
         // Добавляем скрипты для маскировки автоматизации
@@ -111,7 +124,90 @@ export class PlatformZskService {
                     Promise.resolve({ state: Notification.permission }) :
                     originalQuery(parameters)
             );
+
+            // Эмулируем navigator.connection
+            if (!(navigator as any).connection) {
+                Object.defineProperty(navigator, 'connection', {
+                    configurable: true,
+                    enumerable: true,
+                    get: () => ({
+                        downlink: 10,
+                        effectiveType: '4g',
+                        rtt: 50,
+                        saveData: false,
+                        onchange: null,
+                    }),
+                });
+            }
+
+            // Эмулируем медиа-устройства
+            if (navigator.mediaDevices && 'enumerateDevices' in navigator.mediaDevices) {
+                const originalEnumerate = navigator.mediaDevices.enumerateDevices.bind(navigator.mediaDevices);
+                navigator.mediaDevices.enumerateDevices = async () => {
+                    try {
+                        const list = await originalEnumerate();
+                        if (Array.isArray(list) && list.length > 0) return list;
+                    } catch {}
+                    return [
+                        { kind: 'audioinput', deviceId: 'default', label: '', groupId: '' },
+                        { kind: 'audiooutput', deviceId: 'default', label: '', groupId: '' },
+                        { kind: 'videoinput', deviceId: 'default', label: '', groupId: '' },
+                    ] as any;
+                };
+            }
+
+            // Подменяем WebGL параметры для правдоподобности
+            const patchWebGL = (gl: any) => {
+                if (!gl) return;
+                const originalGetParameter = gl.getParameter.bind(gl);
+                gl.getParameter = (parameter: number) => {
+                    const UNMASKED_VENDOR_WEBGL = 0x9245;
+                    const UNMASKED_RENDERER_WEBGL = 0x9246;
+                    if (parameter === UNMASKED_VENDOR_WEBGL) return 'Apple Inc.';
+                    if (parameter === UNMASKED_RENDERER_WEBGL) return 'Apple GPU';
+                    return originalGetParameter(parameter);
+                };
+            };
+            try {
+                const canvas = document.createElement('canvas');
+                patchWebGL(canvas.getContext('webgl'));
+                patchWebGL(canvas.getContext('webgl2'));
+            } catch {}
         });
+
+        // Настраиваем UA Client Hints через CDP, чтобы совпадали с Chrome/macOS
+        try {
+            const client = await context.newCDPSession(page);
+            await client.send('Network.setUserAgentOverride', {
+                userAgent,
+                userAgentMetadata: {
+                    brands: [
+                        { brand: 'Chromium', version: '126' },
+                        { brand: 'Google Chrome', version: '126' },
+                        { brand: 'Not.A/Brand', version: '24' },
+                    ],
+                    fullVersionList: [
+                        { brand: 'Chromium', version: '126.0.0.0' },
+                        { brand: 'Google Chrome', version: '126.0.0.0' },
+                        { brand: 'Not.A/Brand', version: '24.0.0.0' },
+                    ],
+                    platform: 'macOS',
+                    platformVersion: '14.5.0',
+                    architecture: 'x86',
+                    model: '',
+                    mobile: false,
+                }
+            });
+        } catch {}
+
+        // Небольшая «очеловеченная» активность до перехода на сайт с проверкой
+        try {
+            await page.mouse.move(100 + Math.random() * 300, 150 + Math.random() * 200);
+            await page.keyboard.press('Tab');
+            await page.waitForTimeout(300 + Math.floor(Math.random() * 500));
+            await page.mouse.move(200 + Math.random() * 400, 300 + Math.random() * 200);
+            await page.evaluate(() => window.scrollBy(0, 200 + Math.floor(Math.random() * 200)));
+        } catch {}
 
         return { context, page };
     }
@@ -128,8 +224,10 @@ export class PlatformZskService {
 
             logger.info(`Starting INN check for: ${inn} with new browser context`);
 
-            // Переходим на страницу
-            await page.goto('https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/');
+            // Переходим на страницу (точечно передаем referer)
+            await page.goto('https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/', {
+                referer: 'https://cbr.ru/'
+            });
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(3000);
 
