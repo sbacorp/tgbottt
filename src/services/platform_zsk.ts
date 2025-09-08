@@ -246,17 +246,35 @@ export class PlatformZskService {
             logger.info(`Screenshot saved to: ${screenshotPath1}`);
 
             // Заполняем форму
-            try {
-                await page.waitForSelector('#BlackINN_INN', { state: 'visible', timeout: 30000 });
-            } catch (e) {
+            let innFieldVisible = false;
+            for (let attempt = 1; attempt <= 3; attempt++) {
                 try {
-                    const timeoutShotPath = path.join(process.cwd(), 'screenshot_wait_inn.png');
-                    await page.screenshot({ path: timeoutShotPath, fullPage: true });
-                    logger.error(`Timeout while waiting for #BlackINN_INN. Screenshot saved: ${timeoutShotPath}`);
-                } catch (scrErr) {
-                    logger.error('Failed to capture timeout screenshot:', scrErr);
+                    await page.waitForSelector('#BlackINN_INN', { state: 'visible', timeout: 10000 });
+                    innFieldVisible = true;
+                    break;
+                } catch (e) {
+                    try {
+                        const timeoutShotPath = path.join(process.cwd(), `screenshot_wait_inn_attempt${attempt}.png`);
+                        await page.screenshot({ path: timeoutShotPath, fullPage: true });
+                        logger.error(`Attempt ${attempt}: timeout waiting for #BlackINN_INN. Screenshot saved: ${timeoutShotPath}`);
+                    } catch (scrErr) {
+                        logger.error('Failed to capture timeout screenshot:', scrErr);
+                    }
+                    if (attempt < 3) {
+                        try { await page.reload({ waitUntil: 'domcontentloaded' }); } catch {}
+                        try { await page.waitForLoadState('networkidle', { timeout: 30000 }); } catch {}
+                        await page.waitForTimeout(3000);
+                        continue;
+                    } else {
+                        throw e;
+                    }
                 }
             }
+
+            if (!innFieldVisible) {
+                throw new Error('Поле #BlackINN_INN не появилось после 3 попыток');
+            }
+
             await page.locator('#BlackINN_INN').fill(inn);
 
             await page.locator('#BlackINN_AuthorType').selectOption('Other');
