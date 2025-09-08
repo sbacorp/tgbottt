@@ -36,16 +36,6 @@ export class PlatformZskService {
                     server: config.proxy.server
                 };
                 
-                // Добавляем аутентификацию прокси если указаны учетные данные
-                if (config.proxy.username && config.proxy.password) {
-                    launchOptions.proxy.username = config.proxy.username;
-                    launchOptions.proxy.password = config.proxy.password;
-                }
-                
-                // Добавляем исключения для прокси если указаны
-                if (config.proxy.bypass) {
-                    launchOptions.proxy.bypass = config.proxy.bypass;
-                }
                 
                 logger.info(`Proxy enabled: ${config.proxy.server}`);
             }
