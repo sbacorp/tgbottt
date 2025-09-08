@@ -246,7 +246,17 @@ export class PlatformZskService {
             logger.info(`Screenshot saved to: ${screenshotPath1}`);
 
             // Заполняем форму
-            await page.waitForSelector('#BlackINN_INN', { state: 'visible' });
+            try {
+                await page.waitForSelector('#BlackINN_INN', { state: 'visible', timeout: 30000 });
+            } catch (e) {
+                try {
+                    const timeoutShotPath = path.join(process.cwd(), 'screenshot_wait_inn.png');
+                    await page.screenshot({ path: timeoutShotPath, fullPage: true });
+                    logger.error(`Timeout while waiting for #BlackINN_INN. Screenshot saved: ${timeoutShotPath}`);
+                } catch (scrErr) {
+                    logger.error('Failed to capture timeout screenshot:', scrErr);
+                }
+            }
             await page.locator('#BlackINN_INN').fill(inn);
 
             await page.locator('#BlackINN_AuthorType').selectOption('Other');
