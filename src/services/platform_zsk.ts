@@ -359,16 +359,58 @@ export class PlatformZskService {
             const checkboxIframe = page.locator('[data-testid="checkbox-iframe"]').contentFrame();
             if (checkboxIframe) {
                 await checkboxIframe.getByRole('checkbox', { name: 'Я не робот' }).click();
+                await page.waitForTimeout(1000);
+                try {
+                    const ariaChecked = await checkboxIframe.getByRole('checkbox', { name: 'Я не робот' }).getAttribute('aria-checked');
+                    if (ariaChecked === 'true') {
+                        // Капча уже отмечена — пробуем сразу получить результат
+                        await page.locator('#BlackINN_searchbtn').click();
+                        await page.waitForTimeout(3000);
+                        const resultBlock = page.locator('.block-part');
+                        await resultBlock.waitFor({ timeout: 10000 });
+                        const resultText = await resultBlock.textContent();
+                        return {
+                            success: true,
+                            result: resultText?.trim() || 'Результат не найден'
+                        };
+                    }
+                } catch {}
             } else {
                 throw new Error('Капча не найдена');
             }
 
             // Работаем с advanced капчей
-            await page.waitForSelector('[data-testid="advanced-iframe"]', { timeout: 60000, state: 'attached' });
-            await page.waitForSelector('[data-testid="advanced-iframe"]', { timeout: 60000, state: 'visible' });
+            try {
+                await page.waitForSelector('[data-testid="advanced-iframe"]', { timeout: 60000, state: 'attached' });
+                await page.waitForSelector('[data-testid="advanced-iframe"]', { timeout: 60000, state: 'visible' });
+            } catch {
+                // Advanced окно не появилось — пробуем сразу поиск
+                await page.locator('#BlackINN_searchbtn').click();
+                await page.waitForTimeout(3000);
+                try {
+                    const resultBlock = page.locator('.block-part');
+                    await resultBlock.waitFor({ timeout: 10000 });
+                    const resultText = await resultBlock.textContent();
+                    return {
+                        success: true,
+                        result: resultText?.trim() || 'Результат не найден'
+                    };
+                } catch {
+                    throw new Error('Advanced капча не появилась и результат без неё не получен');
+                }
+            }
             const advancedIframe = page.locator('[data-testid="advanced-iframe"]').contentFrame();
             if (!advancedIframe) {
-                throw new Error('Advanced капча не найдена');
+                // Нет доступа к фрейму — последний шанс без капчи
+                await page.locator('#BlackINN_searchbtn').click();
+                await page.waitForTimeout(3000);
+                const resultBlock = page.locator('.block-part');
+                await resultBlock.waitFor({ timeout: 10000 });
+                const resultText = await resultBlock.textContent();
+                return {
+                    success: true,
+                    result: resultText?.trim() || 'Результат не найден'
+                };
             }
 
             const captchaView = advancedIframe.locator('.AdvancedCaptcha-View');
