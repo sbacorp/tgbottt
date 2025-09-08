@@ -354,6 +354,8 @@ export class PlatformZskService {
             await page.evaluate(() => window.scrollBy(0, 400));
 
             // Работаем с капчей
+            await page.waitForSelector('[data-testid="checkbox-iframe"]', { timeout: 60000, state: 'attached' });
+            await page.waitForSelector('[data-testid="checkbox-iframe"]', { timeout: 60000, state: 'visible' });
             const checkboxIframe = page.locator('[data-testid="checkbox-iframe"]').contentFrame();
             if (checkboxIframe) {
                 await checkboxIframe.getByRole('checkbox', { name: 'Я не робот' }).click();
@@ -362,14 +364,15 @@ export class PlatformZskService {
             }
 
             // Работаем с advanced капчей
-            await page.waitForSelector('[data-testid="advanced-iframe"]', {timeout: 5000, state: 'visible' });
+            await page.waitForSelector('[data-testid="advanced-iframe"]', { timeout: 60000, state: 'attached' });
+            await page.waitForSelector('[data-testid="advanced-iframe"]', { timeout: 60000, state: 'visible' });
             const advancedIframe = page.locator('[data-testid="advanced-iframe"]').contentFrame();
             if (!advancedIframe) {
                 throw new Error('Advanced капча не найдена');
             }
 
             const captchaView = advancedIframe.locator('.AdvancedCaptcha-View');
-            await captchaView.waitFor({ timeout: 10000 });
+            await captchaView.waitFor({ timeout: 30000 });
 
             const screenshot = await captchaView.screenshot();
             const screenshotPath = path.join(process.cwd(), 'captcha_screenshot.png');
