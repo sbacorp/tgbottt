@@ -236,8 +236,6 @@ export class MonitoringService {
       const data = await this.firecrawlService.getOrganizationData(inn);
       console.log(data, 'data')
       if (data) {
-        
-        
         logger.info(`Данные организации ${inn} обновлены в базе данных`);
       }
 

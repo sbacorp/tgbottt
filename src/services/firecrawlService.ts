@@ -244,17 +244,7 @@ export class FireCrawlService {
         }
       }
 
-      // Дополнительная информация о проверке
-      if (liquidationFactMatch || attentionFactMatch || goodFactsMatch) {
-        const facts = [];
-        if (liquidationFactMatch) facts.push(`🔴 ${liquidationFactMatch[1]} - ликвидация/банкротство`);
-        if (attentionFactMatch) facts.push(`🟡 ${attentionFactMatch[1]} - требует внимания`);
-        if (goodFactsMatch) facts.push(`🟢 ${goodFactsMatch[1]} - благоприятные`);
-        
-        if (facts.length > 0) {
-          data.additionalInfo = `Факты об организации: ${facts.join(', ')}`;
-        }
-      }
+      // Удаляем вывод блока "Факты об организации" — не формируем additionalInfo
 
       // Логируем итоговый статус
       logger.info(`Final status for ${inn}: ${data.status} (liquidation: ${liquidationFactMatch?.[1] || 0}, attention: ${attentionFactMatch?.[1] || 0}, good: ${goodFactsMatch?.[1] || 0})`);

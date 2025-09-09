@@ -87,7 +87,11 @@ export async function addInnToGroupConversation(
       const addedOrg = await database.addOrganizationIfNotExists({
         inn,
         name: orgData?.name || `Организация ${inn}`,
-        status: orgData?.status || 'green'
+        status: orgData?.status || 'green',
+        address: orgData?.address || '',
+        region: orgData?.region || ''
+
+
       });
 
       if (addedOrg) {

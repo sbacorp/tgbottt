@@ -32,7 +32,7 @@ export async function addUserToGroupConversation(
   await ctx.editMessageText(
     `➕ <b>Добавление участника в группу "${userGroup.name}"</b>\n\n` +
     `Введите Telegram ID пользователя для добавления в группу:\n\n` +
-    `💡 <i>Пользователь может узнать свой ID у бота @userinfobot</i>`,
+    `💡 <i>Пользователь может узнать свой ID у бота @user_stats_bot</i>`,
     {
       parse_mode: 'HTML',
       reply_markup: createCancelKeyboard("back_to_tracking", "🔙 Назад к управлению")
