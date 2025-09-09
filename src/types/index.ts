@@ -26,7 +26,7 @@ export interface Organization {
   id: number;
   inn: string;
   name: string;
-  status: 'red' | 'orange' | 'green' | 'removed';
+  status: 'red' | 'orange' | 'green';
   zskStatus: 'red' | 'green';
   address?: string;
   websites?: string[];

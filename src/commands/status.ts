@@ -36,7 +36,8 @@ export async function handleStatus(ctx: MyContext): Promise<void> {
     message += `👥 Пользователей: ${users.length}`;
 
     // Проверка прокси
-    if (config.proxy.enabled && config.proxy.server) {
+    const hasAnyProxy = config.proxy.enabled && (config.proxy.poolIps && config.proxy.poolIps.length > 0);
+    if (hasAnyProxy) {
       message += `\n\n🌐 Проверка прокси...\n`;
       await ctx.reply(message);
       
@@ -48,7 +49,8 @@ export async function handleStatus(ctx: MyContext): Promise<void> {
         
         const proxyStatus = await platformZskService.checkProxyStatus();
         
-        let proxyMessage = `🔗 Прокси: ${config.proxy.server}\n`;
+        const proxyLabel = `pool[${config.proxy.port}] ${config.proxy.poolIps?.join(', ') || ''}`;
+        let proxyMessage = `🔗 Прокси: ${proxyLabel}\n`;
         if (proxyStatus.success) {
           proxyMessage += `✅ ${proxyStatus.message}\n`;
           if (proxyStatus.ip) {

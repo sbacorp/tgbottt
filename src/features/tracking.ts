@@ -16,6 +16,8 @@ export function createTrackingMenuKeyboard(): InlineKeyboard {
     .row()
     .text("👥 Список пользователей", "tracking_users")
     .row()
+    .text("🗑 Удалить группу", "delete_group")
+    .row()
     .text("🔙 Назад в меню", "back_to_main_menu");
 }
 
@@ -343,12 +345,41 @@ tracking.callbackQuery("back_to_users", async (ctx) => {
 tracking.callbackQuery("back_to_main_menu", async (ctx) => {
   try {
     const keyboard = createMainMenuKeyboard();
-    await ctx.editMessageText("Главное меню", {
-      reply_markup: keyboard,
-    });
+    await ctx.editMessageText(
+      `Для разовой проверки воспользуйтесь кнопкой "разовая проверка" или командой /check
+
+      Для подписки организаций на постоянное отслеживание воспользуйтесь кнопкой "отслеживание". В структуре меню на отслеживание вы можете назначить группу организаций и указать пользователей-получателей отчетов, просматривать списки пользователей-получателей уведомлений и редактировать их.`,
+      {
+        reply_markup: keyboard,
+      }
+    );
     await ctx.answerCallbackQuery();
   } catch (error) {
     logger.error("Error going back to main menu:", error);
     await ctx.answerCallbackQuery("❌ Ошибка навигации");
+  }
+});
+
+// Обработчик удаления группы
+tracking.callbackQuery("delete_group", async (ctx) => {
+  try {
+    const telegramId = ctx.from?.id;
+    if (!telegramId) {
+      await ctx.answerCallbackQuery("❌ Ошибка идентификации пользователя");
+      return;
+    }
+
+    const userGroup = await database.getUserGroup(telegramId);
+    if (!userGroup) {
+      await ctx.answerCallbackQuery("❌ Группа не найдена");
+      return;
+    }
+
+    await database.deleteUserGroup(userGroup.id, telegramId);
+    await ctx.editMessageText('✅ Группа удалена.');
+    await ctx.answerCallbackQuery();
+  } catch (error) {
+    logger.error('Error deleting group from tracking menu:', error);
+    await ctx.answerCallbackQuery('❌ Не удалось удалить группу');
   }
 });

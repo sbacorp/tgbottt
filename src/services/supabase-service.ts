@@ -822,6 +822,52 @@ export class SupabaseService {
   }
 
   /**
+   * Удаление группы владельцем: удаляет членов и организации, затем саму группу
+   */
+  async deleteUserGroup(groupId: number, ownerId: number): Promise<void> {
+    if (!this.isEnabled) return;
+
+    try {
+      // Проверяем, что владелец совпадает
+      const { data: group, error: groupErr } = await this.client!
+        .from('user_groups')
+        .select('*')
+        .eq('id', groupId)
+        .single();
+      if (groupErr) throw groupErr;
+      if (!group || group.owner_id !== ownerId) {
+        throw new Error('Недостаточно прав для удаления группы');
+      }
+
+      // Удаляем участников
+      const { error: delMembersErr } = await this.client!
+        .from('group_members')
+        .delete()
+        .eq('group_id', groupId);
+      if (delMembersErr) throw delMembersErr;
+
+      // Удаляем организации группы
+      const { error: delOrgErr } = await this.client!
+        .from('group_organizations')
+        .delete()
+        .eq('group_id', groupId);
+      if (delOrgErr) throw delOrgErr;
+
+      // Удаляем саму группу
+      const { error: delGroupErr } = await this.client!
+        .from('user_groups')
+        .delete()
+        .eq('id', groupId);
+      if (delGroupErr) throw delGroupErr;
+
+      logger.info(`Group ${groupId} deleted by owner ${ownerId}`);
+    } catch (error) {
+      logger.error('Error deleting user group:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Добавление участника в группу
    */
   async addGroupMember(groupId: number, userId: number): Promise<void> {

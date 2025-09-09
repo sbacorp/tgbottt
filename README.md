@@ -125,7 +125,7 @@ src/
 PROXY_ENABLED=true
 
 # Адрес прокси-сервера
-PROXY_SERVER=http://your-proxy.com:8080
+PROXY_POOL_IPS=149.126.216.86,149.126.220.245,149.126.221.17
 
 # Аутентификация (если требуется)
 PROXY_USERNAME=username
@@ -146,17 +146,17 @@ PROXY_BYPASS=localhost,127.0.0.1
 ```env
 # HTTP прокси без аутентификации
 PROXY_ENABLED=true
-PROXY_SERVER=http://proxy.example.com:8080
+PROXY_POOL_IPS=1.2.3.4,5.6.7.8
 
 # SOCKS5 прокси с аутентификацией
 PROXY_ENABLED=true
-PROXY_SERVER=socks5://proxy.example.com:1080
+PROXY_POOL_IPS=proxy.example.com
 PROXY_USERNAME=user123
 PROXY_PASSWORD=pass123
 
 # Прокси с исключениями
 PROXY_ENABLED=true
-PROXY_SERVER=http://proxy.example.com:8080
+PROXY_POOL_IPS=proxy.example.com
 PROXY_BYPASS=localhost,127.0.0.1,*.internal.com
 ```
 

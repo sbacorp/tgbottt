@@ -7,7 +7,7 @@ async function testProxy() {
     // Проверяем настройки прокси
     const proxyConfig = {
         enabled: process.env.PROXY_ENABLED === 'true',
-        server: process.env.PROXY_SERVER || '',
+        server: '',
         username: process.env.PROXY_USERNAME || '',
         password: process.env.PROXY_PASSWORD || '',
         bypass: process.env.PROXY_BYPASS || ''
@@ -21,7 +21,7 @@ async function testProxy() {
     console.log(`   Исключения: ${proxyConfig.bypass || 'Не указаны'}\n`);
     
     if (!proxyConfig.enabled || !proxyConfig.server) {
-        console.log('❌ Прокси не настроен. Установите PROXY_ENABLED=true и PROXY_SERVER в .env файле');
+        console.log('❌ Прокси не настроен. Установите PROXY_ENABLED=true и PROXY_POOL_IPS в .env файле');
         return;
     }
     

@@ -20,31 +20,53 @@ export class PlatformZskService {
 
     async init(): Promise<void> {
         try {
-            const launchOptions: any = {
+            const launchOptionsBase: any = {
                 headless: true,
                 slowMo: 0,
                 args: [
-                    '--lang=ru-RU,ru',
+                    '--lang=ru-RU,ru'
                 ]
             };
 
             // Добавляем прокси если он включен
             // Поддерживаются HTTP/HTTPS, SOCKS4/SOCKS5 прокси с аутентификацией
-            if (config.proxy.enabled && config.proxy.server) {
-                launchOptions.proxy = {
-                    server: config.proxy.server
-                };
-                console.log(config.proxy);
-                // Добавляем аутентификацию прокси если указаны учетные данные
-                if (config.proxy.username && config.proxy.password) {
-                    launchOptions.proxy.username = config.proxy.username;
-                    launchOptions.proxy.password = config.proxy.password;
+            let lastError: any = null;
+            const proxyIps = (config.proxy.poolIps && config.proxy.poolIps.length > 0)
+                ? config.proxy.poolIps
+                : [];
+
+            const targets = proxyIps.length > 0 ? proxyIps : [''];
+
+            for (const ip of targets) {
+                const launchOptions: any = { ...launchOptionsBase };
+
+                if (config.proxy.enabled) {
+                    const serverHost = ip;
+                    if (!serverHost) continue;
+                    const server = serverHost.startsWith('http') ? serverHost : `http://${serverHost}:${config.proxy.port}`;
+                    launchOptions.proxy = { server };
+                    if (config.proxy.username && config.proxy.password) {
+                        launchOptions.proxy.username = config.proxy.username;
+                        launchOptions.proxy.password = config.proxy.password;
+                    }
+                    logger.info(`Trying proxy: ${launchOptions.proxy.server}`);
                 }
-                
-                logger.info(`Proxy enabled: ${config.proxy.server}`);
+
+                try {
+                    this.browser = await chromium.launch(launchOptions);
+                    logger.info('Platform ZSK service initialized');
+                    lastError = null;
+                    break;
+                } catch (e) {
+                    lastError = e;
+                    logger.warn(`Failed to launch with proxy ${config.proxy.enabled ? launchOptions.proxy.server : 'NO_PROXY'}: ${String(e)}`);
+                    this.browser = null;
+                }
             }
 
-            this.browser = await chromium.launch(launchOptions);
+            if (!this.browser) {
+                throw lastError || new Error('Failed to initialize browser with provided proxy settings');
+            }
             logger.info('Platform ZSK service initialized');
         } catch (error) {
             logger.error('Error initializing Platform ZSK service:', error);
@@ -354,8 +376,7 @@ export class PlatformZskService {
             await page.evaluate(() => window.scrollBy(0, 400));
 
             // Работаем с капчей
-            await page.waitForSelector('[data-testid="checkbox-iframe"]', { timeout: 60000, state: 'attached' });
-            await page.waitForSelector('[data-testid="checkbox-iframe"]', { timeout: 60000, state: 'visible' });
+            await page.waitForSelector('[data-testid="checkbox-iframe"]', { timeout: 6000, state: 'visible' });
             const checkboxIframe = page.locator('[data-testid="checkbox-iframe"]').contentFrame();
             if (checkboxIframe) {
                 await checkboxIframe.getByRole('checkbox', { name: 'Я не робот' }).click();
@@ -381,13 +402,17 @@ export class PlatformZskService {
 
             // Работаем с advanced капчей
             try {
-                await page.waitForSelector('[data-testid="advanced-iframe"]', { timeout: 60000, state: 'attached' });
-                await page.waitForSelector('[data-testid="advanced-iframe"]', { timeout: 60000, state: 'visible' });
+                await page.waitForSelector('[data-testid="advanced-iframe"]', { timeout: 6000, state: 'visible' });
             } catch {
                 // Advanced окно не появилось — пробуем сразу поиск
                 await page.locator('#BlackINN_searchbtn').click();
+                //делаем скриншот
+                const screenshot = await page.screenshot();
+                const screenshotPath = path.join(process.cwd(), 'advanced_captcha_screenshot_no_visible.png');
+                fs.writeFileSync(screenshotPath, screenshot);
+                logger.info(`Screenshot saved to: ${screenshotPath}`);
                 await page.waitForTimeout(3000);
-                try {
+                try {   
                     const resultBlock = page.locator('.block-part');
                     await resultBlock.waitFor({ timeout: 10000 });
                     const resultText = await resultBlock.textContent();
@@ -599,7 +624,7 @@ export class PlatformZskService {
      * Проверяет работоспособность прокси
      */
     async checkProxyStatus(): Promise<{ success: boolean; message: string; ip?: string; country?: string }> {
-        if (!config.proxy.enabled || !config.proxy.server) {
+        if (!config.proxy.enabled || !(config.proxy.poolIps && config.proxy.poolIps.length > 0)) {
             return {
                 success: false,
                 message: 'Прокси не настроен или отключен'

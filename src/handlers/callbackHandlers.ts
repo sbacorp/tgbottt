@@ -2,8 +2,12 @@ import { MyContext } from "../types";
 import { database } from "../database";
 import { MESSAGES, STATUS_EMOJIS } from "../utils/config";
 import logger from "../utils/logger";
-import { createBackKeyboard, createCancelKeyboard, createMainMenuKeyboard } from "../helpers";
-import { createTrackingMenuKeyboard } from "../features/tracking"
+import {
+  createBackKeyboard,
+  createCancelKeyboard,
+  createMainMenuKeyboard,
+} from "../helpers";
+import { createTrackingMenuKeyboard } from "../features/tracking";
 import { InlineKeyboard } from "grammy";
 /**
  * Обработчик callback запросов
@@ -72,9 +76,14 @@ async function handleMenuCallback(ctx: MyContext): Promise<void> {
       await ctx.answerCallbackQuery("Вы не зарегистрированы");
       return;
     }
-    await ctx.editMessageText("Главное меню", {
-      reply_markup: createMainMenuKeyboard(),
-    });
+    await ctx.editMessageText(
+      `Для разовой проверки воспользуйтесь кнопкой "разовая проверка" или командой /check
+
+Для подписки организаций на постоянное отслеживание воспользуйтесь кнопкой "отслеживание". В структуре меню на отслеживание вы можете назначить группу организаций и указать пользователей-получателей отчетов, просматривать списки пользователей-получателей уведомлений и редактировать их.`,
+      {
+        reply_markup: createMainMenuKeyboard(),
+      }
+    );
     await ctx.answerCallbackQuery("Главное меню");
   } catch (error) {
     logger.error("Error in handleMenuCallback:", error);
@@ -262,7 +271,7 @@ async function handleOrganizationsListCallback(ctx: MyContext): Promise<void> {
 
     await ctx.editMessageText(message, {
       parse_mode: "HTML",
-      reply_markup: createBackKeyboard('tracking_menu'),
+      reply_markup: createBackKeyboard("tracking_menu"),
     });
     await ctx.answerCallbackQuery();
   } catch (error) {

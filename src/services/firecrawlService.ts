@@ -26,6 +26,9 @@ export interface KonturOrganizationData {
   taxAuthority?: string;
   riskInfo?: string;
   hasIllegalActivity?: boolean;
+  // Отдельные поля для блока "Сведения недостоверны"
+  unreliableInfo?: string; // причина/формулировка
+  unreliableDate?: string; // дата из ФНС, если присутствует
 }
 
 export class FireCrawlService {
@@ -194,7 +197,7 @@ export class FireCrawlService {
       const oldLiquidationMatch = markdown.match(/ с ликвидацией или банкротством/);
       const oldAttentionMatch = markdown.match(/на который следует обратить внимание/);
 
-      // Приоритет: красный > оранжевый > зеленый
+      // Приоритет: красный > оранжевый; по умолчанию status уже 'green'
       if (liquidationFactMatch && liquidationFactMatch[1] && parseInt(liquidationFactMatch[1]) > 0) {
         data.status = 'red';
         data.riskInfo = `Обнаружено ${liquidationFactMatch[1]} фактов ликвидации/банкротства`;
@@ -205,41 +208,45 @@ export class FireCrawlService {
         data.riskInfo = `Обнаружено ${attentionFactMatch[1]} фактов требующих внимания`;
       } else if (oldAttentionMatch) {
         data.status = 'orange';
-        
-        // Извлекаем информацию о рисках для оранжевого статуса
-        const riskPatterns = [
-          /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)/,
-          /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)\d{2}\.\d{2}\.\d{4}/,
-          /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)\n/,
-          /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)\s*\d{2}\.\d{2}\.\d{4}/
-        ];
+      }
 
+      // Независимый от статуса блок: извлекаем «Сведения недостоверны»
+      const riskPatterns = [
+        /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)/,
+        /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)\d{2}\.\d{2}\.\d{4}/,
+        /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)\n/,
+        /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)\s*\d{2}\.\d{2}\.\d{4}/
+      ];
+
+      if (!data.unreliableInfo) {
         for (const pattern of riskPatterns) {
           const riskMatch = markdown.match(pattern);
           if (riskMatch && riskMatch[1]) {
-            data.riskInfo = `Сведения недостоверны (по результатам проверки ФНС – ${riskMatch[1]})`;
+            const reason = riskMatch[1].trim();
+            data.unreliableInfo = reason;
+            const dateMatch = markdown.match(/Сведения недостоверны\s*\(по результатам проверки ФНС – .*?\)\s*(\d{2}\.\d{2}\.\d{4})/);
+            if (dateMatch && dateMatch[1]) {
+              data.unreliableDate = dateMatch[1];
+            }
             break;
           }
         }
+      }
 
-        // Если не нашли по паттерну, ищем просто текст "Сведения недостоверны"
-        if (!data.riskInfo && markdown.includes('Сведения недостоверны')) {
-          const lines = markdown.split('\n');
-          for (const line of lines) {
-            if (line.includes('Сведения недостоверны')) {
-              // Очищаем строку от лишних символов и дат в конце
-              let cleanLine = line.trim();
-              // Убираем дату в конце строки (формат DD.MM.YYYY)
-              cleanLine = cleanLine.replace(/\d{2}\.\d{2}\.\d{4}$/, '').trim();
-              data.riskInfo = cleanLine;
-              break;
+      // Если не нашли по паттерну, ищем просто текст "Сведения недостоверны"
+      if (!data.unreliableInfo && markdown.includes('Сведения недостоверны')) {
+        const lines = markdown.split('\n');
+        for (const line of lines) {
+          if (line.includes('Сведения недостоверны')) {
+            let cleanLine = line.trim();
+            const dateAtEnd = cleanLine.match(/(\d{2}\.\d{2}\.\d{4})$/);
+            if (dateAtEnd && dateAtEnd[1]) {
+              data.unreliableDate = dateAtEnd[1];
             }
+            cleanLine = cleanLine.replace(/\d{2}\.\d{2}\.\d{4}$/, '').trim();
+            data.unreliableInfo = cleanLine.replace(/^Сведения недостоверны\s*[–-]?\s*/i, '').trim();
+            break;
           }
-        }
-      } else {
-        data.status = 'green';
-        if (goodFactsMatch) {
-          data.riskInfo = `Обнаружено ${goodFactsMatch[1]} благоприятных фактов`;
         }
       }
 

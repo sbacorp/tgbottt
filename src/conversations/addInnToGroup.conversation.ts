@@ -116,7 +116,7 @@ export async function addInnToGroupConversation(
       `✅ <b>Организация добавлена!</b>\n\n` +
       `🏢 <b>Название:</b> ${organization.name}\n` +
       `🆔 <b>ИНН:</b> ${inn}\n` +
-      `📊 <b>Статус:</b> ${organization.status}\n\n` +
+      `📊 <b>Статус:</b> ${statusColorMap[organization.status]}\n\n` +
       `Организация успешно добавлена в группу "${userGroup.name}" для отслеживания.`,
       {
         parse_mode: 'HTML',
@@ -142,4 +142,11 @@ export async function addInnToGroupConversation(
       await ctx.editMessageText('❌ Произошла ошибка при добавлении организации. Попробуйте позже.');
     }
   }
+}
+
+
+export const statusColorMap = {
+  'red': 'Красный',
+  'orange': 'Желтый',
+  'green': 'Зеленый'
 }

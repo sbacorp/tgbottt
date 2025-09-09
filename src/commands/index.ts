@@ -13,6 +13,7 @@ export { handleStatus } from './status';
 export { handleHelp } from './help';
 export { handleAddAdmins } from './addAdmins';
 export { handleRemoveAdmins } from './removeAdmins';
+export { handleDeleteGroup } from './removeGroup';
 
 function getPrivateChatCommands(): BotCommand[] {
   return [
@@ -52,6 +53,10 @@ function getPrivateChatAdminCommands(): BotCommand[] {
     {
       command: "setcommands",
       description: "Обновить команды",
+    },
+    {
+      command: "delete_group",
+      description: "Удалить мою группу",
     },
   ];
 }

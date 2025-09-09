@@ -56,7 +56,7 @@ export async function checkConversation(
     break;
   } while (true);
 
-  await ctx.reply('🔍 Выполняется проверка организации...');
+  const msg = await ctx.reply('🔍 Выполняется проверка организации...');
 
   try {
     // Получаем данные из Контур.Фокус
@@ -69,12 +69,21 @@ export async function checkConversation(
       return;
     }
 
+
+    await ctx.api.editMessageText(
+      msg.chat.id,
+      msg.message_id,
+      '🔍 Проверяю в списках ЦБР...'
+    );
     // Проверяем в списках ЦБР (отказы по спискам 764/639/550)
-    await ctx.reply('🔍 Проверяю в списках ЦБР...');
     const cbrResult = await cbrService.searchOrganization(inn);
 
     // Получаем результат проверки ЗСК
-    await ctx.reply('🔍 Проверяю в системе ЗСК...');
+    await ctx.api.editMessageText(
+      msg.chat.id,
+      msg.message_id,
+      '🔍 Проверяю в системе ЗСК...'
+    );
     let zskResult: any = null;
     try {
       const platformZskService = new PlatformZskService();
@@ -122,10 +131,7 @@ export async function checkConversation(
     }
     
     message += `\nТекущий риск: Уровень риска: ${statusIcon} ${riskLevel} - компания находится в ${statusText}\n`;
-    message += `➕ Добавлен: Данные недоступны\n`;
     message += `\n==============\n`;
-    message += `История изменения риска ЗСК:\n`;
-    message += `Данные временно недоступны\n`;
 
     message += `\n〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n`;
     message += `🙅🏼 Отказы по спискам 764/639/550\n\n`;
@@ -142,15 +148,12 @@ export async function checkConversation(
     if (konturResult.additionalInfo) {
       message += `📊 ${konturResult.additionalInfo}\n\n`;
     }
-    
-    message += `🤥 Недостоверность сведений:\n\n`;
-    
-    if (konturResult.riskInfo && !konturResult.additionalInfo) {
-      message += `${konturResult.riskInfo}\n`;
-    } else if (!konturResult.additionalInfo) {
-      message += `Признаков недостоверности не обнаружено\n`;
+
+    message += `\n🧾 Сведения недостоверны:\n\n`;
+    if (konturResult.unreliableInfo) {
+      message += `${konturResult.unreliableInfo}${konturResult.unreliableDate ? ` (дата: ${konturResult.unreliableDate})` : ''}\n`;
     } else {
-      message += ``;
+      message += `Признаков недостоверности не обнаружено\n`;
     }
 
     await ctx.reply(message, { 

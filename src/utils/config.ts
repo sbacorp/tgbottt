@@ -25,10 +25,11 @@ const configSchema = z.object({
   
   // Настройки прокси
   PROXY_ENABLED: z.string().default('false'),
-  PROXY_SERVER: z.string().default(''),
   PROXY_USERNAME: z.string().default(''),
   PROXY_PASSWORD: z.string().default(''),
-  PROXY_BYPASS: z.string().default('')
+  PROXY_BYPASS: z.string().default(''),
+  PROXY_POOL_IPS: z.string().default(''),
+  PROXY_PORT: z.string().default('50101')
 });
 
 const parseConfig = (environment: NodeJS.ProcessEnv) => {
@@ -44,10 +45,14 @@ const parseConfig = (environment: NodeJS.ProcessEnv) => {
     // Настройки прокси
     proxy: {
       enabled: parsed.PROXY_ENABLED === 'true',
-      server: parsed.PROXY_SERVER,
       username: parsed.PROXY_USERNAME,
       password: parsed.PROXY_PASSWORD,
-      bypass: parsed.PROXY_BYPASS
+      bypass: parsed.PROXY_BYPASS,
+      poolIps: parsed.PROXY_POOL_IPS
+        .split(',')
+        .map(v => v.trim())
+        .filter(v => v.length > 0),
+      port: parseInt(parsed.PROXY_PORT || '50101', 10)
     }
   };
 };

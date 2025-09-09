@@ -18,6 +18,7 @@ import {
   handleStatus,
   handleHelp,
   setCommandsHandler,
+  handleDeleteGroup,
 } from './commands';
 
 import { handleCallback } from './handlers/callbackHandlers';
@@ -132,6 +133,7 @@ bot.command('check_cbr', handleCheckCbr);
 bot.command('status', handleStatus);
 bot.command('help', handleHelp);
 bot.command('setcommands', setCommandsHandler);
+bot.command('delete_group', handleDeleteGroup);
 
 // Обработчик callback запросов
 bot.on('callback_query:data', handleCallback);
