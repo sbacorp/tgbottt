@@ -210,41 +210,35 @@ export class FireCrawlService {
         data.status = 'orange';
       }
 
-      // Независимый от статуса блок: извлекаем «Сведения недостоверны»
-      const riskPatterns = [
-        /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)/,
-        /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)\d{2}\.\d{2}\.\d{4}/,
-        /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)\n/,
-        /Сведения недостоверны \(по результатам проверки ФНС – (.+?)\)\s*\d{2}\.\d{2}\.\d{4}/
-      ];
-
-      if (!data.unreliableInfo) {
-        for (const pattern of riskPatterns) {
-          const riskMatch = markdown.match(pattern);
-          if (riskMatch && riskMatch[1]) {
-            const reason = riskMatch[1].trim();
-            data.unreliableInfo = reason;
-            const dateMatch = markdown.match(/Сведения недостоверны\s*\(по результатам проверки ФНС – .*?\)\s*(\d{2}\.\d{2}\.\d{4})/);
-            if (dateMatch && dateMatch[1]) {
-              data.unreliableDate = dateMatch[1];
-            }
-            break;
-          }
-        }
-      }
-
-      // Если не нашли по паттерну, ищем просто текст "Сведения недостоверны"
+      // Независимый от статуса блок: извлекаем «Сведения недостоверны» аккуратно
       if (!data.unreliableInfo && markdown.includes('Сведения недостоверны')) {
         const lines = markdown.split('\n');
-        for (const line of lines) {
-          if (line.includes('Сведения недостоверны')) {
-            let cleanLine = line.trim();
-            const dateAtEnd = cleanLine.match(/(\d{2}\.\d{2}\.\d{4})$/);
-            if (dateAtEnd && dateAtEnd[1]) {
-              data.unreliableDate = dateAtEnd[1];
+        for (let i = 0; i < lines.length; i++) {
+          const rawLine = lines[i];
+          if (!rawLine) continue;
+          const line = rawLine.trim();
+          if (line.startsWith('Сведения недостоверны')) {
+            // Базовая строка с формулировкой
+            let infoLine = line;
+            // Убираем дату внутри или сразу после строки, оставляя чистый текст
+            // Пример: "Сведения недостоверны (по результатам проверки ФНС – 15.08.2025)" -> "Сведения недостоверны (по результатам проверки ФНС)"
+            infoLine = infoLine.replace(/\(по результатам проверки ФНС\s*[–-]\s*\d{2}\.\d{2}\.\d{4}\)/, '(по результатам проверки ФНС)');
+            // Если дата стоит после закрывающей скобки на той же строке, убираем её из текста и запоминаем
+            const inlineDateMatch = infoLine.match(/\)\s*(\d{2}\.\d{2}\.\d{4})$/);
+            if (inlineDateMatch && inlineDateMatch[1]) {
+              data.unreliableDate = inlineDateMatch[1];
+              infoLine = infoLine.replace(/\)\s*\d{2}\.\d{2}\.\d{4}\s*$/, ')');
             }
-            cleanLine = cleanLine.replace(/\d{2}\.\d{2}\.\d{4}$/, '').trim();
-            data.unreliableInfo = cleanLine.replace(/^Сведения недостоверны\s*[–-]?\s*/i, '').trim();
+            // Если следующая строка — дата, возьмём её как дату результата ФНС
+            let nextLine: string | undefined;
+            if (i + 1 < lines.length) {
+              const rawNext = lines[i + 1];
+              nextLine = rawNext ? rawNext.trim() : undefined;
+            }
+            if (!data.unreliableDate && nextLine && /^\d{2}\.\d{2}\.\d{4}$/.test(nextLine)) {
+              data.unreliableDate = nextLine;
+            }
+            data.unreliableInfo = infoLine;
             break;
           }
         }
@@ -258,7 +252,7 @@ export class FireCrawlService {
         if (goodFactsMatch) facts.push(`🟢 ${goodFactsMatch[1]} - благоприятные`);
         
         if (facts.length > 0) {
-          data.additionalInfo = `Факты о организации: ${facts.join(', ')}`;
+          data.additionalInfo = `Факты об организации: ${facts.join(', ')}`;
         }
       }
 
