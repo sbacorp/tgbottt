@@ -1109,13 +1109,12 @@ export class SupabaseService {
   }
 
   // МЕТОДЫ-ЗАГЛУШКИ ДЛЯ УВЕДОМЛЕНИЙ (НЕ РЕАЛИЗОВАНЫ В SUPABASE)
-
   async markCheckAsNotified(_inn: string, _status: string): Promise<void> {
-    logger.warn('markCheckAsNotified not implemented in Supabase service');
+    // Заглушка - не реализовано в Supabase
   }
 
   async markZskCheckAsNotified(_inn: string, _status: string): Promise<void> {
-    logger.warn('markZskCheckAsNotified not implemented in Supabase service');
+    // Заглушка - не реализовано в Supabase
   }
 }
 

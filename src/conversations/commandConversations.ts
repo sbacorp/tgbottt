@@ -97,7 +97,7 @@ export async function checkConversation(
     // Формируем сообщение в новом формате
     let message = `Запрос: /${inn}\n`;
     message += `Актуальное название компании: ${konturResult.name}\n`;
-    message += `Адрес: ${konturResult.address}\n`
+    message += `Адрес: ${konturResult.region}\n`
     
     // Определяем статус организации
     if (konturResult.isLiquidated) {

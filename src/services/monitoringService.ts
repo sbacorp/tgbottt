@@ -1,18 +1,19 @@
 import cron from 'node-cron';
 import { database } from '../database/index';
-import { FireCrawlService, KonturOrganizationData } from './firecrawlService';
+import { KonturOrganizationData } from './playwrightScrapeService';
+import { getKonturScraper } from './index';
 import { PlatformZskService } from './platform_zsk';
 import { getNotificationService } from './notificationService';
 import logger from '../utils/logger';
 import { Organization } from '../types';
-import { formatCheckResult } from '../helpers/messages';
+import { NotificationFormatter } from '../helpers/notificationFormatter';
 
 export class MonitoringService {
-  private firecrawlService: FireCrawlService;
+  private scraperService: any;
   private isRunning = false;
 
   constructor() {
-    this.firecrawlService = new FireCrawlService();
+    this.scraperService = getKonturScraper();
   }
 
   /**
@@ -66,8 +67,8 @@ export class MonitoringService {
       // Получаем ИНН всех организаций
       const inns = organizations.map((org: any) => org.inn);
 
-      // Проверяем организации через FireCrawl
-      const results = await this.firecrawlService.checkMultipleOrganizations(inns);
+      // Проверяем организации через Playwright
+      const results = await this.scraperService.checkMultipleOrganizations(inns);
 
       // Обрабатываем результаты
       for (const [inn, newData] of results) {
@@ -164,57 +165,12 @@ export class MonitoringService {
     newData: KonturOrganizationData
   ): Promise<void> {
     try {
-      const statusMessage = formatCheckResult(newData.status);
+      // Получаем старый статус для сравнения
+      const currentOrg = await database.getOrganizationByInn(inn);
+      const oldStatus = currentOrg?.status || 'green';
 
-      let message = ``;
-      
-      // Добавляем информацию только если поле не пустое
-      if (newData.liquidationDate) {
-        message += `📅 **Дата внесения в список:** ${newData.liquidationDate}\n`;
-      }
-      
-      if (newData.name) {
-        message += `🏢 **Актуальное название компании:** ${newData.name}\n`;
-      }
-      
-      message += `🔢 <b>ИНН:</b> ${inn}\n`;
-      
-      if (newData.address) {
-        message += `📍 <b>Адрес:</b> ${newData.address}\n`;
-      }
-      
-      if (newData.websites && newData.websites.length > 0) {
-        message += `🌐 <b>Список веб-сайтов компании:</b> ${newData.websites.join(', ')}\n`;
-      }
-      
-      if (newData.isLiquidated !== undefined) {
-        message += `⚠️ <b>Ликвидирована ли организация:</b> ${newData.isLiquidated ? 'Да' : 'Нет'}\n`;
-      }
-      
-      if (newData.illegalitySigns && newData.illegalitySigns.length > 0) {
-        message += `🚨 <b>Санкции:</b> ${newData.illegalitySigns.join(', ')}\n`;
-      }
-      
-      if (newData.region) {
-        message += `🗺 <b>Регион:</b> ${newData.region}\n`;
-      }
-      
-      if (newData.additionalInfo) {
-        message += `📋 <b>Доп информация:</b> ${newData.additionalInfo}\n`;
-      }
-      
-      if (newData.comment) {
-        message += `💬 <b>Комментарий:</b> ${newData.comment}\n`;
-      }
-
-      message += `\n${statusMessage}\n`;
-      // Добавляем информацию о рисках для оранжевого статуса
-      if (newData.status === 'orange' && newData.riskInfo) {
-        message += `\n⚠️ <b>Риски:</b>\n${newData.riskInfo}\n`;
-      }
-
-
-      message += '➕ Обновлено в системе: ' + new Date().toLocaleDateString('ru-RU');
+      // Формируем сообщение об изменении статуса
+      const message = NotificationFormatter.formatStatusChange(inn, oldStatus, newData);
 
       // Отправляем уведомление пользователям, отслеживающим организацию
       await getNotificationService().sendOrganizationNotification(inn, message);
@@ -233,7 +189,7 @@ export class MonitoringService {
     try {
       logger.info(`Ручная проверка организации с ИНН: ${inn}`);
       
-      const data = await this.firecrawlService.getOrganizationData(inn);
+      const data = await this.scraperService.getOrganizationData(inn);
       console.log(data, 'data')
       if (data) {
         logger.info(`Данные организации ${inn} обновлены в базе данных`);
@@ -405,14 +361,8 @@ export class MonitoringService {
     resultText: string
   ): Promise<void> {
     try {
-      const statusIcon = newZskStatus === 'red' ? '🔴' : '🟢';
-      const statusText = newZskStatus === 'red' ? 'Найдены нарушения' : 'Нарушений не найдено';
-
-      let message = `🔍 Проверка через ЗСК\n\n`;
-      message += `${statusIcon} Статус: ${statusText}\n`;
-      message += `🔢 ИНН: ${inn}\n\n`;
-      message += `📋 Результат проверки:\n${resultText}\n\n`;
-      message += '➕ Обновлено в системе: ' + new Date().toLocaleDateString('ru-RU');
+      // Формируем сообщение о проверке ЗСК
+      const message = NotificationFormatter.formatZskCheck(inn, newZskStatus, resultText);
 
       // Отправляем уведомление пользователям, отслеживающим организацию
       await getNotificationService().sendOrganizationNotification(inn, message);

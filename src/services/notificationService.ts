@@ -93,27 +93,6 @@ class NotificationService {
     await this.sendAdminNotification(message);
   }
 
-  /**
-   * Отправка уведомления всем пользователям (legacy метод)
-   */
-  async sendNotificationToAllUsers(message: string): Promise<void> {
-    try {
-      const { database } = await import('../database/index');
-      const users = await database.getAllUsers();
-      
-      for (const user of users) {
-        try {
-          await this.sendNotification(user?.telegram_id || 0, message);
-        } catch (error) {
-          logger.error(`Error sending notification to user ${user.telegram_id}:`, error);
-        }
-      }
-      
-      logger.info(`Notification sent to ${users.length} users`);
-    } catch (error) {
-      logger.error('Error sending notification to all users:', error);
-    }
-  }
 
   /**
    * Отправка уведомления пользователям групп, которые отслеживают организацию
@@ -126,9 +105,7 @@ class NotificationService {
       const groups = await database.getGroupsByOrganization(inn);
       
       if (groups.length === 0) {
-        logger.info(`No groups found tracking organization ${inn}, sending to all users`);
-        // Fallback: отправляем всем пользователям если нет групп
-        await this.sendNotificationToAllUsers(message);
+        logger.info(`No groups found tracking organization ${inn}`);
         return;
       }
 
@@ -160,8 +137,6 @@ class NotificationService {
       logger.info(`Organization notification for ${inn} sent to ${notifiedUsers.size} unique users across ${groups.length} groups`);
     } catch (error) {
       logger.error(`Error sending notification to groups for organization ${inn}:`, error);
-      // Fallback: отправляем всем пользователям при ошибке
-      await this.sendNotificationToAllUsers(message);
     }
   }
 

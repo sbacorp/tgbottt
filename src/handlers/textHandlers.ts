@@ -5,7 +5,7 @@ import { monitoringService } from "../services/monitoringService";
 import { cbrService } from "../services/cbrService";
 import { PlatformZskService } from "../services/platform_zsk";
 import { createCheckResultKeyboard } from "../helpers/keyboard";
-import { validateInn } from "../helpers";
+import { validateInn } from "../utils/validation";
 /**
  * Обработчик текстовых сообщений
  * Теперь большая часть логики обрабатывается в conversations
@@ -78,7 +78,7 @@ async function handleDefaultText(ctx: MyContext, text: string): Promise<void> {
 
         let message = `Запрос: /${inn}\n`;
         message += `Актуальное название компании: ${konturResult.name}\n`;
-        if (konturResult.address) message += `Адрес: ${konturResult.address}\n`;
+        if (konturResult.address) message += `Адрес: ${konturResult.region}\n`;
 
         if (konturResult.isLiquidated) {
           message += `Ликвидированная организация\n`;

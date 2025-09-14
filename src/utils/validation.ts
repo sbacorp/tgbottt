@@ -171,64 +171,6 @@ export function validateTelegramIdList(telegramIds: string): {
   return { valid, invalid };
 }
 
-/**
- * Валидация email
- * @param email - email для проверки
- * @returns true если email корректный
- */
-export function validateEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-/**
- * Валидация URL
- * @param url - URL для проверки
- * @returns true если URL корректный
- */
-export function validateUrl(url: string): boolean {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Санитизация строки (удаление опасных символов)
- * @param str - строка для очистки
- * @returns очищенная строка
- */
-export function sanitizeString(str: string): string {
-  return str
-    .replace(/[<>]/g, '') // Удаление < и >
-    .replace(/javascript:/gi, '') // Удаление javascript:
-    .replace(/on\w+=/gi, '') // Удаление обработчиков событий
-    .trim();
-}
-
-/**
- * Ограничение длины строки
- * @param str - строка
- * @param maxLength - максимальная длина
- * @returns обрезанная строка
- */
-export function truncateString(str: string, maxLength: number): string {
-  if (str.length <= maxLength) {
-    return str;
-  }
-  return str.substring(0, maxLength - 3) + '...';
-}
-
-/**
- * Проверка на пустую строку или только пробелы
- * @param str - строка для проверки
- * @returns true если строка пустая или содержит только пробелы
- */
-export function isEmptyString(str: string): boolean {
-  return !str || str.trim().length === 0;
-}
 
 /**
  * Проверяет, содержит ли ответ от Firecrawl сообщение о том, что компания не найдена
