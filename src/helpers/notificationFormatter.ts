@@ -106,6 +106,14 @@ export class NotificationFormatter {
       message += `\n⚠️ <b>Информация о рисках:</b>\n${data.riskInfo}\n`;
     }
 
+    // Основной риск и дата
+    if (data.primaryRisk) {
+      message += `\n⚠️ <b>Основной риск:</b> ${data.primaryRisk}\n`;
+    }
+    if (data.primaryRiskDate) {
+      message += `📅 <b>Обновлено:</b> ${data.primaryRiskDate}\n`;
+    }
+
     // Недостоверные сведения
     if (data.unreliableInfo) {
       message += `\n❌ <b>Недостоверные сведения:</b> ${data.unreliableInfo}\n`;

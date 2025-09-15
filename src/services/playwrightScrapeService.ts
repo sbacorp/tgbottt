@@ -29,6 +29,10 @@ export interface KonturOrganizationData {
   hasIllegalActivity?: boolean;
   unreliableInfo?: string;
   unreliableDate?: string;
+  /** Короткое текстовое описание основного риска/факта (например, "Находится в стадии ликвидации" или "Сведения недостоверны") */
+  primaryRisk?: string;
+  /** Дата, релевантная основному риску (ДД.ММ.ГГГГ) */
+  primaryRiskDate?: string;
 }
 
 export class PlaywrightScrapeService {
@@ -71,7 +75,7 @@ export class PlaywrightScrapeService {
 
       const response = await this.anthropic.messages.create({
         model: "claude-3-5-sonnet-latest",
-        max_tokens: 2000,
+        max_tokens: 2000, 
         system: `Ты эксперт по анализу данных организаций с сайта Контур.Фокус. 
 Твоя задача - извлекать структурированные данные из текста страницы организации.
 
@@ -82,7 +86,7 @@ export class PlaywrightScrapeService {
 - Даты регистрации: "Дата образования", "Зарегистрировано"
 Извлекай следующие поля и возвращай в формате JSON:
 {
-  "name": "название организации",
+  "name": "название организации", =>
   "status": "red|orange|green (красный - ликвидация/банкротство, оранжевый - внимание, зеленый - норма)",
   "address": "полный адрес",
   "region": "регион/город",
@@ -97,7 +101,9 @@ export class PlaywrightScrapeService {
   "activities": ["основной вид деятельности"],
   "unreliableInfo": "информация о недостоверных сведениях (если есть)",
   "unreliableDate": "дата недостоверных сведений в формате ДД.ММ.ГГГГ (если есть)",
-  "riskInfo": "подробная информация о рисках с датами событий"
+  "riskInfo": "подробная информация о рисках с датами событий",
+  "primaryRisk": "краткое описание главного риска (например: 'Находится в стадии ликвидации' или 'Сведения недостоверны')",
+  "primaryRiskDate": "дата этого главного риска (ДД.ММ.ГГГГ)"
 }
 
 Правила определения статуса:
@@ -105,7 +111,7 @@ export class PlaywrightScrapeService {
 - "orange": факты требующие внимания, недостоверные сведения
 - "green": нормальная деятельность
 
-Если поле не найдено, используй null. Все даты извлекай в формате ДД.ММ.ГГГГ.`,
+Если поле не найдено, используй null. Все даты извлекай в формате ДД.ММ.ГГГГ. Если организация в красном статусе, главным риском обычно является ликвидация/реорганизация с датой. Если в оранжевом — часто 'Сведения недостоверны' с датой.`,
         messages: [
           {
             role: "user",
@@ -143,7 +149,9 @@ ${text}
             founders: parsed.founders,
             unreliableInfo: parsed.unreliableInfo,
             unreliableDate: parsed.unreliableDate,
-            riskInfo: parsed.riskInfo
+            riskInfo: parsed.riskInfo,
+            primaryRisk: parsed.primaryRisk,
+            primaryRiskDate: parsed.primaryRiskDate
           };
         }
       }
