@@ -47,7 +47,7 @@ export class PlaywrightScrapeService {
 
   private async ensureBrowser(): Promise<Browser> {
     if (this.browser) return this.browser;
-    this.browser = await chromium.launch({ headless: true, slowMo: 100 });
+    this.browser = await chromium.launch({ headless: false, slowMo: 100 });
     return this.browser;
   }
 

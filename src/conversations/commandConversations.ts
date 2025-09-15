@@ -6,6 +6,7 @@ import { MESSAGES } from '../utils/config';
 import logger from '../utils/logger';
 import { Context } from "grammy";
 import { PlatformZskService } from '../services/platform_zsk';
+import { NotificationFormatter } from '../helpers/notificationFormatter';
 import { createCancelKeyboard, createMainMenuKeyboard, createCheckResultKeyboard } from '../helpers/keyboard';
 import { cbrService } from '../services/cbrService';
 
@@ -94,45 +95,13 @@ export async function checkConversation(
       logger.error('Error checking ZSK:', error);
     }
 
-    // Формируем сообщение в новом формате
-    let message = `Запрос: /${inn}\n`;
-    message += `Актуальное название компании: ${konturResult.name}\n`;
-    message += `Адрес: ${konturResult.region}\n`
-    
-    // Определяем статус организации
-    if (konturResult.isLiquidated) {
-      message += `Ликвидированная организация\n`;
-    } else {
-      message += `Действующая организация\n`;
-    }
+    // Формируем единый формат сообщения
+    let message = NotificationFormatter.formatOrganizationCheck(inn, konturResult, zskResult, {
+      showTimestamp: true,
+      showRiskInfo: true,
+      showIllegalActivity: true
+    });
 
-    message += `\n🚦 ЗСК\n`;
-    
-    // Добавляем результат проверки ЗСК
-    if (zskResult && zskResult.success && zskResult.result) {
-      const cleanResult = zskResult.result.replace('Проверить ещё один ИНН', '').trim();
-      message += `📋 Результат проверки: ${cleanResult}\n`;
-    } else {
-      message += `📋 Результат проверки: Данные временно недоступны\n`;
-    }
-
-    // Определяем статус на основе данных Контур.Фокус
-    let statusIcon = '🟢';
-    let statusText = 'ЗЕЛЁНОЙ зоне, низкий риск';
-    let riskLevel = '0';
-    
-    if (konturResult.status === 'red') {
-      statusIcon = '🔴';
-      statusText = 'КРАСНОЙ зоне, очень большой риск для работы!';
-      riskLevel = '2';
-    } else if (konturResult.status === 'orange') {
-      statusIcon = '🟡';
-      statusText = 'ЖЁЛТОЙ зоне, средний риск для работы';
-      riskLevel = '1';
-    }
-    
-    message += `\nТекущий риск: Уровень риска: ${statusIcon} ${riskLevel} - компания находится в ${statusText}\n`;
-    message += `\n==============\n`;
 
     message += `\n〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n`;
     message += `🙅🏼 Отказы по спискам 764/639/550\n\n`;
@@ -145,20 +114,9 @@ export async function checkConversation(
 
     message += `〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n`;
     
-    // Добавляем информацию об автоматической проверке
-    if (konturResult.additionalInfo) {
-      message += `📊 ${konturResult.additionalInfo}\n\n`;
-    }
-
-    message += `\n🧾 Сведения недостоверны:\n\n`;
-    if (konturResult.unreliableInfo) {
-      message += `${konturResult.unreliableInfo}${konturResult.unreliableDate ? ` (дата: ${konturResult.unreliableDate})` : ''}\n`;
-    } else {
-      message += `Признаков недостоверности не обнаружено\n`;
-    }
-
     await ctx.reply(message, { 
-      reply_markup: createCheckResultKeyboard()
+      reply_markup: createCheckResultKeyboard(),
+      parse_mode:'HTML'
     });
 
   } catch (error) {

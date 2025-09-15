@@ -5,6 +5,7 @@ import { monitoringService } from "../services/monitoringService";
 import { cbrService } from "../services/cbrService";
 import { PlatformZskService } from "../services/platform_zsk";
 import { createCheckResultKeyboard } from "../helpers/keyboard";
+import { NotificationFormatter } from "../helpers/notificationFormatter";
 import { validateInn } from "../utils/validation";
 /**
  * Обработчик текстовых сообщений
@@ -76,37 +77,13 @@ async function handleDefaultText(ctx: MyContext, text: string): Promise<void> {
           logger.error('Error checking ZSK (hears):', e);
         }
 
-        let message = `Запрос: /${inn}\n`;
-        message += `Актуальное название компании: ${konturResult.name}\n`;
-        if (konturResult.address) message += `Адрес: ${konturResult.region}\n`;
+        const messageHeader = NotificationFormatter.formatOrganizationCheck(inn as string, konturResult,zskResult, {
+          showTimestamp: true,
+          showRiskInfo: true,
+          showIllegalActivity: true,
+        });
 
-        if (konturResult.isLiquidated) {
-          message += `Ликвидированная организация\n`;
-        } else {
-          message += `Действующая организация\n`;
-        }
-
-        message += `\n🚦 ЗСК\n`;
-        if (zskResult && zskResult.success && zskResult.result) {
-          const cleanResult = zskResult.result.replace('Проверить ещё один ИНН', '').trim();
-          message += `📋 Результат проверки: ${cleanResult}\n`;
-        } else {
-          message += `📋 Результат проверки: Данные временно недоступны\n`;
-        }
-
-        let statusIcon = '🟢';
-        let statusText = 'ЗЕЛЁНОЙ зоне, низкий риск';
-        let riskLevel = '0';
-        if (konturResult.status === 'red') {
-          statusIcon = '🔴';
-          statusText = 'КРАСНОЙ зоне, очень большой риск для работы!';
-          riskLevel = '2';
-        } else if (konturResult.status === 'orange') {
-          statusIcon = '🟡';
-          statusText = 'ЖЁЛТОЙ зоне, средний риск для работы';
-          riskLevel = '1';
-        }
-        message += `\nТекущий риск: Уровень риска: ${statusIcon} ${riskLevel} - компания находится в ${statusText}\n`;
+        let message = messageHeader + ""
         message += `\n==============\n`;
 
         message += `\n〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n`;
@@ -116,19 +93,8 @@ async function handleDefaultText(ctx: MyContext, text: string): Promise<void> {
           message += `По данному ИНН записей в отказах по спискам 764/639/550 не найдено.\n`;
         }
 
-        if (konturResult.additionalInfo) {
-          message += `📊 ${konturResult.additionalInfo}\n\n`;
-        }
 
-        message += `\n🧾 Сведения недостоверны:\n\n`;
-        if ((konturResult as any).unreliableInfo) {
-          const ur = (konturResult as any);
-          message += `${ur.unreliableInfo}${ur.unreliableDate ? ` (дата: ${ur.unreliableDate})` : ''}\n`;
-        } else {
-          message += `Признаков недостоверности не обнаружено\n`;
-        }
-
-        await ctx.reply(message, { reply_markup: createCheckResultKeyboard() });
+        await ctx.reply(message, { reply_markup: createCheckResultKeyboard(), parse_mode: 'HTML' });
         return;
       } catch (error) {
         logger.error('Error in inline INN check:', error);

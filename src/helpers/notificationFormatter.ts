@@ -1,5 +1,4 @@
-import { KonturOrganizationData } from '../services/playwrightScrapeService';
-import { formatCheckResult } from './messages';
+import { KonturOrganizationData } from "../services/playwrightScrapeService";
 
 export interface NotificationOptions {
   showTimestamp?: boolean;
@@ -13,28 +12,28 @@ export class NotificationFormatter {
    * Формирует сообщение о проверке организации
    */
   static formatOrganizationCheck(
-    inn: string, 
-    data: KonturOrganizationData, 
+    inn: string,
+    data: KonturOrganizationData,
+    zskResult?: {
+      success: boolean;
+      result: string;
+    },
     options: NotificationOptions = {}
   ): string {
     const {
       showTimestamp = true,
-      showRiskInfo = true,
+      // showRiskInfo = true,
       showIllegalActivity = true,
-      customMessage
+      customMessage,
     } = options;
 
-    let message = '';
-
-    // Заголовок с статусом
-    const statusMessage = formatCheckResult(data.status);
-    message += `${statusMessage}\n\n`;
+    let message = "";
 
     // Основная информация
     if (data.name) {
       message += `🏢 <b>Название:</b> ${data.name}\n`;
     }
-    
+
     message += `🔢 <b>ИНН:</b> ${inn}\n`;
 
     // Адрес и регион
@@ -42,17 +41,6 @@ export class NotificationFormatter {
       message += `📍 <b>Адрес:</b> ${data.address}\n`;
     } else if (data.region) {
       message += `📍 <b>Регион:</b> ${data.region}\n`;
-    }
-
-    // Основные реквизиты
-    if (data.ogrn) {
-      message += `📋 <b>ОГРН:</b> ${data.ogrn}\n`;
-    }
-    if (data.kpp) {
-      message += `📋 <b>КПП:</b> ${data.kpp}\n`;
-    }
-    if (data.okpo) {
-      message += `📋 <b>ОКПО:</b> ${data.okpo}\n`;
     }
 
     // Даты
@@ -66,45 +54,47 @@ export class NotificationFormatter {
       message += `❌ <b>Дата недостоверных сведений:</b> ${data.unreliableDate}\n`;
     }
 
-    // Статус ликвидации
-    if (data.isLiquidated !== undefined) {
-      message += `⚠️ <b>Ликвидирована:</b> ${data.isLiquidated ? 'Да' : 'Нет'}\n`;
-    }
-
-    // Налоговый орган
-    if (data.taxAuthority) {
-      message += `🏛️ <b>Налоговый орган:</b> ${data.taxAuthority}\n`;
-    }
-
-    // Уставный капитал
-    if (data.capital) {
-      message += `💰 <b>Уставный капитал:</b> ${data.capital}\n`;
-    }
-
     // Виды деятельности
     if (data.activities && data.activities.length > 0) {
-      message += `🔧 <b>Основной вид деятельности:</b> ${data.activities.join(', ')}\n`;
-    }
-
-    // Учредители
-    if (data.founders && data.founders.length > 0) {
-      message += `👥 <b>Учредители:</b> ${data.founders.join(', ')}\n`;
+      message += `🔧 <b>Основной вид деятельности:</b> ${data.activities.join(
+        ", "
+      )}\n`;
     }
 
     // Веб-сайты
     if (data.websites && data.websites.length > 0) {
-      message += `🌐 <b>Веб-сайты:</b> ${data.websites.join(', ')}\n`;
+      message += `🌐 <b>Веб-сайты:</b> ${data.websites.join(", ")}\n`;
     }
 
-    // Признаки нелегальности
-    if (data.illegalitySigns && data.illegalitySigns.length > 0) {
-      message += `🚨 <b>Признаки нелегальности:</b> ${data.illegalitySigns.join(', ')}\n`;
+    message += `\n\n🚦 ЗСК\n`;
+
+    // Добавляем результат проверки ЗСК
+    if (zskResult && zskResult.success && zskResult.result) {
+      const cleanResult = zskResult.result
+        .replace("Проверить ещё один ИНН", "")
+        .trim();
+      message += `📋 Результат проверки: ${cleanResult}\n`;
+    } else {
+      message += `📋 Результат проверки: Данные временно недоступны\n`;
     }
 
-    // Информация о рисках
-    if (showRiskInfo && data.riskInfo) {
-      message += `\n⚠️ <b>Информация о рисках:</b>\n${data.riskInfo}\n`;
+    // Определяем статус на основе данных Контур.Фокус
+    let statusIcon = "🟢";
+    let statusText = "ЗЕЛЁНОЙ зоне, низкий риск";
+    let riskLevel = "0";
+
+    if (data.status === "red") {
+      statusIcon = "🔴";
+      statusText = "КРАСНОЙ зоне, очень большой риск для работы!";
+      riskLevel = "2";
+    } else if (data.status === "orange") {
+      statusIcon = "🟡";
+      statusText = "ЖЁЛТОЙ зоне, средний риск для работы";
+      riskLevel = "1";
     }
+
+    message += `\nТекущий риск:\n Уровень риска: ${statusIcon} ${riskLevel} - компания находится в ${statusText}\n`;
+    message += `\n==============\n`;
 
     // Основной риск и дата
     if (data.primaryRisk) {
@@ -122,10 +112,6 @@ export class NotificationFormatter {
       }
     }
 
-    // Нелегальная деятельность (ЦБ РФ)
-    if (showIllegalActivity && data.hasIllegalActivity !== undefined) {
-      message += `\n🏦 <b>Проверка ЦБ РФ:</b> ${data.hasIllegalActivity ? '❌ Найдена нелегальная деятельность' : '✅ Нарушений не найдено'}\n`;
-    }
 
     // Дополнительная информация
     if (data.additionalInfo) {
@@ -142,11 +128,6 @@ export class NotificationFormatter {
       message += `\n${customMessage}\n`;
     }
 
-    // Временная метка
-    if (showTimestamp) {
-      message += `\n➕ <b>Обновлено:</b> ${new Date().toLocaleDateString('ru-RU')}`;
-    }
-
     return message;
   }
 
@@ -157,40 +138,56 @@ export class NotificationFormatter {
     inn: string,
     oldStatus: string,
     newData: KonturOrganizationData,
+    newZsk?: {
+      rezult: string;
+      success: boolean;
+    },
     options: NotificationOptions = {}
   ): string {
+    if (newZsk) {
+    }
+
     const statusEmojis = {
-      red: '🔴',
-      orange: '🟡',
-      green: '🟢'
+      red: "🔴",
+      orange: "🟡",
+      green: "🟢",
     };
 
     const statusNames = {
-      red: 'Красный список',
-      orange: 'Желтый список', 
-      green: 'Зеленый список'
+      red: "Красный список",
+      orange: "Желтый список",
+      green: "Зеленый список",
     };
 
-    const oldEmoji = statusEmojis[oldStatus as keyof typeof statusEmojis] || '⚪';
-    const newEmoji = statusEmojis[newData.status as keyof typeof statusEmojis] || '⚪';
-    const oldName = statusNames[oldStatus as keyof typeof statusNames] || 'Неизвестно';
-    const newName = statusNames[newData.status as keyof typeof statusNames] || 'Неизвестно';
+    const oldEmoji =
+      statusEmojis[oldStatus as keyof typeof statusEmojis] || "⚪";
+    const newEmoji =
+      statusEmojis[newData.status as keyof typeof statusEmojis] || "⚪";
+    const oldName =
+      statusNames[oldStatus as keyof typeof statusNames] || "Неизвестно";
+    const newName =
+      statusNames[newData.status as keyof typeof statusNames] || "Неизвестно";
 
     const header = `🔄 <b>Изменение статуса организации</b>\n\n`;
     const statusChange = `${oldEmoji} ${oldName} → ${newEmoji} ${newName}\n\n`;
-    
+
     // Добавляем информацию о дате события
-    let eventInfo = '';
+    let eventInfo = "";
     if (newData.liquidationDate && newData.isLiquidated) {
       eventInfo = `📅 <b>Дата ликвидации:</b> ${newData.liquidationDate}\n\n`;
     } else if (newData.unreliableDate) {
       eventInfo = `📅 <b>Дата недостоверных сведений:</b> ${newData.unreliableDate}\n\n`;
     }
 
-    return header + statusChange + eventInfo + this.formatOrganizationCheck(inn, newData, {
-      ...options,
-      showTimestamp: true
-    });
+    return (
+      header +
+      statusChange +
+      eventInfo +
+      this.formatOrganizationCheck(inn, newData, undefined, {
+        ...options,
+        showTimestamp: true,
+      })
+    );
   }
 
   /**
@@ -202,8 +199,9 @@ export class NotificationFormatter {
     resultText: string,
     options: NotificationOptions = {}
   ): string {
-    const statusIcon = status === 'red' ? '🔴' : '🟢';
-    const statusText = status === 'red' ? 'Найдены нарушения' : 'Нарушений не найдено';
+    const statusIcon = status === "red" ? "🔴" : "🟢";
+    const statusText =
+      status === "red" ? "Найдены нарушения" : "Нарушений не найдено";
 
     let message = `🔍 <b>Проверка через ЗСК</b>\n\n`;
     message += `${statusIcon} <b>Статус:</b> ${statusText}\n`;
@@ -211,7 +209,9 @@ export class NotificationFormatter {
     message += `📋 <b>Результат проверки:</b>\n${resultText}\n\n`;
 
     if (options.showTimestamp !== false) {
-      message += `➕ <b>Обновлено:</b> ${new Date().toLocaleDateString('ru-RU')}`;
+      message += `➕ <b>Обновлено:</b> ${new Date().toLocaleDateString(
+        "ru-RU"
+      )}`;
     }
 
     return message;
@@ -220,26 +220,23 @@ export class NotificationFormatter {
   /**
    * Формирует краткое сообщение для быстрой проверки
    */
-  static formatQuickCheck(
-    inn: string,
-    data: KonturOrganizationData
-  ): string {
+  static formatQuickCheck(inn: string, data: KonturOrganizationData): string {
     const statusEmojis = {
-      red: '🔴',
-      orange: '🟡',
-      green: '🟢'
+      red: "🔴",
+      orange: "🟡",
+      green: "🟢",
     };
 
-    const emoji = statusEmojis[data.status] || '⚪';
-    
+    const emoji = statusEmojis[data.status] || "⚪";
+
     let message = `${emoji} <b>${data.name || `Организация ${inn}`}</b>\n`;
     message += `🔢 ИНН: ${inn}\n`;
-    message += `📍 ${data.region || data.address || 'Адрес не указан'}\n`;
-    
+    message += `📍 ${data.region || data.address || "Адрес не указан"}\n`;
+
     if (data.isLiquidated) {
       message += `⚠️ Ликвидирована\n`;
     }
-    
+
     if (data.hasIllegalActivity) {
       message += `🚨 Нарушения ЦБ РФ\n`;
     }
