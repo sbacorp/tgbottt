@@ -22,7 +22,7 @@ export class NotificationFormatter {
   ): string {
     const { customMessage } = options;
 
-    let message = `Запрос: /${inn}`;
+    let message = `Запрос: /${inn}\n`;
 
     // Основная информация
     if (data.name) {
