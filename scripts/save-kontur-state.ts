@@ -6,7 +6,7 @@ async function main() {
   const statePath = 'playwright/.auth/kontur.json';
   await mkdir(dirname(statePath), { recursive: true });
 
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext();
   const page = await context.newPage();
 

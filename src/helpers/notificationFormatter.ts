@@ -20,26 +20,16 @@ export class NotificationFormatter {
     },
     options: NotificationOptions = {}
   ): string {
-    const {
-      showTimestamp = true,
-      // showRiskInfo = true,
-      showIllegalActivity = true,
-      customMessage,
-    } = options;
+    const { customMessage } = options;
 
-    let message = "";
+    let message = `Запрос: /${inn}`;
 
     // Основная информация
     if (data.name) {
       message += `🏢 <b>Название:</b> ${data.name}\n`;
     }
 
-    message += `🔢 <b>ИНН:</b> ${inn}\n`;
-
-    // Адрес и регион
-    if (data.address) {
-      message += `📍 <b>Адрес:</b> ${data.address}\n`;
-    } else if (data.region) {
+    if (data.region) {
       message += `📍 <b>Регион:</b> ${data.region}\n`;
     }
 
@@ -111,7 +101,6 @@ export class NotificationFormatter {
         message += `📅 <b>Дата:</b> ${data.unreliableDate}\n`;
       }
     }
-
 
     // Дополнительная информация
     if (data.additionalInfo) {
