@@ -62,6 +62,9 @@ export class NotificationFormatter {
     if (data.liquidationDate) {
       message += `⚠️ <b>Дата ликвидации:</b> ${data.liquidationDate}\n`;
     }
+    if (data.unreliableDate) {
+      message += `❌ <b>Дата недостоверных сведений:</b> ${data.unreliableDate}\n`;
+    }
 
     // Статус ликвидации
     if (data.isLiquidated !== undefined) {
@@ -167,8 +170,16 @@ export class NotificationFormatter {
 
     const header = `🔄 <b>Изменение статуса организации</b>\n\n`;
     const statusChange = `${oldEmoji} ${oldName} → ${newEmoji} ${newName}\n\n`;
+    
+    // Добавляем информацию о дате события
+    let eventInfo = '';
+    if (newData.liquidationDate && newData.isLiquidated) {
+      eventInfo = `📅 <b>Дата ликвидации:</b> ${newData.liquidationDate}\n\n`;
+    } else if (newData.unreliableDate) {
+      eventInfo = `📅 <b>Дата недостоверных сведений:</b> ${newData.unreliableDate}\n\n`;
+    }
 
-    return header + statusChange + this.formatOrganizationCheck(inn, newData, {
+    return header + statusChange + eventInfo + this.formatOrganizationCheck(inn, newData, {
       ...options,
       showTimestamp: true
     });
