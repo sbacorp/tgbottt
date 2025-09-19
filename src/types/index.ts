@@ -1,6 +1,5 @@
 import { Context, SessionFlavor } from "grammy";
 import { Conversation, ConversationFlavor } from "@grammyjs/conversations";
-// import { HydrateFlavor } from "@grammyjs/hydrate";
 
 // Расширенный контекст с сессией
 export interface SessionData {
@@ -8,8 +7,6 @@ export interface SessionData {
   isAdmin: boolean;
   language: string;
   currentAction?: string | null;
-  tempData?: Record<string, any>;
-  // Состояния для feature tracking (больше не используются)
 }
 export type ContextSession = 
     Context &
@@ -37,6 +34,13 @@ export interface Organization {
   comment?: string;
   riskInfo?: string;
   hasIllegalActivity?: boolean;
+  // Новые поля для улучшенного формата
+  organizationStatus?: 'active' | 'liquidated' | 'liquidating';
+  hasRejectionsByLists?: boolean;
+  unreliableAddress?: boolean;
+  unreliableDirector?: boolean;
+  unreliableFounders?: boolean;
+  unreliableDataUpdateDate?: Date;
   addedDate: Date;
   updatedDate: Date;
 }

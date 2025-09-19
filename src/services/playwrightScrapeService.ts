@@ -1,38 +1,38 @@
 import { chromium, Browser, Page } from "playwright";
 import logger from "../utils/logger";
 import { cbrService } from "./cbrService";
-import { isOrganizationNotFound } from "../utils/validation";
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from "../utils/config";
+import * as fs from 'fs';
+const pdfParse = require('pdf-parse');
+
+export interface UnreliableDataInfo {
+  /** Недостоверность адреса */
+  address: boolean;
+  /** Недостоверность директора */
+  director: boolean;
+  /** Недостоверность учредителей */
+  founders: boolean;
+  /** Дата обновления недостоверных сведений в формате ДД.ММ.ГГГГ */
+  updateDate?: string;
+}
 
 export interface KonturOrganizationData {
   inn: string;
+  /** Название организации */
   name: string;
+  /** Статус организации: red - ликвидация/банкротство/риски ЦБ, orange - внимание, green - норма */
   status: "red" | "orange" | "green";
-  address?: string;
-  websites?: string[];
-  isLiquidated?: boolean;
-  illegalitySigns?: string[];
+  /** Действующая организация или ликвидированная или в процессе ликвидации */
+  organizationStatus: "active" | "liquidated" | "liquidating";
+  /** Найдена в списках отказов ЦБ РФ 764/639/550 */
+  hasRejectionsByLists: boolean;
+  /** Регион организации */
   region?: string;
-  additionalInfo?: string;
-  comment?: string;
-  liquidationDate?: string;
-  registrationDate?: string;
-  ogrn?: string;
-  kpp?: string;
-  okpo?: string;
-  founders?: string[];
-  activities?: string[];
-  capital?: string;
-  taxAuthority?: string;
+  /** Информация о недостоверности сведений */
+  unreliableData?: UnreliableDataInfo;
+  /** Дополнительная информация о рисках */
   riskInfo?: string;
-  hasIllegalActivity?: boolean;
-  unreliableInfo?: string;
-  unreliableDate?: string;
-  /** Короткое текстовое описание основного риска/факта (например, "Находится в стадии ликвидации" или "Сведения недостоверны") */
-  primaryRisk?: string;
-  /** Дата, релевантная основному риску (ДД.ММ.ГГГГ) */
-  primaryRiskDate?: string;
 }
 
 export class PlaywrightScrapeService {
@@ -65,62 +65,65 @@ export class PlaywrightScrapeService {
   }
 
 
-  private getMainText(): string {
-    const mainEl = document.querySelector('main');
-    return mainEl?.innerText || '';
-  }
-
   private async parseWithAI(text: string, inn: string): Promise<KonturOrganizationData | null> {
     try {
-
       const response = await this.anthropic.messages.create({
         model: "claude-3-5-sonnet-latest",
         max_tokens: 2000, 
-        system: `Ты эксперт по анализу данных организаций с сайта Контур.Фокус. 
-Твоя задача - извлекать структурированные данные из текста страницы организации.
+        system: `Ты эксперт по анализу PDF экспресс-отчетов с сайта Контур.Фокус. 
+Твоя задача - извлекать ключевые данные об организации из текста PDF отчета.
 
-ВАЖНО: Внимательно ищи все даты в тексте, особенно:
-- Даты ликвидации: "Прекратило деятельность", "Ликвидировано", "Реорганизовано"
-- Даты банкротства: "Признано банкротом", "Процедура банкротства"
-- Даты недостоверных сведений: "Сведения недостоверны"
-- Даты регистрации: "Дата образования", "Зарегистрировано"
-Извлекай следующие поля и возвращай в формате JSON:
+ВАЖНАЯ ИНФОРМАЦИЯ О ФОРМАТАХ:
+
+1. СТАТУС ОРГАНИЗАЦИИ:
+   - "active" - действующая организация
+   - "liquidated" - ликвидированная организация  
+   - "liquidating" - в процессе ликвидации
+
+2. ОБЩИЙ СТАТУС РИСКА:
+   - "red" - ликвидация/банкротство/высокие риски
+   - "orange" - внимание, есть проблемы (например, недостоверные сведения)
+   - "green" - норма, нет значительных рисков
+
+3. НЕДОСТОВЕРНОСТЬ СВЕДЕНИЙ:
+   Ищи информацию о том, что сведения недостоверны по следующим пунктам:
+   - Адрес (да/нет)
+   - Директор (да/нет) 
+   - Учредители (да/нет)
+   - Дата обновления в формате ДД.ММ.ГГГГ
+
+Возвращай данные СТРОГО в следующем JSON формате:
 {
-  "name": "название организации", =>
-  "status": "red|orange|green (красный - ликвидация/банкротство, оранжевый - внимание, зеленый - норма)",
-  "address": "полный адрес",
-  "region": "регион/город",
-  "ogrn": "ОГРН",
-  "kpp": "КПП", 
-  "okpo": "ОКПО",
-  "registrationDate": "дата регистрации в формате ДД.ММ.ГГГГ",
-  "liquidationDate": "дата ликвидации в формате ДД.ММ.ГГГГ (если есть)",
-  "isLiquidated": true/false,
-  "taxAuthority": "налоговый орган",
-  "capital": "уставный капитал",
-  "activities": ["основной вид деятельности"],
-  "unreliableInfo": "информация о недостоверных сведениях (если есть)",
-  "unreliableDate": "дата недостоверных сведений в формате ДД.ММ.ГГГГ (если есть)",
-  "riskInfo": "подробная информация о рисках с датами событий",
-  "primaryRisk": "краткое описание главного риска (например: 'Находится в стадии ликвидации' или 'Сведения недостоверны')",
-  "primaryRiskDate": "дата этого главного риска (ДД.ММ.ГГГГ)"
+  "name": "полное название организации",
+  "organizationStatus": "active|liquidated|liquidating",
+  "status": "red|orange|green",
+  "region": "регион/город организации",
+  "unreliableData": {
+    "address": true/false,
+    "director": true/false,
+    "founders": true/false,
+    "updateDate": "ДД.ММ.ГГГГ или null"
+  },
+  "riskInfo": "краткое описание основных рисков если есть"
 }
 
-Правила определения статуса:
-- "red": ликвидация, банкротство, прекращение деятельности
-- "orange": факты требующие внимания, недостоверные сведения
-- "green": нормальная деятельность
+ЛОГИКА ОПРЕДЕЛЕНИЯ СТАТУСОВ:
+- Если организация ликвидирована или в процессе ликвидации → status = "red"
+- Если есть недостоверные сведения → status = "orange" 
+- Если нет рисков и организация действует → status = "green"
 
-Если поле не найдено, используй null. Все даты извлекай в формате ДД.ММ.ГГГГ. Если организация в красном статусе, главным риском обычно является ликвидация/реорганизация с датой. Если в оранжевом — часто 'Сведения недостоверны' с датой.`,
+Если информация не найдена, используй null для опциональных полей, false для boolean полей.`,
         messages: [
           {
             role: "user",
-            content: `Проанализируй текст страницы организации с Контур.Фокус и извлеки структурированные данные.
+            content: `Проанализируй текст PDF экспресс-отчета организации с Контур.Фокус и извлеки ключевые данные.
 
-Текст страницы:
+Текст PDF отчета:
 ${text}
 
-ИНН организации: ${inn}`
+ИНН организации: ${inn}
+
+Верни результат в указанном JSON формате.`
           }
         ]
       });
@@ -134,30 +137,29 @@ ${text}
           return {
             inn,
             name: parsed.name || `Организация ${inn}`,
+            organizationStatus: parsed.organizationStatus || 'active',
             status: parsed.status || 'green',
-            address: parsed.address,
-            region: parsed.region,
-            ogrn: parsed.ogrn,
-            kpp: parsed.kpp,
-            okpo: parsed.okpo,
-            registrationDate: parsed.registrationDate,
-            liquidationDate: parsed.liquidationDate,
-            isLiquidated: parsed.isLiquidated || false,
-            taxAuthority: parsed.taxAuthority,
-            capital: parsed.capital,
-            activities: parsed.activities,
-            founders: parsed.founders,
-            unreliableInfo: parsed.unreliableInfo,
-            unreliableDate: parsed.unreliableDate,
-            riskInfo: parsed.riskInfo,
-            primaryRisk: parsed.primaryRisk,
-            primaryRiskDate: parsed.primaryRiskDate
+            hasRejectionsByLists: false, // Будет установлено отдельно через cbrService
+            region: parsed.region || undefined,
+            unreliableData: parsed.unreliableData || undefined,
+            riskInfo: parsed.riskInfo || undefined
           };
         }
       }
-      return  null
+      return null;
     } catch (error) {
       logger.error('Ошибка AI парсинга:', error);
+      return null;
+    }
+  }
+
+  private async extractTextFromPDF(pdfPath: string): Promise<string | null> {
+    try {
+      const dataBuffer = fs.readFileSync(pdfPath);
+      const data = await pdfParse(dataBuffer);
+      return data.text;
+    } catch (error) {
+      logger.error(`Ошибка извлечения текста из PDF ${pdfPath}:`, error);
       return null;
     }
   }
@@ -167,7 +169,7 @@ ${text}
   ): Promise<KonturOrganizationData | null> {
     try {
       logger.info(`Playwright-сбор данных для ИНН: ${inn}`);
-      const text = await this.withPage(async (page) => {
+      const pdfPath = await this.withPage(async (page) => {
         // 1) Заходим на главную
         await page.goto("https://focus.kontur.ru/", {
           waitUntil: "domcontentloaded",
@@ -242,6 +244,7 @@ ${text}
         } else {
           console.log('Пагинация не найдена - это прямая страница организации');
         }
+        
         // Ждем загрузки main элемента
         await page.waitForSelector('main', { timeout: 10000 });
         await page.waitForTimeout(3000);
@@ -250,26 +253,124 @@ ${text}
         const currentUrl = page.url();
         console.log('Текущий URL:', currentUrl);
         
-        // Проверим, есть ли main элемент
-        const mainExists = await page.locator('main').count() > 0;
-        console.log('Main элемент найден:', mainExists);
+        // Ищем ссылку содержащую текст "Экспресс-отчёт"
+        console.log('Ищем ссылку с "Экспресс-отчёт"...');
+        const expressReportLink = page.locator('a:has-text("Экспресс-отчёт")');
+        const linkCount = await expressReportLink.count();
+        console.log(`Найдено ссылок с "Экспресс-отчёт": ${linkCount}`);
         
-        // Получаем данные из конкретных элементов
-        const mainText = await page.evaluate(this.getMainText);
-        console.log('mainText длина:', mainText?.length || 0);
-        console.log('mainText первые 200 символов:', mainText?.substring(0, 200) || 'ПУСТО');
-        // Проверяем, что организация найдена
-        if (isOrganizationNotFound(mainText, inn)) return null;
+        if (linkCount === 0) {
+          // Попробуем альтернативные селекторы
+          console.log('Ссылка с "Экспресс-отчёт" не найдена, пробуем альтернативные селекторы...');
+          
+          // Попробуем найти по data-tid и href содержащему pdf
+          const pdfLinks = page.locator('a[data-tid="Link__root"][href*=".pdf"]');
+          const pdfLinkCount = await pdfLinks.count();
+          console.log(`Найдено PDF ссылок: ${pdfLinkCount}`);
+          
+          if (pdfLinkCount === 0) {
+            console.log('Никаких PDF ссылок не найдено');
+            return null;
+          }
+          
+          // Используем первую найденную PDF ссылку
+          const downloadPromise = page.waitForEvent('download');
+          console.log('Кликаем на PDF ссылку...');
+          await pdfLinks.first().click();
+          
+          const download = await downloadPromise;
+          const fileName = `express-report-${inn}-${Date.now()}.pdf`;
+          const filePath = `./downloads/${fileName}`;
+          await download.saveAs(filePath);
+          
+          console.log(`PDF сохранен: ${filePath}`);
+          return filePath;
+        }
         
-        return await this.parseWithAI(mainText, inn);
+        // Получаем URL PDF из href атрибута
+        const pdfHref = await expressReportLink.first().getAttribute('href');
+        if (!pdfHref) {
+          console.log('Не удалось получить href ссылки');
+          return null;
+        }
+        
+        console.log('Найден URL PDF:', pdfHref);
+        
+        // Скачиваем PDF напрямую через HTTP запрос
+        console.log('Скачиваем PDF файл...');
+        
+        // Используем page.request для прямого HTTP запроса
+        const response = await page.request.get(pdfHref);
+        
+        if (!response.ok()) {
+          console.log(`Ошибка загрузки PDF: ${response.status()} ${response.statusText()}`);
+          return null;
+        }
+        
+        // Получаем содержимое PDF
+        const pdfBuffer = await response.body();
+        
+        // Сохраняем файл
+        const fileName = `express-report-${inn}-${Date.now()}.pdf`;
+        const filePath = `./downloads/${fileName}`;
+        
+        // Записываем байты в файл
+        fs.writeFileSync(filePath, pdfBuffer);
+        
+        console.log(`PDF сохранен: ${filePath}`);
+        return filePath;
       });
 
-      if (!text) return null;
+      if (!pdfPath) {
+        console.log('PDF не был загружен');
+        return null;
+      }
       
-      // text уже является KonturOrganizationData от AI
-      const hasIllegalActivity = await cbrService.searchOrganization(inn);
-      text.hasIllegalActivity = hasIllegalActivity;
-      return text;
+      // Извлекаем текст из PDF
+      const pdfText = await this.extractTextFromPDF(pdfPath);
+      if (!pdfText) {
+        logger.error(`Не удалось извлечь текст из PDF: ${pdfPath}`);
+        // Удаляем PDF файл даже при ошибке
+        try {
+          fs.unlinkSync(pdfPath);
+          console.log(`PDF файл удален после ошибки: ${pdfPath}`);
+        } catch (deleteError) {
+          logger.warn(`Не удалось удалить PDF файл после ошибки ${pdfPath}:`, deleteError);
+        }
+        return null;
+      }
+      
+      // Парсим данные с помощью AI
+      const organizationData = await this.parseWithAI(pdfText, inn);
+      
+      // Удаляем PDF файл после парсинга
+      try {
+        fs.unlinkSync(pdfPath);
+        console.log(`PDF файл удален: ${pdfPath}`);
+      } catch (error) {
+        logger.warn(`Не удалось удалить PDF файл ${pdfPath}:`, error);
+      }
+      
+      if (!organizationData) {
+        logger.error(`AI не смог обработать данные для ИНН ${inn}`);
+        return null;
+      }
+      
+      // Проверяем наличие в списках отказов ЦБ РФ
+      const hasRejectionsByLists = await cbrService.searchOrganization(inn);
+      
+      // Обновляем статус если найдена в списках ЦБ
+      let finalStatus = organizationData.status;
+      if (hasRejectionsByLists && finalStatus === 'green') {
+        finalStatus = 'red'; // Если найдена в списках ЦБ, это красный статус
+      }
+      
+      return {
+        ...organizationData,
+        hasRejectionsByLists,
+        status: finalStatus
+      };
+      
     } catch (error) {
       logger.error(`Ошибка Playwright для ИНН ${inn}:`, error);
       return null;

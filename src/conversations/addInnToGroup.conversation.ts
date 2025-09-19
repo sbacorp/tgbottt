@@ -88,10 +88,8 @@ export async function addInnToGroupConversation(
         inn,
         name: orgData?.name || `Организация ${inn}`,
         status: orgData?.status || 'green',
-        address: orgData?.address || '',
+        address: '', // TODO: добавить поддержку адреса из нового формата
         region: orgData?.region || ''
-
-
       });
 
       if (addedOrg) {

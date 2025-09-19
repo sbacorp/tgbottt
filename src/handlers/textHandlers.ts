@@ -2,7 +2,6 @@ import logger from "../utils/logger";
 import { MyContext } from "../types";
 import { MESSAGES } from "../utils/config";
 import { monitoringService } from "../services/monitoringService";
-import { cbrService } from "../services/cbrService";
 import { PlatformZskService } from "../services/platform_zsk";
 import { createCheckResultKeyboard } from "../helpers/keyboard";
 import { NotificationFormatter } from "../helpers/notificationFormatter";
@@ -44,28 +43,34 @@ async function handleDefaultText(ctx: MyContext, text: string): Promise<void> {
 
     if (validInns.length > 0) {
       const inn = validInns[0];
-      const msg = await ctx.reply('🔍 Выполняется проверка организации...\n Это может занять до 60 секунд.');
+      const msg = await ctx.reply(
+        "🔍 Выполняется проверка организации...\n Это может занять до 60 секунд."
+      );
       try {
         // Контур
-        const konturResult = await monitoringService.checkOrganization(inn as string);
+        const konturResult = await monitoringService.checkOrganization(
+          inn as string
+        );
         if (!konturResult) {
-          await ctx.reply(`❌ Организация с ИНН ${inn} не найдена или не существует`, {
-            reply_markup: createCheckResultKeyboard()
-          });
+          await ctx.reply(
+            `❌ Организация с ИНН ${inn} не найдена или не существует`,
+            {
+              reply_markup: createCheckResultKeyboard(),
+            }
+          );
           return;
         }
 
         await ctx.api.editMessageText(
           msg.chat.id,
           msg.message_id,
-          '🔍 Проверяю в списках ЦБР...'
+          "🔍 Проверяю в списках ЦБР..."
         );
-        const cbrResult = await cbrService.searchOrganization(inn as string);
 
         await ctx.api.editMessageText(
           msg.chat.id,
           msg.message_id,
-          '🔍 Проверяю в системе ЗСК...'
+          "🔍 Проверяю в системе ЗСК..."
         );
         let zskResult: any = null;
         try {
@@ -74,30 +79,27 @@ async function handleDefaultText(ctx: MyContext, text: string): Promise<void> {
           zskResult = await zsk.checkInn(inn as string);
           await zsk.close();
         } catch (e) {
-          logger.error('Error checking ZSK (hears):', e);
+          logger.error("Error checking ZSK (hears):", e);
         }
 
-        const messageHeader = NotificationFormatter.formatOrganizationCheck(inn as string, konturResult,zskResult, {
-          showTimestamp: true,
-          showRiskInfo: true,
-          showIllegalActivity: true,
+        const messageHeader = NotificationFormatter.formatOrganizationCheck(
+          inn as string,
+          konturResult,
+          zskResult,
+          {
+            showTimestamp: true,
+            showRiskInfo: true,
+            showIllegalActivity: true,
+          }
+        );
+
+        await ctx.reply(messageHeader, {
+          reply_markup: createCheckResultKeyboard(),
+          parse_mode: "HTML",
         });
-
-        let message = messageHeader + ""
-        message += `\n==============\n`;
-
-        message += `\n〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️〰️\n`;
-        if (cbrResult) {
-          message += `По данному ИНН найдены записи в отказах по спискам 764/639/550.\n`;
-        } else {
-          message += `По данному ИНН записей в отказах по спискам 764/639/550 не найдено.\n`;
-        }
-
-
-        await ctx.reply(message, { reply_markup: createCheckResultKeyboard(), parse_mode: 'HTML' });
         return;
       } catch (error) {
-        logger.error('Error in inline INN check:', error);
+        logger.error("Error in inline INN check:", error);
         await ctx.reply(MESSAGES.error);
         return;
       }

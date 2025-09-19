@@ -5,21 +5,30 @@ import * as path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
 import Jimp from 'jimp';
 import { config } from '../utils/config';
-// Убрана генерация браузера. Фиксированный профиль macOS.
+
+/**
+ * Сервис для работы с платформой ЗСК (Знай Своего Клиента) ЦБ РФ
+ * Автоматизирует проверку организаций через веб-интерфейс с обходом капчи
+ */
 
 export class PlatformZskService {
     private browser: Browser | null = null;
     private anthropic: Anthropic | null = null;
 
     constructor() {
-        const apiKey = config.CLAUDE_API_KEY
+        const apiKey = config.CLAUDE_API_KEY;
         if (apiKey) {
             this.anthropic = new Anthropic({ apiKey });
         }
     }
 
+    /**
+     * Инициализация браузера с настройкой прокси
+     */
+
     async init(): Promise<void> {
         try {
+            // Настройка базовых опций браузера
             const launchOptionsBase: any = {
                 headless: true,
                 slowMo: 0,
@@ -105,27 +114,6 @@ export class PlatformZskService {
         logger.info(`Creating new browser context with macOS profile: ${userAgent.substring(0, 60)}...`);
 
         const context = await this.browser.newContext(contextOptions);
-
-        // Хардкод: подставляем куки пользователя для домена .cbr.ru (для обхода DDOS-Guard)
-        try {
-            const expires = Math.floor(Date.now() / 1000) + 60 * 30; // 30 минут
-            await context.addCookies([
-                { name: '__ddg8_', value: 'XUG2bFYpIMlNbWpp', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
-                { name: '__ddg10_', value: '1757359660', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
-                { name: '__ddg9_', value: '46.138.90.140', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
-                { name: '__ddg1_', value: 'prqVNhQvR0NvAAKbn0fv', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
-                { name: '_ym_uid', value: '1756333850930728211', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
-                { name: '_ym_d', value: '1756333850', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
-                { name: 'ASPNET_SessionID', value: 'dxjpnjdupbwory2yqoomrqlu', domain: '.cbr.ru', path: '/', expires, httpOnly: true, secure: true, sameSite: 'Lax' },
-                { name: 'accept', value: '1', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
-                { name: '_ym_isad', value: '1', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
-                { name: '_ym_visorc', value: 'b', domain: '.cbr.ru', path: '/', expires, httpOnly: false, secure: true, sameSite: 'Lax' },
-            ]);
-        } catch (e) {
-            logger.warn('Не удалось установить хардкод-куки для cbr.ru', e);
-        }
-
-        // Убираем глобальный перехват referer: может ломать загрузку статики/CORS
 
         const page = await context.newPage();
 
@@ -252,6 +240,13 @@ export class PlatformZskService {
         return { context, page };
     }
 
+    /**
+     * Основной метод проверки организации по ИНН через платформу ЗСК
+     * Включает обход защиты DDOS-Guard и решение капчи через AI
+     * 
+     * @param inn - ИНН организации для проверки
+     * @returns Promise с результатом проверки
+     */
     async checkInn(inn: string): Promise<{ success: boolean; result: string }> {
         let context: BrowserContext | null = null;
         let page: Page | null = null;
@@ -268,6 +263,7 @@ export class PlatformZskService {
             page.setDefaultNavigationTimeout(25000);
             page.setDefaultTimeout(25000);
 
+            // === ЭТАП 1: РАЗОГРЕВ И ПОЛУЧЕНИЕ DDOS-GUARD КУКИ ===
             // Разогрев: идём на корень, чтобы DDOS-Guard поставил нужные куки
             await page.goto('https://www.cbr.ru/', { referer: 'https://www.google.com/' });
             try { await page.waitForLoadState('networkidle', { timeout: 20000 }); } catch {}
@@ -308,11 +304,13 @@ export class PlatformZskService {
                 await page.waitForLoadState('domcontentloaded', { timeout: 20000 });
                 navigatedViaMenu = true;
             } catch (e) {
-                // Фолбэк: прямой переход
+                // === ЭТАП 2: ПЕРЕХОД НА ПЛАТФОРМУ ЗСК ===
+                // Фолбэк: прямой переход на страницу проверки ИНН
                 await page.goto('https://cbr.ru/counteraction_m_ter/platform_zsk/proverka-po-inn/', { referer: 'https://www.cbr.ru/' });
                 try { await page.waitForLoadState('domcontentloaded', { timeout: 20000 }); } catch {}
             }
 
+            // === ЭТАП 3: ОБХОД DDOS-GUARD ЗАЩИТЫ ===
             // Если попали на экран DDOS-Guard — несколько попыток автообновления
             for (let attempt = 1; attempt <= 4; attempt++) {
                 const guardText = await page.locator('text=Проверка браузера перед переходом на cbr.ru').count();
@@ -340,6 +338,7 @@ export class PlatformZskService {
             logger.info(`Screenshot saved to: ${screenshotPath1}`);
 
             // Заполняем форму
+            // === ЭТАП 4: ЗАПОЛНЕНИЕ ФОРМЫ ПРОВЕРКИ ===
             let innFieldVisible = false;
             for (let attempt = 1; attempt <= 3; attempt++) {
                 try {
@@ -375,6 +374,7 @@ export class PlatformZskService {
 
             await page.evaluate(() => window.scrollBy(0, 400));
 
+            // === ЭТАП 5: ОБРАБОТКА КАПЧИ ===
             // Работаем с капчей
             await page.waitForSelector('[data-testid="checkbox-iframe"]', { timeout: 6000, state: 'visible' });
             const checkboxIframe = page.locator('[data-testid="checkbox-iframe"]').contentFrame();
@@ -701,6 +701,9 @@ export class PlatformZskService {
         }
     }
 
+    /**
+     * Закрытие браузера и освобождение ресурсов
+     */
     async close(): Promise<void> {
         try {
             if (this.browser) {

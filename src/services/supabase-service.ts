@@ -27,6 +27,13 @@ export interface SupabaseOrganization {
   comment?: string;
   risk_info?: string;
   has_illegal_activity?: boolean;
+  // Новые поля для улучшенного формата
+  organization_status?: string;
+  has_rejections_by_lists?: boolean;
+  unreliable_address?: boolean;
+  unreliable_director?: boolean;
+  unreliable_founders?: boolean;
+  unreliable_data_update_date?: string | undefined;
   created_at: string;
   updated_at: string;
 }
@@ -450,6 +457,16 @@ export class SupabaseService {
       if (organizationData.comment !== undefined) updateData.comment = organizationData.comment;
       if (organizationData.riskInfo !== undefined) updateData.risk_info = organizationData.riskInfo;
       if (organizationData.hasIllegalActivity !== undefined) updateData.has_illegal_activity = organizationData.hasIllegalActivity;
+      
+      // Новые поля для улучшенного формата
+      if (organizationData.organizationStatus !== undefined) updateData.organization_status = organizationData.organizationStatus;
+      if (organizationData.hasRejectionsByLists !== undefined) updateData.has_rejections_by_lists = organizationData.hasRejectionsByLists;
+      if (organizationData.unreliableAddress !== undefined) updateData.unreliable_address = organizationData.unreliableAddress;
+      if (organizationData.unreliableDirector !== undefined) updateData.unreliable_director = organizationData.unreliableDirector;
+      if (organizationData.unreliableFounders !== undefined) updateData.unreliable_founders = organizationData.unreliableFounders;
+      if (organizationData.unreliableDataUpdateDate !== undefined && organizationData.unreliableDataUpdateDate !== null) {
+        updateData.unreliable_data_update_date = organizationData.unreliableDataUpdateDate.toISOString().split('T')[0]; // Только дата
+      }
 
       const { data, error } = await this.client!
         .from('tracked_organizations')
@@ -674,26 +691,8 @@ export class SupabaseService {
     }
   }
 
-  // МЕТОДЫ ДЛЯ РАБОТЫ СО СВЯЗЯМИ ПОЛЬЗОВАТЕЛЬ-ОРГАНИЗАЦИЯ (ЗАГЛУШКИ)
-  // Индивидуальное отслеживание не используется - только групповое
-
-  async addUserOrganization(_userId: number, _inn: string): Promise<void> {
-    logger.warn('Individual user-organization tracking is disabled, use groups instead');
-  }
-
-  async removeUserOrganization(_userId: number, _inn: string): Promise<void> {
-    logger.warn('Individual user-organization tracking is disabled, use groups instead');
-  }
-
-  async getUserOrganizations(_userId: number): Promise<Organization[]> {
-    logger.warn('Individual user-organization tracking is disabled, use groups instead');
-    return [];
-  }
-
-  async getOrganizationUsers(_inn: string): Promise<User[]> {
-    logger.warn('Individual user-organization tracking is disabled, use groups instead');
-    return [];
-  }
+  // МЕТОДЫ ДЛЯ РАБОТЫ СО СВЯЗЯМИ ПОЛЬЗОВАТЕЛЬ-ОРГАНИЗАЦИЯ
+  // Индивидуальное отслеживание удалено - используется только групповое управление
 
   // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
 
@@ -721,6 +720,14 @@ export class SupabaseService {
     if (data.comment !== undefined) org.comment = data.comment;
     if (data.risk_info !== undefined) org.riskInfo = data.risk_info;
     if (data.has_illegal_activity !== undefined) org.hasIllegalActivity = data.has_illegal_activity;
+    
+    // Новые поля для улучшенного формата
+    if (data.organization_status !== undefined) org.organizationStatus = data.organization_status as any;
+    if (data.has_rejections_by_lists !== undefined) org.hasRejectionsByLists = data.has_rejections_by_lists;
+    if (data.unreliable_address !== undefined) org.unreliableAddress = data.unreliable_address;
+    if (data.unreliable_director !== undefined) org.unreliableDirector = data.unreliable_director;
+    if (data.unreliable_founders !== undefined) org.unreliableFounders = data.unreliable_founders;
+    if (data.unreliable_data_update_date !== undefined) org.unreliableDataUpdateDate = new Date(data.unreliable_data_update_date);
     
     return org;
   }
@@ -1108,14 +1115,7 @@ export class SupabaseService {
     return result;
   }
 
-  // МЕТОДЫ-ЗАГЛУШКИ ДЛЯ УВЕДОМЛЕНИЙ (НЕ РЕАЛИЗОВАНЫ В SUPABASE)
-  async markCheckAsNotified(_inn: string, _status: string): Promise<void> {
-    // Заглушка - не реализовано в Supabase
-  }
-
-  async markZskCheckAsNotified(_inn: string, _status: string): Promise<void> {
-    // Заглушка - не реализовано в Supabase
-  }
+  // Методы уведомлений не требуются в текущей реализации
 }
 
 // Создаем singleton экземпляр

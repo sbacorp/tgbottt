@@ -28,7 +28,6 @@ BOT_TOKEN=your_telegram_bot_token_here
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-supabase-anon-key
 ADMIN_USER_IDS=123456789,987654321
-FIRECRAWL_API_KEY=your_firecrawl_api_key_here
 CLAUDE_API_KEY=your_claude_api_key_here
 ```
 
@@ -92,19 +91,20 @@ src/
 
 ### Для пользователей:
 - `/start` - Запуск бота
-- `/menu` - Главное меню
-- `/organizations` - Список организаций
-- `/add_inn ИНН1 ИНН2` - Добавить ИНН для отслеживания
 - `/check ИНН` - Проверить конкретную организацию
-- `/status` - Статус системы
+- `/help` - Справка по командам
 
 ### Для администраторов:
-- `/users` - Список получателей
-- `/add_users 123456789 987654321` - Добавить пользователей по telegram_id
-- `/remove_users 123456789 987654321` - Удалить пользователей по telegram_id
 - `/add_admins 123456789 987654321` - Добавить администраторов по telegram_id
 - `/remove_admins 123456789 987654321` - Удалить администраторов по telegram_id
-- `/remove_inn ИНН1 ИНН2` - Удалить ИНН из отслеживания
+- `/status` - Статус системы
+- `/setcommands` - Обновить команды бота
+
+### Групповое управление:
+- Создание групп для совместного мониторинга
+- Добавление/удаление организаций в группы
+- Управление участниками групп
+- Централизованные уведомления
 
 ## ⚙️ Мониторинг
 

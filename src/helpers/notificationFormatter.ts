@@ -26,34 +26,22 @@ export class NotificationFormatter {
 
     // Основная информация
     if (data.name) {
-      message += `🏢 <b>Название:</b> ${data.name}\n`;
+      message += `<b>Название:</b> ${data.name}\n`;
     }
 
+    // Статус организации
+    const orgStatusText = {
+      active: "Действующая",
+      liquidated: "Ликвидированная",
+      liquidating: "В процессе ликвидации",
+    };
+    message += `<b>Статус:</b> ${
+      orgStatusText[data.organizationStatus] || data.organizationStatus
+    }\n`;
+
+    // Регион
     if (data.region) {
-      message += `📍 <b>Регион:</b> ${data.region}\n`;
-    }
-
-    // Даты
-    if (data.registrationDate) {
-      message += `📅 <b>Дата регистрации:</b> ${data.registrationDate}\n`;
-    }
-    if (data.liquidationDate) {
-      message += `⚠️ <b>Дата ликвидации:</b> ${data.liquidationDate}\n`;
-    }
-    if (data.unreliableDate) {
-      message += `❌ <b>Дата недостоверных сведений:</b> ${data.unreliableDate}\n`;
-    }
-
-    // Виды деятельности
-    if (data.activities && data.activities.length > 0) {
-      message += `🔧 <b>Основной вид деятельности:</b> ${data.activities.join(
-        ", "
-      )}\n`;
-    }
-
-    // Веб-сайты
-    if (data.websites && data.websites.length > 0) {
-      message += `🌐 <b>Веб-сайты:</b> ${data.websites.join(", ")}\n`;
+      message += `<b>Регион:</b> ${data.region}\n`;
     }
 
     message += `\n\n🚦 ЗСК\n`;
@@ -63,9 +51,9 @@ export class NotificationFormatter {
       const cleanResult = zskResult.result
         .replace("Проверить ещё один ИНН", "")
         .trim();
-      message += `📋 Результат проверки: ${cleanResult}\n`;
+      message += `Результат проверки: ${cleanResult}\n`;
     } else {
-      message += `📋 Результат проверки: Данные временно недоступны\n`;
+      message += `Результат проверки: Данные временно недоступны\n`;
     }
 
     // Определяем статус на основе данных Контур.Фокус
@@ -86,31 +74,26 @@ export class NotificationFormatter {
     message += `\nТекущий риск:\n Уровень риска: ${statusIcon} ${riskLevel} - компания находится в ${statusText}\n`;
     message += `\n==============\n`;
 
-    // Основной риск и дата
-    if (data.primaryRisk) {
-      message += `\n⚠️ <b>Основной риск:</b> ${data.primaryRisk}\n`;
-    }
-    if (data.primaryRiskDate) {
-      message += `📅 <b>Обновлено:</b> ${data.primaryRiskDate}\n`;
+    // Информация о рисках
+    if (data.riskInfo) {
+      message += `\n<b>Риски:</b> ${data.riskInfo}\n`;
     }
 
     // Недостоверные сведения
-    if (data.unreliableInfo) {
-      message += `\n❌ <b>Недостоверные сведения:</b> ${data.unreliableInfo}\n`;
-      if (data.unreliableDate) {
-        message += `📅 <b>Дата:</b> ${data.unreliableDate}\n`;
+    if (data.unreliableData) {
+      message += `\n❌ <b>Недостоверность сведений:</b>\n`;
+      message += `Адрес: ${data.unreliableData.address ? "Да" : "Нет"}\n`;
+      message += `Директор: ${data.unreliableData.director ? "Да" : "Нет"}\n`;
+      message += `Учредители: ${data.unreliableData.founders ? "Да" : "Нет"}\n`;
+      if (data.unreliableData.updateDate) {
+        message += `📅 <b>Обновлено:</b> ${data.unreliableData.updateDate}\n`;
       }
     }
 
-    // Дополнительная информация
-    if (data.additionalInfo) {
-      message += `\n📋 <b>Дополнительная информация:</b>\n${data.additionalInfo}\n`;
-    }
-
-    // Комментарий
-    if (data.comment) {
-      message += `\n💬 <b>Комментарий:</b> ${data.comment}\n`;
-    }
+    // Проверка по спискам ЦБ РФ
+    message += `<b>Отказы по спискам 764/639/550:</b> ${
+      data.hasRejectionsByLists ? "Да" : "Нет"
+    }\n`;
 
     // Кастомное сообщение
     if (customMessage) {
@@ -162,10 +145,17 @@ export class NotificationFormatter {
 
     // Добавляем информацию о дате события
     let eventInfo = "";
-    if (newData.liquidationDate && newData.isLiquidated) {
-      eventInfo = `📅 <b>Дата ликвидации:</b> ${newData.liquidationDate}\n\n`;
-    } else if (newData.unreliableDate) {
-      eventInfo = `📅 <b>Дата недостоверных сведений:</b> ${newData.unreliableDate}\n\n`;
+    if (
+      newData.organizationStatus === "liquidated" ||
+      newData.organizationStatus === "liquidating"
+    ) {
+      eventInfo = `📅 <b>Статус организации:</b> ${
+        newData.organizationStatus === "liquidated"
+          ? "Ликвидирована"
+          : "В процессе ликвидации"
+      }\n\n`;
+    } else if (newData.unreliableData?.updateDate) {
+      eventInfo = `📅 <b>Дата недостоверных сведений:</b> ${newData.unreliableData.updateDate}\n\n`;
     }
 
     return (
@@ -198,36 +188,9 @@ export class NotificationFormatter {
     message += `📋 <b>Результат проверки:</b>\n${resultText}\n\n`;
 
     if (options.showTimestamp !== false) {
-      message += `➕ <b>Обновлено:</b> ${new Date().toLocaleDateString(
+      message += `<b>Обновлено:</b> ${new Date().toLocaleDateString(
         "ru-RU"
       )}`;
-    }
-
-    return message;
-  }
-
-  /**
-   * Формирует краткое сообщение для быстрой проверки
-   */
-  static formatQuickCheck(inn: string, data: KonturOrganizationData): string {
-    const statusEmojis = {
-      red: "🔴",
-      orange: "🟡",
-      green: "🟢",
-    };
-
-    const emoji = statusEmojis[data.status] || "⚪";
-
-    let message = `${emoji} <b>${data.name || `Организация ${inn}`}</b>\n`;
-    message += `🔢 ИНН: ${inn}\n`;
-    message += `📍 ${data.region || data.address || "Адрес не указан"}\n`;
-
-    if (data.isLiquidated) {
-      message += `⚠️ Ликвидирована\n`;
-    }
-
-    if (data.hasIllegalActivity) {
-      message += `🚨 Нарушения ЦБ РФ\n`;
     }
 
     return message;

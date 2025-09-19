@@ -25,9 +25,6 @@ export async function handleCallback(ctx: MyContext): Promise<void> {
       case "menu":
         await handleMenuCallback(ctx);
         break;
-      case "add_inn":
-        await handleAddInnCallback(ctx);
-        break;
       case "users_list":
         await handleUsersListCallback(ctx);
         break;
@@ -39,12 +36,6 @@ export async function handleCallback(ctx: MyContext): Promise<void> {
         break;
       case "organizations_list":
         await handleOrganizationsListCallback(ctx);
-        break;
-      case "add_users":
-        await handleAddUsersCallback(ctx);
-        break;
-      case "remove_users":
-        await handleRemoveUsersCallback(ctx);
         break;
       case "add_admins":
         await handleAddAdminsCallback(ctx);
@@ -90,23 +81,6 @@ async function handleMenuCallback(ctx: MyContext): Promise<void> {
   }
 }
 
-/**
- * Обработчик callback для добавления ИНН - запускает conversation
- */
-async function handleAddInnCallback(ctx: MyContext): Promise<void> {
-  try {
-    if (!ctx.session.isRegistered) {
-      await ctx.answerCallbackQuery("Вы не зарегистрированы");
-      return;
-    }
-
-    await ctx.answerCallbackQuery();
-    await ctx.conversation.enter("add_inn");
-  } catch (error) {
-    logger.error("Error in handleAddInnCallback:", error);
-    await ctx.answerCallbackQuery("Ошибка при запуске добавления ИНН");
-  }
-}
 
 /**
  * Обработчик callback для списка пользователей
@@ -280,43 +254,6 @@ async function handleOrganizationsListCallback(ctx: MyContext): Promise<void> {
   }
 }
 
-/**
- * Обработчик callback для добавления пользователей - запускает conversation
- */
-async function handleAddUsersCallback(ctx: MyContext): Promise<void> {
-  try {
-    if (!ctx.session.isRegistered || !ctx.session.isAdmin) {
-      await ctx.answerCallbackQuery("Недостаточно прав");
-      return;
-    }
-
-    await ctx.answerCallbackQuery();
-    await ctx.conversation.enter("add_users");
-  } catch (error) {
-    logger.error("Error in handleAddUsersCallback:", error);
-    await ctx.answerCallbackQuery(
-      "Ошибка при запуске добавления пользователей"
-    );
-  }
-}
-
-/**
- * Обработчик callback для удаления пользователей - запускает conversation
- */
-async function handleRemoveUsersCallback(ctx: MyContext): Promise<void> {
-  try {
-    if (!ctx.session.isRegistered || !ctx.session.isAdmin) {
-      await ctx.answerCallbackQuery("Недостаточно прав");
-      return;
-    }
-
-    await ctx.answerCallbackQuery();
-    await ctx.conversation.enter("remove_users");
-  } catch (error) {
-    logger.error("Error in handleRemoveUsersCallback:", error);
-    await ctx.answerCallbackQuery("Ошибка при запуске удаления пользователей");
-  }
-}
 
 /**
  * Обработчик callback для добавления администраторов - запускает conversation

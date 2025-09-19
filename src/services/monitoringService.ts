@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import { database } from '../database/index';
 import { KonturOrganizationData } from './playwrightScrapeService';
-import { getKonturScraper } from './index';
+import { playwrightScrapeService } from './playwrightScrapeService';
 import { PlatformZskService } from './platform_zsk';
 import { getNotificationService } from './notificationService';
 import logger from '../utils/logger';
@@ -13,7 +13,7 @@ export class MonitoringService {
   private isRunning = false;
 
   constructor() {
-    this.scraperService = getKonturScraper();
+    this.scraperService = playwrightScrapeService;
   }
 
   /**
@@ -101,21 +101,11 @@ export class MonitoringService {
         status: newData.status,
         details: {
           name: newData.name,
-          address: newData.address,
-          isLiquidated: newData.isLiquidated,
-          illegalitySigns: newData.illegalitySigns,
+          organizationStatus: newData.organizationStatus,
+          hasRejectionsByLists: newData.hasRejectionsByLists,
           region: newData.region,
-          additionalInfo: newData.additionalInfo,
-          comment: newData.comment,
-          liquidationDate: newData.liquidationDate,
-          registrationDate: newData.registrationDate,
-          ogrn: newData.ogrn,
-          kpp: newData.kpp,
-          okpo: newData.okpo,
-          founders: newData.founders,
-          activities: newData.activities,
-          capital: newData.capital,
-          taxAuthority: newData.taxAuthority
+          unreliableData: newData.unreliableData,
+          riskInfo: newData.riskInfo
         }
       });
 
@@ -124,13 +114,18 @@ export class MonitoringService {
       
       if (newData.name) updateData.name = newData.name;
       if (newData.status) updateData.status = newData.status;
-      if (newData.address) updateData.address = newData.address;
-      if (newData.websites) updateData.websites = newData.websites;
-      if (newData.isLiquidated !== undefined) updateData.isLiquidated = newData.isLiquidated;
-      if (newData.illegalitySigns) updateData.illegalitySigns = newData.illegalitySigns;
       if (newData.region) updateData.region = newData.region;
-      if (newData.additionalInfo) updateData.additionalInfo = newData.additionalInfo;
-      if (newData.comment) updateData.comment = newData.comment;
+      // Новые поля для улучшенного формата (теперь поддерживаются в БД)
+      if (newData.organizationStatus) updateData.organizationStatus = newData.organizationStatus;
+      if (newData.hasRejectionsByLists !== undefined) updateData.hasRejectionsByLists = newData.hasRejectionsByLists;
+      if (newData.unreliableData) {
+        updateData.unreliableAddress = newData.unreliableData.address;
+        updateData.unreliableDirector = newData.unreliableData.director;
+        updateData.unreliableFounders = newData.unreliableData.founders;
+        if (newData.unreliableData.updateDate) {
+          updateData.unreliableDataUpdateDate = new Date(newData.unreliableData.updateDate);
+        }
+      }
       
       await database.updateOrganizationData(inn, updateData);
 
@@ -144,9 +139,6 @@ export class MonitoringService {
 
         if (shouldNotify) {
           await this.sendStatusChangeNotification(inn, newData);
-          
-          // Отмечаем, что уведомление отправлено
-          await database.markCheckAsNotified(inn, newData.status);
         }
       } else {
         logger.info(`Данные организации ${inn} обновлены (статус не изменился: ${newData.status})`);
@@ -341,7 +333,7 @@ export class MonitoringService {
           await this.sendZskStatusChangeNotification(inn, newZskStatus, result.result);
           
           // Отмечаем, что уведомление отправлено
-          await database.markZskCheckAsNotified(inn, newZskStatus);
+          // Проверка ЗСК отмечена как обработанная автоматически
         }
       } else {
         logger.info(`Данные организации ${inn} обновлены через ЗСК (статус не изменился: ${newZskStatus})`);

@@ -54,8 +54,6 @@ const sessionConfig = {
     isAdmin: false,
     language: 'ru',
     currentAction: null,
-    tempData: {},
-    // Состояния для feature tracking (больше не используются)
   }),
   // Используем Supabase storage
   storage: createSupabaseStorageAdapter("grammy_sessions")

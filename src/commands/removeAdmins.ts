@@ -15,14 +15,11 @@ export async function handleRemoveAdmins(ctx: MyContext): Promise<void> {
     }
 
     const text = ctx.message?.text;
-    if (!text) {
-      await ctx.reply('Пожалуйста, укажите telegram_id для снятия прав администратора. Например: /remove_admins 123456789 987654321');
-      return;
-    }
-
-    const telegramIds = text.replace('/remove_admins', '').trim();
+    const telegramIds = text ? text.replace('/remove_admins', '').trim() : '';
+    
+    // Если аргументы не указаны, запускаем интерактивный conversation
     if (!telegramIds) {
-      await ctx.reply('Пожалуйста, укажите telegram_id для снятия прав администратора. Например: /remove_admins 123456789 987654321');
+      await ctx.conversation.enter("remove_admins");
       return;
     }
 
