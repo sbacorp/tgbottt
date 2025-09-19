@@ -104,7 +104,7 @@ export class PlaywrightScrapeService {
     "founders": true/false,
     "updateDate": "ДД.ММ.ГГГГ или null"
   },
-  "riskInfo": "краткое описание основных рисков если есть"
+  "riskInfo": "краткое описание основных рисков если есть каждый риск с новой строки"
 }
 
 ЛОГИКА ОПРЕДЕЛЕНИЯ СТАТУСОВ:

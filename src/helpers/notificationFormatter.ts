@@ -72,7 +72,6 @@ export class NotificationFormatter {
     }
 
     message += `\nТекущий риск:\n Уровень риска: ${statusIcon} ${riskLevel} - компания находится в ${statusText}\n`;
-    message += `\n==============\n`;
 
     // Информация о рисках
     if (data.riskInfo) {
