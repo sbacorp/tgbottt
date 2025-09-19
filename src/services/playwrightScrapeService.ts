@@ -71,7 +71,10 @@ export class PlaywrightScrapeService {
         model: "claude-3-5-sonnet-latest",
         max_tokens: 2000, 
         system: `Ты эксперт по анализу PDF экспресс-отчетов с сайта Контур.Фокус и системе противодействия отмыванию денежных средств (115-ФЗ). 
-Твоя задача - извлекать ключевые данные об организации из текста PDF отчета и определять потенциальные риски согласно системе СВЕТОФОР ЦБ РФ.
+Твоя задача - извлекать ключевые данные об организации СТРОГО из текста PDF отчета и определять потенциальные риски согласно системе СВЕТОФОР ЦБ РФ.
+НЕ ДОПУСКАЕТСЯ добавление информации, которой нет в тексте.
+не выдумывай
+это надо для стабильности системы
 
 ВАЖНАЯ ИНФОРМАЦИЯ О ФОРМАТАХ:
 
@@ -91,6 +94,7 @@ export class PlaywrightScrapeService {
    - Директор (да/нет) 
    - Учредители (да/нет)
    - Дата обновления в формате ДД.ММ.ГГГГ
+   - дата когда недостоверны сведения стали!!!
 
 4. КОДЫ РИСКА СИСТЕМЫ СВЕТОФОР (если применимо):
    Анализируй деятельность организации на предмет соответствия следующим рисковым операциям:
@@ -160,7 +164,7 @@ export class PlaywrightScrapeService {
     "founders": true/false,
     "updateDate": "ДД.ММ.ГГГГ или null"
   },
-  "riskInfo": "ПЕРВАЯ СТРОКА: Главный риск\nОстальные риски с кодами СВЕТОФОР если применимо (например: 'Признаки обналичивания (код 1.01)')"
+  "riskInfo": "ПЕРВАЯ СТРОКА: <b>Главный риск</b> кодом СВЕТОФОР\nОстальные риски с кодами СВЕТОФОР если применимо (например: '<b>1.01</b> Признаки обналичивания')"
 }
 
 ЛОГИКА ОПРЕДЕЛЕНИЯ СТАТУСОВ:
@@ -170,12 +174,13 @@ export class PlaywrightScrapeService {
 - Если нет рисков и организация действует нормально → status = "green"
 
 ВАЖНО: 
-- Коды риска указывай в скобках после описания риска (например: "Признаки обналичивания (код 1.01)")
+- Коды риска, обернутые в тег <b>, указывай в начале строки, без слова 'код' и без скобок (например: "<b>1.01</b> Признаки обналичивания")
 - Первая строка riskInfo всегда должна содержать главный/основной риск
 - Коды применяй только при наличии конкретных признаков из отчета
 - Не назначай коды "на всякий случай" - только при четких основаниях
 - При отсутствии признаков рисковых операций не указывай коды СВЕТОФОР
 - Учитывай сферу деятельности организации при оценке рисков
+- НЕ ВКЛЮЧАЙ в riskInfo информацию о статусе ликвидации ("Находится в процессе ликвидации") или о недостоверности сведений ("Недостоверность адреса регистрации"). Эта информация указывается в полях organizationStatus и unreliableData.
 
 Если информация не найдена, используй null для опциональных полей, false для boolean полей.`,
         messages: [
@@ -194,21 +199,42 @@ ${text}
       });
 
       const content = response.content[0];
-
+      logger.info(`Ответ AI: ${content}`);
       if (content && content.type === 'text') {
-        const jsonMatch = content.text.match(/\{[\s\S]*\}/);
+        // Улучшенный поиск JSON, который может быть обернут в markdown
+        const jsonMatch = content.text.match(/```json\s*([\s\S]*?)\s*```|(\{[\s\S]*\})/);
+        logger.info(`JSON: ${jsonMatch}`);
         if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          return {
-            inn,
-            name: parsed.name || `Организация ${inn}`,
-            organizationStatus: parsed.organizationStatus || 'active',
-            status: parsed.status || 'green',
-            hasRejectionsByLists: false, // Будет установлено отдельно через cbrService
-            region: parsed.region || undefined,
-            unreliableData: parsed.unreliableData || undefined,
-            riskInfo: parsed.riskInfo || undefined
-          };
+          // Выбираем правильную группу из совпадения
+          let jsonString = jsonMatch[1] || jsonMatch[2];
+
+          if (jsonString) {
+            // Обработка потенциальных проблем с riskInfo
+            // Заменяем неэкранированные переносы строк внутри riskInfo
+            jsonString = jsonString.replace(/"riskInfo":\s*"(.*?)"/gs, (_match, group1) => {
+              const cleanedGroup = group1.replace(/\n/g, '\\n').replace(/"/g, '\\"');
+              return `"riskInfo": "${cleanedGroup}"`;
+            });
+            
+            try {
+              const parsed = JSON.parse(jsonString);
+              logger.info(`Parsed: ${JSON.stringify(parsed, null, 2)}`);
+              return {
+                inn,
+                name: parsed.name || `Организация ${inn}`,
+                organizationStatus: parsed.organizationStatus || 'active',
+                status: parsed.status || 'green',
+                hasRejectionsByLists: false, // Будет установлено отдельно через cbrService
+                region: parsed.region || undefined,
+                unreliableData: parsed.unreliableData || undefined,
+                riskInfo: parsed.riskInfo || undefined
+              };
+            } catch (parseError) {
+              logger.error('Ошибка JSON.parse:', parseError);
+              logger.error('Строка, которую не удалось спарсить:', jsonString);
+              return null;
+            }
+          }
         }
       }
       return null;

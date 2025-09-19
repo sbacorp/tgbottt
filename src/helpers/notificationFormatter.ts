@@ -44,34 +44,36 @@ export class NotificationFormatter {
       message += `<b>Регион:</b> ${data.region}\n`;
     }
 
-    message += `\n\n🚦 ЗСК\n`;
+    message += `\n🚦 <b>ЗСК</b>\n`;
 
     // Добавляем результат проверки ЗСК
     if (zskResult && zskResult.success && zskResult.result) {
       const cleanResult = zskResult.result
         .replace("Проверить ещё один ИНН", "")
+        .replace("имеются", "<b>ИМЕЮТСЯ</b>")
+        .replace("отсутствуют", "<b>ОТСУТСТВУЮТ</b>")
         .trim();
-      message += `Результат проверки: ${cleanResult}\n`;
+      message += `<b>Результат проверки:</b> ${cleanResult}\n`;
     } else {
-      message += `Результат проверки: Данные временно недоступны\n`;
+      message += `<b>Результат проверки:</b> Данные временно недоступны\n`;
     }
 
     // Определяем статус на основе данных Контур.Фокус
     let statusIcon = "🟢";
-    let statusText = "ЗЕЛЁНОЙ зоне, низкий риск";
+    let statusText = "<b>ЗЕЛЁНОЙ</b> зоне, низкий риск";
     let riskLevel = "0";
 
     if (data.status === "red") {
       statusIcon = "🔴";
-      statusText = "КРАСНОЙ зоне, очень большой риск для работы!";
+      statusText = "<b>КРАСНОЙ</b> зоне, очень большой риск для работы!";
       riskLevel = "2";
     } else if (data.status === "orange") {
       statusIcon = "🟡";
-      statusText = "ЖЁЛТОЙ зоне, средний риск для работы";
+      statusText = "<b>ЖЁЛТОЙ</b> зоне, средний риск для работы";
       riskLevel = "1";
     }
 
-    message += `\nТекущий риск:\n Уровень риска: ${statusIcon} ${riskLevel} - компания находится в ${statusText}\n`;
+    message += `\n<b>Уровень риска:</b> ${statusIcon} ${riskLevel} - компания находится в ${statusText}\n`;
 
     // Информация о рисках
     if (data.riskInfo) {
@@ -85,7 +87,7 @@ export class NotificationFormatter {
       message += `Директор: ${data.unreliableData.director ? "Да" : "Нет"}\n`;
       message += `Учредители: ${data.unreliableData.founders ? "Да" : "Нет"}\n`;
       if (data.unreliableData.updateDate) {
-        message += `📅 <b>Обновлено:</b> ${data.unreliableData.updateDate}\n`;
+        message += `<b>Запись добавлена:</b> ${data.unreliableData.updateDate}\n`;
       }
     }
 
