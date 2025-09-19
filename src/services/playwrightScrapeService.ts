@@ -280,7 +280,12 @@ ${text}
           
           const download = await downloadPromise;
           const fileName = `express-report-${inn}-${Date.now()}.pdf`;
-          const filePath = `./downloads/${fileName}`;
+          const downloadsDir = './downloads';
+          if (!fs.existsSync(downloadsDir)) {
+            fs.mkdirSync(downloadsDir);
+            logger.info(`Директория ${downloadsDir} создана`);
+          }
+          const filePath = `${downloadsDir}/${fileName}`;
           await download.saveAs(filePath);
           
           console.log(`PDF сохранен: ${filePath}`);
@@ -312,7 +317,12 @@ ${text}
         
         // Сохраняем файл
         const fileName = `express-report-${inn}-${Date.now()}.pdf`;
-        const filePath = `./downloads/${fileName}`;
+        const downloadsDir = './downloads';
+        if (!fs.existsSync(downloadsDir)) {
+          fs.mkdirSync(downloadsDir);
+          logger.info(`Директория ${downloadsDir} создана`);
+        }
+        const filePath = `${downloadsDir}/${fileName}`;
         
         // Записываем байты в файл
         fs.writeFileSync(filePath, pdfBuffer);
