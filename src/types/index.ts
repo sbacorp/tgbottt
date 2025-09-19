@@ -26,21 +26,16 @@ export interface Organization {
   status: 'red' | 'orange' | 'green';
   zskStatus: 'red' | 'green';
   address?: string;
-  websites?: string[];
-  isLiquidated?: boolean;
-  illegalitySigns?: string[];
   region?: string;
-  additionalInfo?: string;
-  comment?: string;
   riskInfo?: string;
-  hasIllegalActivity?: boolean;
+
   // Новые поля для улучшенного формата
   organizationStatus?: 'active' | 'liquidated' | 'liquidating';
   hasRejectionsByLists?: boolean;
   unreliableAddress?: boolean;
   unreliableDirector?: boolean;
   unreliableFounders?: boolean;
-  unreliableDataUpdateDate?: Date;
+  unreliableDataUpdateDate?: string;
   addedDate: Date;
   updatedDate: Date;
 }

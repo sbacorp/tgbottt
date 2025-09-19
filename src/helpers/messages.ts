@@ -2,10 +2,10 @@ import { STATUS_EMOJIS } from "../utils/config";
 
 export function formatOrganizationList(organizations: any[]): string {
   if (organizations.length === 0) {
-    return "📋 Список отслеживаемых организаций пуст.";
+    return "Список отслеживаемых организаций пуст.";
   }
 
-  let message = "📋 Список отслеживаемых организаций:\n\n";
+  let message = "Список отслеживаемых организаций:\n\n";
   console.log(organizations, 'organizations')
   
   for (const org of organizations) {
@@ -13,13 +13,13 @@ export function formatOrganizationList(organizations: any[]): string {
     const statusMessage = formatCheckResult(org.status);
     
     message += `${emoji} <b>${org.inn}</b>\n`;
-    message += `   Актуальное название компании: ${org.name || 'Не указано'}\n`;
-    message += `   Обновлено: ${org.undated_at ? org.undated_at.toLocaleDateString('ru-RU') : 'Не указано'}\n`;
-    message += `   Регион: ${org.region || 'Не указано'}\n`;
+    message += `Актуальное название компании: ${org.name || 'Не указано'}\n`;
+    message += org.undated_at ? `Обновлено: ${org.undated_at ? org.undated_at.toLocaleDateString('ru-RU') : ''}\n` : '';
+    message += `Регион: ${org.region || 'Не указан'}\n`;
     
     // Добавляем информацию о рисках для оранжевого статуса
-    if (org.status === 'orange' && org.riskInfo) {
-      message += `   ⚠️ Риски: ${org.riskInfo}\n`;
+    if ((org.status === 'orange' || org.status === 'red') && org.riskInfo) {
+      message += `Риски: ${org.riskInfo}\n`;
     }
     
     message += `\n${statusMessage}\n\n`;

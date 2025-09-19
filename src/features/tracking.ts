@@ -376,7 +376,8 @@ tracking.callbackQuery("delete_group", async (ctx) => {
     }
 
     await database.deleteUserGroup(userGroup.id, telegramId);
-    await ctx.editMessageText('✅ Группа удалена.');
+    const keyboard = createMainMenuKeyboard();
+    await ctx.editMessageText(MESSAGES.welcome, { reply_markup: keyboard });
     await ctx.answerCallbackQuery();
   } catch (error) {
     logger.error('Error deleting group from tracking menu:', error);

@@ -447,7 +447,7 @@ export class PlatformZskService {
 
             // Решаем капчу
             let attempts = 0;
-            const maxAttempts = 10;
+            const maxAttempts = 20;
             let success = false;
 
             while (attempts < maxAttempts && !success) {

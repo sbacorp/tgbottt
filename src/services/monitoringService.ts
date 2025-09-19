@@ -123,7 +123,7 @@ export class MonitoringService {
         updateData.unreliableDirector = newData.unreliableData.director;
         updateData.unreliableFounders = newData.unreliableData.founders;
         if (newData.unreliableData.updateDate) {
-          updateData.unreliableDataUpdateDate = new Date(newData.unreliableData.updateDate);
+          updateData.unreliableDataUpdateDate = newData.unreliableData.updateDate;
         }
       }
       

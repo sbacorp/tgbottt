@@ -7,6 +7,8 @@ import { createCancelKeyboard } from '../helpers/keyboard';
 import { createTrackingMenuKeyboard } from '../features/tracking';
 import { validateInn, ValidationError } from '../utils/validation';
 import { monitoringService } from '../services/monitoringService';
+import { PlatformZskService } from '../services/platform_zsk';
+import { NotificationFormatter } from '../helpers/notificationFormatter';
 
 /**
  * Conversation для добавления ИНН организации в группу
@@ -77,49 +79,63 @@ export async function addInnToGroupConversation(
   await ctx.editMessageText('🔄 Проверяю и добавляю организацию...');
 
   try {
-    // Проверяем, есть ли организация в базе, если нет - добавляем
-    let organization = await database.getOrganizationByInn(inn);
+    // 1. Всегда получаем свежие данные об организации из Контура
+    const konturResult = await monitoringService.checkOrganization(inn);
     
-    if (!organization) {
-      // Получаем данные об организации
-      const orgData = await monitoringService.checkOrganization(inn);
-      
-      const addedOrg = await database.addOrganizationIfNotExists({
-        inn,
-        name: orgData?.name || `Организация ${inn}`,
-        status: orgData?.status || 'green',
-        address: '', // TODO: добавить поддержку адреса из нового формата
-        region: orgData?.region || ''
-      });
-
-      if (addedOrg) {
-        organization = addedOrg;
-        logger.info(`Added new organization ${inn} to database`);
-      } else {
-        organization = await database.getOrganizationByInn(inn);
-      }
-    }
-
-    if (!organization) {
-      await ctx.editMessageText(`❌ Организация с ИНН ${inn} не найдена или не существует. Проверьте правильность ИНН.`);
+    if (!konturResult) {
+      await ctx.editMessageText(`❌ Организация с ИНН ${inn} не найдена в Контур.Фокус. Проверьте правильность ИНН.`);
       return;
     }
+    
+    // 2. Всегда получаем свежие данные из ЗСК
+    await ctx.editMessageText('🔄 Проверяю в системе ЗСК...');
+    let zskResult: { success: boolean; result: string } | null = null;
+    try {
+      const platformZskService = new PlatformZskService();
+      await platformZskService.init();
+      zskResult = await platformZskService.checkInn(inn);
+      await platformZskService.close();
+    } catch (error) {
+      logger.error("Error checking ZSK in addInnToGroup:", error);
+    }
 
-    // Добавляем организацию в группу
+    // 3. Сохраняем или обновляем организацию в базе данных
+    const zskStatus = zskResult?.success ? (zskResult.result.toLowerCase().includes('имеются') ? 'red' : 'green') : 'green';
+    await database.addOrganization({
+      inn,
+      name: konturResult.name || `Организация ${inn}`,
+      status: konturResult.status || 'green',
+      region: konturResult.region || '',
+      riskInfo: konturResult.riskInfo || '',
+      zskStatus: zskStatus,
+      organizationStatus: konturResult.organizationStatus,
+      hasRejectionsByLists: konturResult.hasRejectionsByLists,
+      unreliableAddress: !!konturResult.unreliableData?.address,
+      unreliableDirector: !!konturResult.unreliableData?.director,
+      unreliableFounders: !!konturResult.unreliableData?.founders,
+      ...(konturResult.unreliableData?.updateDate && { unreliableDataUpdateDate: konturResult.unreliableData.updateDate })
+    });
+
+    // 4. Добавляем организацию в группу
     await database.addGroupOrganization(userGroup.id, inn, telegramId);
 
-    // Создаем клавиатуру для возврата к управлению
+    // 5. Формируем и отправляем сообщение с актуальными данными
     const backKeyboard = new InlineKeyboard()
       .text("📋 Список организаций", "tracking_organizations")
       .row()
       .text("🔙 Назад к управлению", "back_to_tracking");
+      
+    const message = NotificationFormatter.formatOrganizationCheck(
+      inn,
+      konturResult,
+      zskResult || undefined,
+      {
+        customMessage: `<b>✅ Организация добавлена в группу "${userGroup.name}" для отслеживания.</b>`
+      }
+    );
 
     await ctx.reply(
-      `✅ <b>Организация добавлена!</b>\n\n` +
-      `🏢 <b>Название:</b> ${organization.name}\n` +
-      `🆔 <b>ИНН:</b> ${inn}\n` +
-      `📊 <b>Статус:</b> ${statusColorMap[organization.status]}\n\n` +
-      `Организация успешно добавлена в группу "${userGroup.name}" для отслеживания.`,
+      message,
       {
         parse_mode: 'HTML',
         reply_markup: backKeyboard
@@ -133,7 +149,7 @@ export async function addInnToGroupConversation(
     
     if (error instanceof Error && error.message.includes('duplicate')) {
       await ctx.editMessageText(
-        `ℹ️ <b>Организация уже отслеживается</b>\n\n` +
+        `<b>Организация уже отслеживается</b>\n\n` +
         `ИНН ${inn} уже добавлен в группу "${userGroup.name}".`,
         {
           parse_mode: 'HTML',

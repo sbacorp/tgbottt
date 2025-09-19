@@ -19,15 +19,10 @@ export interface SupabaseOrganization {
   status: string;
   zsk_status: string;
   address?: string;
-  websites?: string[];
-  is_liquidated?: boolean;
-  illegality_signs?: string[];
   region?: string;
-  additional_info?: string;
-  comment?: string;
   risk_info?: string;
-  has_illegal_activity?: boolean;
-  // Новые поля для улучшенного формата
+  
+  // Новые поля для детальной информации
   organization_status?: string;
   has_rejections_by_lists?: boolean;
   unreliable_address?: boolean;
@@ -288,14 +283,16 @@ export class SupabaseService {
           status: organization.status || 'green',
           zsk_status: organization.zskStatus || 'green',
           address: organization.address,
-          websites: organization.websites,
-          is_liquidated: organization.isLiquidated,
-          illegality_signs: organization.illegalitySigns,
           region: organization.region,
-          additional_info: organization.additionalInfo,
-          comment: organization.comment,
           risk_info: organization.riskInfo,
-          has_illegal_activity: organization.hasIllegalActivity,
+          
+          organization_status: organization.organizationStatus,
+          has_rejections_by_lists: organization.hasRejectionsByLists,
+          unreliable_address: organization.unreliableAddress,
+          unreliable_director: organization.unreliableDirector,
+          unreliable_founders: organization.unreliableFounders,
+          unreliable_data_update_date: organization.unreliableDataUpdateDate,
+
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'inn'
@@ -330,14 +327,15 @@ export class SupabaseService {
           status: organization.status || 'green',
           zsk_status: organization.zskStatus || 'green',
           address: organization.address,
-          websites: organization.websites,
-          is_liquidated: organization.isLiquidated,
-          illegality_signs: organization.illegalitySigns,
           region: organization.region,
-          additional_info: organization.additionalInfo,
-          comment: organization.comment,
           risk_info: organization.riskInfo,
-          has_illegal_activity: organization.hasIllegalActivity
+
+          organization_status: organization.organizationStatus,
+          has_rejections_by_lists: organization.hasRejectionsByLists,
+          unreliable_address: organization.unreliableAddress,
+          unreliable_director: organization.unreliableDirector,
+          unreliable_founders: organization.unreliableFounders,
+          unreliable_data_update_date: organization.unreliableDataUpdateDate
         })
         .select()
         .single();
@@ -449,14 +447,8 @@ export class SupabaseService {
       if (organizationData.status !== undefined) updateData.status = organizationData.status;
       if (organizationData.zskStatus !== undefined) updateData.zsk_status = organizationData.zskStatus;
       if (organizationData.address !== undefined) updateData.address = organizationData.address;
-      if (organizationData.websites !== undefined) updateData.websites = organizationData.websites;
-      if (organizationData.isLiquidated !== undefined) updateData.is_liquidated = organizationData.isLiquidated;
-      if (organizationData.illegalitySigns !== undefined) updateData.illegality_signs = organizationData.illegalitySigns;
       if (organizationData.region !== undefined) updateData.region = organizationData.region;
-      if (organizationData.additionalInfo !== undefined) updateData.additional_info = organizationData.additionalInfo;
-      if (organizationData.comment !== undefined) updateData.comment = organizationData.comment;
       if (organizationData.riskInfo !== undefined) updateData.risk_info = organizationData.riskInfo;
-      if (organizationData.hasIllegalActivity !== undefined) updateData.has_illegal_activity = organizationData.hasIllegalActivity;
       
       // Новые поля для улучшенного формата
       if (organizationData.organizationStatus !== undefined) updateData.organization_status = organizationData.organizationStatus;
@@ -465,7 +457,7 @@ export class SupabaseService {
       if (organizationData.unreliableDirector !== undefined) updateData.unreliable_director = organizationData.unreliableDirector;
       if (organizationData.unreliableFounders !== undefined) updateData.unreliable_founders = organizationData.unreliableFounders;
       if (organizationData.unreliableDataUpdateDate !== undefined && organizationData.unreliableDataUpdateDate !== null) {
-        updateData.unreliable_data_update_date = organizationData.unreliableDataUpdateDate.toISOString().split('T')[0]; // Только дата
+        updateData.unreliable_data_update_date = organizationData.unreliableDataUpdateDate;
       }
 
       const { data, error } = await this.client!
@@ -712,14 +704,8 @@ export class SupabaseService {
     
     // Добавляем опциональные поля только если они определены
     if (data.address !== undefined) org.address = data.address;
-    if (data.websites !== undefined) org.websites = data.websites;
-    if (data.is_liquidated !== undefined) org.isLiquidated = data.is_liquidated;
-    if (data.illegality_signs !== undefined) org.illegalitySigns = data.illegality_signs;
     if (data.region !== undefined) org.region = data.region;
-    if (data.additional_info !== undefined) org.additionalInfo = data.additional_info;
-    if (data.comment !== undefined) org.comment = data.comment;
     if (data.risk_info !== undefined) org.riskInfo = data.risk_info;
-    if (data.has_illegal_activity !== undefined) org.hasIllegalActivity = data.has_illegal_activity;
     
     // Новые поля для улучшенного формата
     if (data.organization_status !== undefined) org.organizationStatus = data.organization_status as any;
@@ -727,7 +713,7 @@ export class SupabaseService {
     if (data.unreliable_address !== undefined) org.unreliableAddress = data.unreliable_address;
     if (data.unreliable_director !== undefined) org.unreliableDirector = data.unreliable_director;
     if (data.unreliable_founders !== undefined) org.unreliableFounders = data.unreliable_founders;
-    if (data.unreliable_data_update_date !== undefined) org.unreliableDataUpdateDate = new Date(data.unreliable_data_update_date);
+    if (data.unreliable_data_update_date !== undefined) org.unreliableDataUpdateDate = data.unreliable_data_update_date;
     
     return org;
   }
@@ -980,14 +966,8 @@ export class SupabaseService {
             status,
             zsk_status,
             address,
-            websites,
-            is_liquidated,
-            illegality_signs,
             region,
-            additional_info,
-            comment,
             risk_info,
-            has_illegal_activity,
             created_at,
             updated_at
           )
