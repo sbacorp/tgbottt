@@ -320,7 +320,7 @@ ${text}
                 console.log('Переходим на страницу организации...');
                 
                 // Ждём загрузки страницы организации
-                await page.waitForLoadState("networkidle", { timeout: 15000 });
+                // await page.waitForLoadState("networkidle", { timeout: 15000 });
                 await page.waitForTimeout(3000);
               } else {
                 console.log('Индекс превышает количество найденных ссылок');
@@ -337,7 +337,6 @@ ${text}
         
         // Ждем загрузки main элемента
         await page.waitForSelector('main', { timeout: 10000 });
-        await page.waitForTimeout(3000);
         
         // Отладка: проверим URL и содержимое страницы
         const currentUrl = page.url();
