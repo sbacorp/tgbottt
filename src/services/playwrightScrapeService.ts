@@ -287,8 +287,8 @@ ${text}
         // Дополнительное ожидание для стабильности
 
         // Проверяем, есть ли пагинация (второй сценарий)
-        const hasPagination = await page.locator('[data-tid="textPagination"]').count() > 0;
-        
+        const hasPagination = await page.getByRole('complementary').count() > 0;
+        await page.pause();
         if (hasPagination) {
           console.log('Найдена пагинация - это список результатов, ищем нужную организацию...');
           
