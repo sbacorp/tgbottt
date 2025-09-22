@@ -288,7 +288,6 @@ ${text}
 
         // Проверяем, есть ли пагинация (второй сценарий)
         const hasPagination = await page.getByRole('complementary').count() > 0;
-        await page.pause();
         if (hasPagination) {
           console.log('Найдена пагинация - это список результатов, ищем нужную организацию...');
           
