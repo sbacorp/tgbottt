@@ -47,7 +47,7 @@ export class PlaywrightScrapeService {
 
   private async ensureBrowser(): Promise<Browser> {
     if (this.browser) return this.browser;
-    this.browser = await chromium.launch({ headless: true, slowMo: 100 });
+    this.browser = await chromium.launch({ headless: true, slowMo: 300 });
     return this.browser;
   }
 
@@ -290,7 +290,7 @@ ${text}
         const hasPagination = await page.getByRole('complementary').count() > 0;
         if (hasPagination) {
           console.log('Найдена пагинация - это список результатов, ищем нужную организацию...');
-          
+          await page.waitForTimeout(1000);
           // Получаем историю поиска через API
           const searchHistory = await page.evaluate(async () => {
             try {
