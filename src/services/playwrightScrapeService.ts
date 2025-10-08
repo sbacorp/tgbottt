@@ -285,6 +285,7 @@ ${text}
         await genericInput.press("Enter");
         
         // Дополнительное ожидание для стабильности
+        await page.waitForTimeout(2000);
 
         // Проверяем, есть ли пагинация (второй сценарий)
         const hasPagination = await page.getByRole('complementary').count() > 0;
