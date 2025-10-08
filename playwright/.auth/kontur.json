@@ -2,17 +2,17 @@
   "cookies": [
     {
       "name": "auth.refreshtoken",
-      "value": "DC9EF190F7ED8547ADA03E75681CDFBFBD4EEDD5C2FF00418D5C250D50AA96B1",
+      "value": "DC9EF190F7ED8547ADA03E75681CDFBF7907D4045ED96444A894C98C13464330",
       "domain": "auth.kontur.ru",
       "path": "/refreshsession",
-      "expires": 1762101559.738466,
+      "expires": 1763813181.927225,
       "httpOnly": true,
       "secure": true,
       "sameSite": "Lax"
     },
     {
       "name": "fsr",
-      "value": "e93d204c-d82b-4f09-9777-caa9794f9cfe",
+      "value": "c2285612-75aa-469a-b541-e6458942d6da",
       "domain": ".focus.kontur.ru",
       "path": "/",
       "expires": -1,
@@ -22,27 +22,27 @@
     },
     {
       "name": "spid",
-      "value": "1758213543002_bcfb1690c004a0d2ac749359d6a2fa74_0u47rigdwshf05f9",
+      "value": "1759925121429_8e82cb85264de192a17cb370feb70d8d_gi62rn04lbpe48ei",
       "domain": "focus.kontur.ru",
       "path": "/",
-      "expires": 1792773543.011191,
+      "expires": 1794485121.457028,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "spsc",
-      "value": "1758213543002_4b5887be9eabb40fb52c007e05b0b0c5_i4iKRQbkMcJUe7njxsBLkOQbqQHVfwMqkv.m.X5BFvoZ",
+      "value": "1759925121429_64734799e6a9bf7a8427f4ffc984739b_i4iKRQbkMcJUe7njxsBLkOQbqQHVfwMqkv.m.X5BFvoZ",
       "domain": "focus.kontur.ru",
       "path": "/",
-      "expires": 1792773543.012373,
+      "expires": 1794485121.457383,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "sr_singular",
-      "value": "298e0b14-1c0d-45d8-8f53-383d9c74a314",
+      "value": "ce737838-e05b-4263-9471-8917b3844ad9",
       "domain": ".focus.kontur.ru",
       "path": "/",
       "expires": -1,
@@ -55,7 +55,7 @@
       "value": "77",
       "domain": "focus.kontur.ru",
       "path": "/",
-      "expires": 1789749543.012405,
+      "expires": 1791461121.457418,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -65,24 +65,24 @@
       "value": "5919",
       "domain": "focus.kontur.ru",
       "path": "/",
-      "expires": 1789749543.012435,
+      "expires": 1791461121.45745,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "ngtoken",
-      "value": "LhHOEWjMNacavQhjBCymAg==",
+      "value": "LhHOEWjmU4F5neJbAwouAg==",
       "domain": ".kontur.ru",
       "path": "/",
-      "expires": 1792773543.012463,
+      "expires": 1794485121.457481,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "sr_singular",
-      "value": "3dc07837-7dff-464c-a87e-2b57812540d0",
+      "value": "f6d841b2-0892-4929-b620-be1a862c06ce",
       "domain": ".kontur.ru",
       "path": "/",
       "expires": -1,
@@ -91,31 +91,21 @@
       "sameSite": "Lax"
     },
     {
-      "name": "spid",
-      "value": "1758213543203_7872e79cfb9c0ded1b538e04c1911044_lg6s5mf1id4t9upp",
-      "domain": "kontur.ru",
-      "path": "/",
-      "expires": 1792773543.140881,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "spsc",
-      "value": "1758213543203_e44d0eaff1bfbf1f5c1f742f75e43580_i4iKRQbkMcJUe7njxsBLkOQbqQHVfwMqkv.m.X5BFvoZ",
-      "domain": "kontur.ru",
-      "path": "/",
-      "expires": 1792773543.140908,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
       "name": "utm",
       "value": "utm_source%3Dfocus.kontur.ru%26utm_medium%3Dreferral",
       "domain": "forms.kontur.ru",
       "path": "/",
-      "expires": 1773851986.599114,
+      "expires": 1775649982.251595,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "referrer",
+      "value": "https%3A%2F%2Ffocus.kontur.ru",
+      "domain": "forms.kontur.ru",
+      "path": "/",
+      "expires": 1775649982.251629,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -125,7 +115,7 @@
       "value": "77",
       "domain": "forms.kontur.ru",
       "path": "/",
-      "expires": 1789749543.15686,
+      "expires": 1791461121.576887,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
@@ -135,10 +125,30 @@
       "value": "5919",
       "domain": "forms.kontur.ru",
       "path": "/",
-      "expires": 1789749543.156898,
+      "expires": 1791461121.576911,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
+    },
+    {
+      "name": "spid",
+      "value": "1759925121624_6c593316ffc6342d52e4997cd5a26c90_wrmlakdlu1e8vboh",
+      "domain": "kontur.ru",
+      "path": "/",
+      "expires": 1794485121.577729,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "spsc",
+      "value": "1759925121624_752e4196b869ff44341dddaf848122c5_i4iKRQbkMcJUe7njxsBLkOQbqQHVfwMqkv.m.X5BFvoZ",
+      "domain": "kontur.ru",
+      "path": "/",
+      "expires": 1794485121.577744,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
     },
     {
       "name": "ktr_sid",
@@ -151,18 +161,8 @@
       "sameSite": "Lax"
     },
     {
-      "name": "_kmts",
-      "value": "RIpjPEvN8x",
-      "domain": ".kontur.ru",
-      "path": "/",
-      "expires": -1,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
       "name": "Sticky",
-      "value": "0ca0d0b5-b432-41c8-9bf4-7edda0bdd62e",
+      "value": "51cbaa08-36a7-4521-90ec-7ab4f6612a9e",
       "domain": ".tp.kontur.ru",
       "path": "/",
       "expires": -1,
@@ -171,21 +171,193 @@
       "sameSite": "Lax"
     },
     {
-      "name": "fwtoken",
-      "value": "1f4cd02dffec46a0b5e6d476a8a948d5",
-      "domain": "forms.kontur.ru",
+      "name": "_kmts",
+      "value": "YQfi3KsUqi",
+      "domain": ".kontur.ru",
       "path": "/",
-      "expires": 1765989543.470043,
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "AFFICHE_W",
+      "value": "sAjQ6JbX@vew93",
+      "domain": ".weborama-tech.ru",
+      "path": "/",
+      "expires": 1793880321.813473,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "remixlang",
+      "value": "0",
+      "domain": ".vk.com",
+      "path": "/",
+      "expires": 1791514177.818096,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "remixstlid",
+      "value": "9103258695720194030_RZnmafkzd2wqMeboqeaz35i5mgDoaSUtGF3NoBOEUjL",
+      "domain": ".vk.com",
+      "path": "/",
+      "expires": 1791461121.818106,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "tmr_lvid",
+      "value": "cdb50ca376fdfe81a2c2baadc67f93ce",
+      "domain": ".kontur.ru",
+      "path": "/",
+      "expires": 1788696321,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "tmr_lvidTS",
+      "value": "1759925121920",
+      "domain": ".kontur.ru",
+      "path": "/",
+      "expires": 1788696321,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ym_uid",
+      "value": "1759925122762899129",
+      "domain": ".kontur.ru",
+      "path": "/",
+      "expires": 1791461121,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_ym_d",
+      "value": "1759925122",
+      "domain": ".kontur.ru",
+      "path": "/",
+      "expires": 1791461121,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "yabs-sid",
+      "value": "615004271759925122",
+      "domain": "mc.yandex.ru",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "i",
+      "value": "6tdR+L2yGn4DF0JDVppvPUUTWurIo1S8m9RvahyjOoF2JN/Mmv39lbtLD0CXyVjSdXTU1XXtZdEdBwdaR7GOJLEEFnk=",
+      "domain": ".yandex.ru",
+      "path": "/",
+      "expires": 1794485121.949288,
       "httpOnly": true,
       "secure": true,
       "sameSite": "None"
+    },
+    {
+      "name": "yandexuid",
+      "value": "2153881581759925122",
+      "domain": ".yandex.ru",
+      "path": "/",
+      "expires": 1794485121.949306,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "yuidss",
+      "value": "2153881581759925122",
+      "domain": ".yandex.ru",
+      "path": "/",
+      "expires": 1794485121.949317,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "ymex",
+      "value": "2075285122.yrts.1759925122#2075285122.yrtsi.1759925122",
+      "domain": ".yandex.ru",
+      "path": "/",
+      "expires": 1791461122,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "receive-cookie-deprecation",
+      "value": "1",
+      "domain": ".yandex.ru",
+      "path": "/",
+      "expires": 1791461182,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None",
+      "partitionKey": "https://kontur.ru",
+      "_crHasCrossSiteAncestor": true
+    },
+    {
+      "name": "_ym_isad",
+      "value": "2",
+      "domain": ".kontur.ru",
+      "path": "/",
+      "expires": 1759997121,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_ymab_param",
+      "value": "dZGaygzvh89R6k9nTWOfAZB_MKmc1W5L9vqatW7ugkM-lN8yp4ykF_zJk_hF4YKEyawPt6cdzevsYv0RJW7K2qbVBXs",
+      "domain": "focus.kontur.ru",
+      "path": "/",
+      "expires": 1791461122.024551,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_ym_visorc",
+      "value": "b",
+      "domain": ".kontur.ru",
+      "path": "/",
+      "expires": 1759926982,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "domain_sid",
+      "value": "qqpQzqjrevUxmJ6OTYQxi%3A1759925122045",
+      "domain": "focus.kontur.ru",
+      "path": "/",
+      "expires": 1760529922.045939,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
     },
     {
       "name": "_kfpxv5",
       "value": "cc274761037ba1607720634ae5d6e7491b02d8a4",
       "domain": ".kontur.ru",
       "path": "/",
-      "expires": 1773765543.751517,
+      "expires": 1775477122.082358,
       "httpOnly": true,
       "secure": true,
       "sameSite": "Lax"
@@ -201,270 +373,78 @@
       "sameSite": "Lax"
     },
     {
-      "name": "tmr_lvid",
-      "value": "a60f4a2f89261d4991c06781c844bf8c",
-      "domain": ".kontur.ru",
+      "name": "fwtoken",
+      "value": "61a9c667cafb4ed69389b518fecc4872",
+      "domain": "forms.kontur.ru",
       "path": "/",
-      "expires": 1786984743,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "tmr_lvidTS",
-      "value": "1758213543756",
-      "domain": ".kontur.ru",
-      "path": "/",
-      "expires": 1786984743,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "AFFICHE_W",
-      "value": "E7tAuQAGHfIT12",
-      "domain": ".weborama-tech.ru",
-      "path": "/",
-      "expires": 1792168743.761419,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "remixlang",
-      "value": "0",
-      "domain": ".vk.com",
-      "path": "/",
-      "expires": 1789197709.781057,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "remixstlid",
-      "value": "9069761461913595501_znocHoTIY2SJDEHBowbKutCo13NXcZMT7ZdOcnk8A3o",
-      "domain": ".vk.com",
-      "path": "/",
-      "expires": 1789749543.781069,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "_ym_uid",
-      "value": "1758213544567608534",
-      "domain": ".kontur.ru",
-      "path": "/",
-      "expires": 1789749543,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "_ym_d",
-      "value": "1758213544",
-      "domain": ".kontur.ru",
-      "path": "/",
-      "expires": 1789749543,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "_ymab_param",
-      "value": "zgBTun8fEmdHNWo0cBjxT7ccWe4l4dHSnRQW_qqI6kAw_voROUH8HZZmssYWt-SD8fuWkfbxUVGGDJwQKoBqGzgg5Hg",
-      "domain": "focus.kontur.ru",
-      "path": "/",
-      "expires": 1789749543.839213,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "domain_sid",
-      "value": "7G6Tbn_QTn52a5f7Mskzs%3A1758213543839",
-      "domain": "focus.kontur.ru",
-      "path": "/",
-      "expires": 1758818343.839899,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "yabs-sid",
-      "value": "269655851758213543",
-      "domain": "mc.yandex.ru",
-      "path": "/",
-      "expires": -1,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "i",
-      "value": "+tqQJODjEJZGEKzeMIxyDyo5HC6/6MnbyvLpCOgRCs+uawfZe/SeEWP6piVPUjTh5rt30yHJVJgszn/gnkVD5ZDZT/E=",
-      "domain": ".yandex.ru",
-      "path": "/",
-      "expires": 1792773543.84518,
+      "expires": 1767701122.145659,
       "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "yandexuid",
-      "value": "4750007681758213543",
-      "domain": ".yandex.ru",
-      "path": "/",
-      "expires": 1792773543.845197,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "yuidss",
-      "value": "4750007681758213543",
-      "domain": ".yandex.ru",
-      "path": "/",
-      "expires": 1792773543.845206,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "ymex",
-      "value": "2073573543.yrts.1758213543#2073573543.yrtsi.1758213543",
-      "domain": ".yandex.ru",
-      "path": "/",
-      "expires": 1789749543,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "receive-cookie-deprecation",
-      "value": "1",
-      "domain": ".yandex.ru",
-      "path": "/",
-      "expires": 1789749586,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None",
-      "partitionKey": "https://kontur.ru",
-      "_crHasCrossSiteAncestor": true
-    },
-    {
-      "name": "_ym_isad",
-      "value": "2",
-      "domain": ".kontur.ru",
-      "path": "/",
-      "expires": 1758285543,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "_ym_visorc",
-      "value": "b",
-      "domain": ".kontur.ru",
-      "path": "/",
-      "expires": 1758215386,
-      "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "vid",
-      "value": "17701a80358af6c70348",
+      "value": "d249bc1e278831f89844",
       "domain": ".hybrid.ai",
       "path": "/",
-      "expires": 1789749782.582676,
+      "expires": 1791461376.377929,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "tmr_detect",
-      "value": "0%7C1758213546086",
+      "value": "0%7C1759925124254",
       "domain": "focus.kontur.ru",
       "path": "/",
-      "expires": 1758299946,
+      "expires": 1760011524,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
       "name": "mkmgsgp",
-      "value": "T2SM96",
+      "value": "T3TAX0",
       "domain": ".hybrid.ai",
       "path": "/",
-      "expires": 1758217384.593588,
+      "expires": 1759928724.376989,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "mkmgrgp",
-      "value": "T2SM96",
+      "value": "T3TAX0",
       "domain": ".hybrid.ai",
       "path": "/",
-      "expires": 1758217384.593696,
+      "expires": 1759928724.377099,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "yashr",
-      "value": "3406771231758213546",
+      "value": "8273164191759925124",
       "domain": ".yandex.ru",
       "path": "/",
-      "expires": 1789749546.646816,
+      "expires": 1791461124.437996,
       "httpOnly": true,
       "secure": true,
       "sameSite": "None"
     },
     {
-      "name": "am-uid",
-      "value": "45ee46a572c2406185da5a8ea461f852",
-      "domain": ".admixer.net",
+      "name": "cookie",
+      "value": "3c6d72e715c57a88",
+      "domain": ".onaudience.com",
       "path": "/",
-      "expires": 1765989546.769484,
+      "expires": 1791461124.572276,
       "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "__upin",
-      "value": "5gkOSWtJctrZ1b+wmaQGIg",
-      "domain": ".aidata.io",
-      "path": "/",
-      "expires": 1792773548.654344,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "__upints",
-      "value": "1758213548",
-      "domain": ".aidata.io",
-      "path": "/",
-      "expires": 1792773548.654363,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "viuserid",
-      "value": "Ar7BCbjPGY.WYKX7mMXZ",
-      "domain": ".dmg.digitaltarget.ru",
-      "path": "/",
-      "expires": 1792773548.647304,
-      "httpOnly": true,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "Sticky",
-      "value": "17f78106-7912-43df-99b2-b2dc98327797",
+      "value": "0032977e-792c-4210-87eb-276e9510fa71",
       "domain": ".auth.kontur.ru",
       "path": "/",
       "expires": -1,
@@ -474,7 +454,7 @@
     },
     {
       "name": "AntiForgery",
-      "value": "fa667c9d-2691-418c-b912-97f531cb7ca3",
+      "value": "5130fb82-8945-4cf0-9e0f-07cead05688b",
       "domain": "auth.kontur.ru",
       "path": "/",
       "expires": -1,
@@ -483,163 +463,31 @@
       "sameSite": "Lax"
     },
     {
+      "name": "ym_user_cookie",
+      "value": "ym_user_65a6af72-919f-4514-b66b-8e2ea9c3d61c",
+      "domain": ".ymmobi.com",
+      "path": "/",
+      "expires": 1791029126.846811,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
       "name": "device",
       "value": "39b69a66085dfb8215fd7d3d0757a12f",
       "domain": ".kontur.ru",
       "path": "/",
-      "expires": 1792773551.392151,
+      "expires": 1794485127.85685,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"
     },
     {
-      "name": "dc",
-      "value": "mow1",
-      "domain": ".betweendigital.com",
-      "path": "/",
-      "expires": 1789749553.416411,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "tuuid",
-      "value": "db3d8be1-a609-5105-b635-e20fdef9d7bf",
-      "domain": ".betweendigital.com",
-      "path": "/",
-      "expires": 1789749553.416512,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "ss",
-      "value": "1",
-      "domain": ".betweendigital.com",
-      "path": "/",
-      "expires": 1789749552.645391,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "bug",
-      "value": "1",
-      "domain": ".betweendigital.com",
-      "path": "/",
-      "expires": 1789749553.41657,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "tuuid",
-      "value": "e93173bf-0588-42ea-a659-b4d39fbe6c9a",
-      "domain": ".bidswitch.net",
-      "path": "/",
-      "expires": 1789749552.881479,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "c",
-      "value": "1758213552",
-      "domain": ".bidswitch.net",
-      "path": "/",
-      "expires": 1789749552.822228,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "tuuid_lu",
-      "value": "1758213552",
-      "domain": ".bidswitch.net",
-      "path": "/",
-      "expires": 1789749552.881577,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "V",
-      "value": "Urw34Cytvftg",
-      "domain": ".contextweb.com",
-      "path": "/",
-      "expires": 1789317553.058951,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "VP",
-      "value": "part_Urw34Cytvftg",
-      "domain": ".contextweb.com",
-      "path": "/",
-      "expires": 1789317553.059013,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None",
-      "partitionKey": "https://kontur.ru",
-      "_crHasCrossSiteAncestor": true
-    },
-    {
-      "name": "INGRESSCOOKIE",
-      "value": "9280636eb74543f0",
-      "domain": "bh.contextweb.com",
-      "path": "/",
-      "expires": -1,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "ljt_reader",
-      "value": "LW7HALZHHjIm_X27QU2cRsiz",
-      "domain": ".lijit.com",
-      "path": "/",
-      "expires": 1789749553.406677,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "ut",
-      "value": "aMw1sQAHibC0CryNwBv_9R8mkhfY7ha6yiEGRg==",
-      "domain": ".betweendigital.com",
-      "path": "/",
-      "expires": 1789749553.416542,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "cookie",
-      "value": "54ed8dd88e62fe3a",
-      "domain": ".onaudience.com",
-      "path": "/",
-      "expires": 1789749554.797563,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
-      "name": "ym_user_cookie",
-      "value": "ym_user_efc2c115-0edd-4165-9689-80f942de3164",
-      "domain": ".ymmobi.com",
-      "path": "/",
-      "expires": 1789317557.067741,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "None"
-    },
-    {
       "name": "XANDR_PANID",
-      "value": "KNtJESP81kK55d1hKmXIsDf1Yt6aBNG5vZ0IETM7z3qr8tvjj0QSjD3pGL-dlL9F1dRg4q9yaIOpIpQd2X_vTveb9236qlA2iA1VaHwDces.",
+      "value": "YiRdQrmctsb8Xh8UDavfIXcZN--bmfLT2FB9klscM5m054FMu36OA2T_pTIdR6jdOMSts4AJxvwO_lb42IrLlMxZj-F096DXQN69Z8lsxAU.",
       "domain": ".adnxs.com",
       "path": "/",
-      "expires": 1765989558.95779,
+      "expires": 1767701128.597194,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None",
@@ -648,20 +496,20 @@
     },
     {
       "name": "uuid2",
-      "value": "4892226538082465776",
+      "value": "336900416104866895",
       "domain": ".adnxs.com",
       "path": "/",
-      "expires": 1765989558.957912,
+      "expires": 1767701128.597349,
       "httpOnly": true,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "anj",
-      "value": "dTM7k!M4/YEVNsVF']wIg2In7l?Ay@!@wnfH8KN*e%UjR0#>T-HMEnJD>6siSiOfLGn6[xDRmzGtsLxr(j#iP(Md+>)fy+#7?.Jn",
+      "value": "dTM7k!M4/YEVNsVF']wIg2C%slsr<E!@wnfH8KN*e%UjR0)HdND`[LxUyl2PD>@zBErtGcDRx4*M0/I/%(2K:$doS]%6lO0*dNs5",
       "domain": ".adnxs.com",
       "path": "/",
-      "expires": 1765989558.957887,
+      "expires": 1767701128.597312,
       "httpOnly": true,
       "secure": true,
       "sameSite": "None"
@@ -671,57 +519,229 @@
       "value": "c3ff5d033debc479f26a68b5fe471e91",
       "domain": ".us.ck-ie.com",
       "path": "/",
-      "expires": 1758818358.999071,
+      "expires": 1760529930.76309,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "am-uid",
+      "value": "ca4102b8cf924a51804372dc195211d4",
+      "domain": ".admixer.net",
+      "path": "/",
+      "expires": 1767701132.545484,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "viuserid",
+      "value": "XWyNJ-lBpZyRqJK7UN1Y",
+      "domain": ".dmg.digitaltarget.ru",
+      "path": "/",
+      "expires": 1794485134.433395,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "dc",
+      "value": "mow1",
+      "domain": ".betweendigital.com",
+      "path": "/",
+      "expires": 1791461135.374908,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "tuuid",
+      "value": "b6f0d671-1c30-5119-9160-3075f98663fb",
+      "domain": ".betweendigital.com",
+      "path": "/",
+      "expires": 1791461135.375019,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "ss",
+      "value": "1",
+      "domain": ".betweendigital.com",
+      "path": "/",
+      "expires": 1791461134.440645,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "bug",
+      "value": "1",
+      "domain": ".betweendigital.com",
+      "path": "/",
+      "expires": 1791461135.375105,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "tuuid",
+      "value": "e2e4cf64-36da-47e8-a57e-ac478269d802",
+      "domain": ".bidswitch.net",
+      "path": "/",
+      "expires": 1791461134.684499,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "c",
+      "value": "1759925134",
+      "domain": ".bidswitch.net",
+      "path": "/",
+      "expires": 1791461134.622483,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "tuuid_lu",
+      "value": "1759925134",
+      "domain": ".bidswitch.net",
+      "path": "/",
+      "expires": 1791461134.684587,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "V",
+      "value": "NzMZIdaC81GA",
+      "domain": ".contextweb.com",
+      "path": "/",
+      "expires": 1791029135.055661,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "VP",
+      "value": "part_NzMZIdaC81GA",
+      "domain": ".contextweb.com",
+      "path": "/",
+      "expires": 1791029135.055777,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None",
+      "partitionKey": "https://kontur.ru",
+      "_crHasCrossSiteAncestor": true
+    },
+    {
+      "name": "INGRESSCOOKIE",
+      "value": "8e8d209b44fbfa28",
+      "domain": "bh.contextweb.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "ljt_reader",
+      "value": "Ld41ALZHcY6YNEmzRAmY6yQ0",
+      "domain": ".lijit.com",
+      "path": "/",
+      "expires": 1791461135.359848,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "ut",
+      "value": "aOZTjwAGwnizyWCvevc3mwwgr_Gv-Vu5Ir0jCQ==",
+      "domain": ".betweendigital.com",
+      "path": "/",
+      "expires": 1791461135.375066,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "uuid",
-      "value": "e0582064-5933-4df6-4cd7-888374caf2dd",
+      "value": "6244001d-938f-47a6-60b7-3d4a6d82f2b0",
       "domain": ".buzzoola.com",
       "path": "/",
-      "expires": 1760805559.723774,
+      "expires": 1762517135.456361,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "prebringads",
+      "value": "1",
+      "domain": ".bringads.ru",
+      "path": "/",
+      "expires": 1762527936.482257,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__upin",
+      "value": "csWuTzdONvWSG9yqUCxqAQ",
+      "domain": ".aidata.io",
+      "path": "/",
+      "expires": 1794485138.449955,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__upints",
+      "value": "1759925138",
+      "domain": ".aidata.io",
+      "path": "/",
+      "expires": 1794485138.45,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "workplace",
-      "value": "auth%3A7eff0787-ae63-4249-a889-178e24575e87",
+      "value": "auth%3A9508df72-3a85-4176-a2b8-1e5160665ffc",
       "domain": "auth.kontur.ru",
       "path": "/",
-      "expires": 1765989559.738195,
+      "expires": 1767701181.92702,
       "httpOnly": true,
       "secure": true,
       "sameSite": "Lax"
     },
     {
       "name": "token",
-      "value": "djnDp40Uq44g1Mr0fBd5tjYIz6G1HBQE6+tiijkxwn0j2tPlbCcmBd/OG/t/0SC2rtLPz9lT9NkOKJCRVRP88H8L+mswF7FOZx/DbEoNKd1prq63ww5iDoFh3Oz7wKE0",
+      "value": "djnDp40Uq44g1Mr0fBd5tjYIz6G1HBQE6+tiijkxwn0j2tPlbCcmBd/OG/t/0SC2rtLPz9lT9NkOKJCRVRP88H8L+mswF7FOU9jRIbrxd5BWTwsZfavIlMrRljjwFjRA",
       "domain": ".kontur.ru",
       "path": "/",
-      "expires": 1762101559.738309,
+      "expires": 1763813181.927091,
       "httpOnly": true,
       "secure": true,
       "sameSite": "Lax"
     },
     {
       "name": "auth.check",
-      "value": "39BE9A2F25AE2322DDD171FC0AF4CC79EDF13406E870610EC41484DEE85D2864",
+      "value": "1BE3171E9E86280A60A88E21C74B98D32248029C4461A6E66E060E00AC2D0B31",
       "domain": ".kontur.ru",
       "path": "/",
-      "expires": 1762101559.738361,
+      "expires": 1763813181.92713,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "auth.sign",
-      "value": "522MopK77t5ocZq5WvyyBjH9a5nzlCz21h%2BThQHCkNI%3D",
+      "value": "FhZXIcXnbLFkNRjnT3FcFt1WbJ4skk6wDgEAeQJDbJ0%3D",
       "domain": "auth.kontur.ru",
       "path": "/",
-      "expires": 1762101559.738395,
+      "expires": 1763813181.927158,
       "httpOnly": true,
       "secure": true,
       "sameSite": "Lax"
@@ -738,40 +758,20 @@
     },
     {
       "name": "auth.sid",
-      "value": "DC9EF190F7ED8547ADA03E75681CDFBFB75A7CC22DCD4C4BA1330B52C156A080",
+      "value": "DC9EF190F7ED8547ADA03E75681CDFBF32DE33B516E01442BB873C7B8BC71891",
       "domain": ".kontur.ru",
       "path": "/",
-      "expires": 1762101559.73844,
+      "expires": 1763813181.927199,
       "httpOnly": true,
       "secure": true,
       "sameSite": "Lax"
-    },
-    {
-      "name": "referrer",
-      "value": "https%3A%2F%2Ffocus.kontur.ru",
-      "domain": "forms.kontur.ru",
-      "path": "/",
-      "expires": 1773851986.599152,
-      "httpOnly": false,
-      "secure": false,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "portal.oidc",
-      "value": "CfDJ8Pz85w9kZmZAsgfCqytFDQIXyhdpBftl1JyH85xpcs81GOCYItd7FvDSLa_bDJKmNTr4dGGqf7d8l1SC4UZa55hjV5XTq8y4M_BkWUGhkyADaDyVTfd_yTtJIZ-FwU5_GYa0NxMDhfBFFAnmMxN1HN2yrPIs64fbvwUTSs6-aSc00tuajhY__CIabjsjA_YM60V4J51qQbUJsLXikmr3Ka0Juro0QEJsHIm1pSkoX8qsuo9M--lJKlTu9oL-9hU0qzxrAg4uanVYw5-hu1LYsfrweWBG2yRz1FNqKx5s0XDniC2VPYLuEmNjLU8jFBGQ5tdOnR3V8fo6pqhHS0hTXRpUg6DtN7DRYYpGY9WAUKwLFp5m1LaskTtpoGVoR1e7r2BlTrz9bmtbLTLo0Hn1L0lXu_SJqBxkOoFg3t6JvmHKhfJdQrBaT3TVbc-ZatZCXcgg4k4YOy9Emili4MsW_Bo",
-      "domain": "identity.kontur.ru",
-      "path": "/",
-      "expires": 1760805560.870339,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
     },
     {
       "name": "PVID",
-      "value": "2IHUbD2K93oZ00002p1dPKIZ:::0-0-0-de68e67-0-de68e92:CAASEEaLLbDmuZhMelBaC7FXtFgaYDwThO-7zHD-FqJq-Oj1E4RnSZdTLmIQ9U9iJqbXsQEIJpLYg4nQftLgTefPBXY_0D89Zy4p9ENIdM5YvDEK0RwwHC4-ZadNb_K27e-W0T8Qf-1APLrsbN4z-F7hUBrM4g",
+      "value": "1y5d0q1lRhIZ00002r1hPKYZ:::0-0-0-e00ac42-0-e00ac7e:CAASENNJxaPLTedWU_mDDWLZgR0aYNpECRoJJ1pcTBlhQH9BWA54ba7UWh7AhPEoGFFf2a31hUZhfPfueYGj0MDRrm0sZfhdqdo8GNVVb2SGNEX76VX1SvgM6F6nIeor55sJbAVDZCoiw3OhE3_Pc1fM9nx8aw",
       "domain": "top-fwz1.mail.ru",
       "path": "/",
-      "expires": 1789835986.575635,
+      "expires": 1791547581.938823,
       "httpOnly": true,
       "secure": true,
       "sameSite": "None",
@@ -780,21 +780,31 @@
     },
     {
       "name": "VID",
-      "value": "2IHUbD2K93oZ00002p1dPKIZ:::0-0-0-de68e67-0-de68e92:CAASEEaLLbDmuZhMelBaC7FXtFgaYDwThO-7zHD-FqJq-Oj1E4RnSZdTLmIQ9U9iJqbXsQEIJpLYg4nQftLgTefPBXY_0D89Zy4p9ENIdM5YvDEK0RwwHC4-ZadNb_K27e-W0T8Qf-1APLrsbN4z-F7hUBrM4g",
+      "value": "1y5d0q1lRhIZ00002r1hPKYZ:::0-0-0-e00ac42-0-e00ac7e:CAASENNJxaPLTedWU_mDDWLZgR0aYNpECRoJJ1pcTBlhQH9BWA54ba7UWh7AhPEoGFFf2a31hUZhfPfueYGj0MDRrm0sZfhdqdo8GNVVb2SGNEX76VX1SvgM6F6nIeor55sJbAVDZCoiw3OhE3_Pc1fM9nx8aw",
       "domain": ".mail.ru",
       "path": "/",
-      "expires": 1789835986.575669,
+      "expires": 1791547581.938889,
       "httpOnly": true,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "bh",
-      "value": "EiciTm90PUE/QnJhbmQiO3Y9IjI0IiwiQ2hyb21pdW0iO3Y9IjE0MCIaA2FybSINMTQwLjAuNzMzOS4xNioCPzA6BW1hY09TQgYyNi4wLjBKAjY0UjciTm90PUE/QnJhbmQiO3Y9IjI0LjAuMC4wIiwiQ2hyb21pdW0iO3Y9IjE0MC4wLjczMzkuMTYiYNLrsMYGaiHcytG2Abvxn6sE+taGzAjS0e3rA/y5r/8H3/378w3zgQI=",
+      "value": "EigiTm90PUE/QnJhbmQiO3Y9IjI0IiwgIkNocm9taXVtIjt2PSIxNDAiGgNhcm0iDTE0MC4wLjczMzkuMTYqAj8wOgcibWFjT1MiQgYyNi4wLjFKAjY0UjciTm90PUE/QnJhbmQiO3Y9IjI0LjAuMC4wIiwiQ2hyb21pdW0iO3Y9IjE0MC4wLjczMzkuMTYiYL6nmccGaiHcytG2Abvxn6sE+taGzAjS0e3rA/y5r/8H3/378w3zgQI=",
       "domain": ".yandex.ru",
       "path": "/",
-      "expires": 1792773586,
+      "expires": 1794485182.803376,
       "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "portal.oidc",
+      "value": "CfDJ8Pz85w9kZmZAsgfCqytFDQLfe9LfwS3qyODdX2eBGMQZi4oX4PbW4IX7WleCh9bHRjIhJkVEaRFrz6z1ww1jKI_1WcDTgmM07HG6cJJFdzWbOdf9lEFE1g11q-3jgwkCNQ2NuAWHlkWOWxqc9EyKVbNYBD18h8YYDf5etk_aNL2DgNVsus1RrIbeFGs_L1ap8156b907DNGF9CPAq2IZV4vOeFXzO_pdOL56M_RQGBHH6JE5uHoppc8jPCTAGcp8_ZnL_Er8uoVf4viTKz6A1kKyBxt4ysZAetNok9pRtRrxeRKDsl7UmOtMf15Hp8aMwKGSOMQF-Y1QEBCuCudsnxYfNVAlXCSx39Nj6tAqdfPJWSZnSPkLY9BNZJ25h_lF9yaCStofPBUNKFiQclNiHT_RrZlKUzIqGLwXMmgpVkDTmSHd8Pd1T2ycdg7p94QozzyxKH986JNeRF6cyK7-hxI",
+      "domain": "identity.kontur.ru",
+      "path": "/",
+      "expires": 1762517182.960888,
+      "httpOnly": true,
       "secure": true,
       "sameSite": "None"
     }
@@ -805,7 +815,7 @@
       "localStorage": [
         {
           "name": "rb_sync_id",
-          "value": "{\"time\":1758213543839,\"fpid\":\"7G6Tbn_QTn52a5f7Mskzs\",\"metricsTime\":1758213543840}"
+          "value": "{\"time\":1759925122045,\"fpid\":\"qqpQzqjrevUxmJ6OTYQxi\",\"metricsTime\":1759925122047}"
         },
         {
           "name": "start_page",
@@ -813,7 +823,7 @@
         },
         {
           "name": "ntf_feed_sdk_stream_keys",
-          "value": "{\"csi\":\"ddd8cc28-764f-4993-a878-18cc1dfb6652\"}"
+          "value": "{\"csi\":\"3a68dcf1-ca5c-4083-b944-7782f2236770\"}"
         },
         {
           "name": "_ym_retryReqs",
@@ -821,19 +831,15 @@
         },
         {
           "name": "_ym14324677_lsid",
-          "value": "611424745588"
+          "value": "759738539512"
         },
         {
           "name": "tmr_trgfpid",
-          "value": "{\"fpid\":null,\"ts\":1758213543831}"
+          "value": "{\"fpid\":null,\"ts\":1759925121968}"
         },
         {
           "name": "tmr_lvid",
-          "value": "a60f4a2f89261d4991c06781c844bf8c"
-        },
-        {
-          "name": "ntf_feed_sdk_cache_csi",
-          "value": "{\"offset\":\"638938103666828740@1BEF/A8C12E98\",\"messages\":[{\"offset\":\"638938103666828740@1BEF/A8C12E98\",\"channel\":{\"accountId\":\"csi\",\"channelId\":\"livechat-unread-messages\"},\"messageId\":\"bacb4e5a-a9e9-4f65-b50d-3386d12f3bb9\",\"status\":\"New\",\"target\":{\"id\":\"portal-user\",\"value\":\"90f19edcedf74785ada03e75681cdfbf\"},\"properties\":{\"issueId\":\"af8d8376-1550-45c3-a129-9a8987b95756\",\"startTopicName\":\"Фокус\",\"unreadCount\":0},\"auxiliary\":{\"createdAt\":\"2025-09-18T16:39:26.682Z\",\"seenAt\":\"\",\"outdatedAt\":\"\",\"expiredAt\":\"2025-09-18T17:39:26.671Z\",\"correlationId\":\"doONr1AVw0WhKZqJh7lXVg==\",\"tags\":[],\"hiddenAt\":\"\"}}]}"
+          "value": "cdb50ca376fdfe81a2c2baadc67f93ce"
         },
         {
           "name": "_ym_synced",
@@ -841,7 +847,7 @@
         },
         {
           "name": "abtest_experiments",
-          "value": "{\"268\":{\"experimentName\":\"ab-test-page-site-bloki-zakupki-2\"},\"269\":{\"experimentName\":\"elba_support\"},\"270\":{\"experimentName\":\"ke-referal\"},\"271\":{\"experimentName\":\"extern-price\"}}"
+          "value": "{\"269\":{\"experimentName\":\"elba_support\"},\"272\":{\"experimentName\":\"focus_try_free_main\"},\"274\":{\"experimentName\":\"ke-referal2\"},\"280\":{\"experimentName\":\"Demopilot\"},\"282\":{\"experimentName\":\"diadok-2-subbrend\"}}"
         },
         {
           "name": "referer",
@@ -849,15 +855,15 @@
         },
         {
           "name": "_ym14324677:0_reqNum",
-          "value": "11"
+          "value": "9"
         },
         {
           "name": "focusActionSync",
-          "value": "{\"action\":{\"type\":\"news/loadNews/fulfilled\",\"payload\":[{\"id\":\"10caab7d-7408-4636-bdee-9d9994b12704\",\"title\":\"Автозаполнение анкеты клиента по фото паспорта\",\"link\":\"https://focus.kontur.ru/site/news/81168-avtozapolnenie_ankety_klienta_po_foto_pasporta\",\"read\":true,\"dt\":\"2025-09-18T12:09:00\",\"description\":\"В Фокус.Комплаенсе появилась новая возможность, которая позволяет быстрее и удобнее заполнять анкеты клиентов. Просто загрузите фото паспорта РФ — сервис сам распознает данные и внесет их в нужные поля. Оцените качество распознавания и оставьте комментарий — так вы поможете сделать сервис еще полезнее.\",\"type\":\"system\",\"important\":true,\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"ff0d519e-fbb6-4b61-8a0e-0641b1259503\",\"title\":\"В Фокусе появилась «Дополнительная информация»\",\"link\":\"https://focus.kontur.ru/site/news/80997-v_fokuse_poyavilas_dopolnitelnaya_informaciya\",\"read\":true,\"dt\":\"2025-09-09T07:03:22\",\"description\":\"В карточке контрагента в Фокусе теперь есть новый раздел — «Дополнительная информация». Здесь собраны данные из отраслевых источников, которые помогают быстрее и точнее оценивать контрагентов. Первые добавленные площадки — СРО Нострой, «Честный знак» и Реестр отечественного ПО.\",\"type\":\"system\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"1d75775f-cc57-48d4-939d-a29321321af6\",\"title\":\"Как проверить генерального директора\",\"link\":\"https://focus.kontur.ru/site/news/80890-proverit_generalnogo_direktora\",\"read\":true,\"dt\":\"2025-09-02T09:09:12\",\"description\":\"Рассказываем, когда необходимо проверять генерального директора, где получить информацию о нем и как обезопасить свой бизнес.\",\"type\":\"analysis\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"7bf5c532-82ae-4525-b02a-01f007de038f\",\"title\":\"18 пакет санкций ЕС: как бизнесу адаптироваться к изменениям\",\"link\":\"https://focus.kontur.ru/site/news/80639-18_paket_sankciy_es\",\"read\":true,\"dt\":\"2025-08-20T05:13:19\",\"description\":\"Совет ЕС принял 18 пакет санкций против России. Меры охватывают энергетику, финансовый сектор, судоходство, ВПК, а также информационную сферу. Рассказываем в статье, как российскому бизнесу адаптироваться к изменениям.\",\"type\":\"analysis\",\"important\":true,\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"c92f5594-9e49-4732-ba86-3f3e0a263d43\",\"title\":\"Как быстро автоматизировать проверку контрагентов в BPMSoft: опыт консалтинговой компании\",\"link\":\"https://focus.kontur.ru/site/news/80607-bystro_avtomatizirovat_proverku_kontragentov\",\"read\":true,\"dt\":\"2025-08-19T04:30:12\",\"description\":\"Рассказываем, как Евроэксперт в кратчайшие сроки автоматизировал проверку контрагентов с помощью готового интеграционного модуля Контур.Фокуса.\",\"type\":\"analysis\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"094dcbce-7904-422f-be32-0e5953ade99a\",\"title\":\"Как увеличить объем проверок в 15 раз: опыт лизинговой компании\",\"link\":\"https://focus.kontur.ru/site/news/80368-uvelichit_obem_proverok_v_15_raz\",\"read\":true,\"dt\":\"2025-08-01T05:00:42\",\"description\":\"Рассказываем, как с помощью Контур.Фокуса крупная лизинговая компания перестроила процесс проверки контрагентов. Сейчас она выполняет около 3 тыс. проверок в год против 200 ранее. При этом процесс по-прежнему курирует один сотрудник.\",\"type\":\"analysis\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"16fe7b67-f093-4260-b51a-59834c3a3a51\",\"title\":\"Добавили проверки по 248‑ФЗ\",\"link\":\"https://focus.kontur.ru/site/news/80335-dobavili_proverki_po_248fz\",\"read\":true,\"dt\":\"2025-07-31T05:14:44\",\"description\":\"В Фокусе появились данные о плановых и внеплановых проверках по 248-ФЗ. О том, что содержат новые данные — в статье.\",\"type\":\"system\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"48928a9c-d34a-4908-91be-cb419b957d20\",\"title\":\"Обновления в тарифе Корпорация\",\"link\":\"https://focus.kontur.ru/site/news/79557-obnovleniya_v_tarife_korporaciya\",\"read\":true,\"dt\":\"2025-07-08T08:52:24\",\"description\":\"В новом тарифе Корпорация появилась возможность назначать роль дополнительному пользователю, а также выдавать доступ к расходованию расширенных сведений и пакетов отчетов о проверке физлиц.\",\"type\":\"system\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"14b43d05-7aee-40fa-8a5b-da6cd614cb92\",\"title\":\"В Контур.Фокусе возобновилась проверка паспортов\",\"link\":\"https://focus.kontur.ru/site/news/79480-v_konturfokuse_vozobnovilas_proverka_pasportov\",\"read\":true,\"dt\":\"2025-06-24T10:45:40\",\"description\":\"Теперь проверить действительность паспорта можно в модуле Фокус.Комплаенс и в Фокусе при заказе отчета о проверке физлица. Рассказываем, что изменилось.\",\"type\":\"system\",\"important\":true,\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"c3c8d6da-2b44-428e-a118-615b8d7231ba\",\"title\":\"Появился тариф «Корпорация» с расширенной выгрузкой списка\",\"link\":\"https://focus.kontur.ru/site/news/56909-pervyy_tarif_fokusa\",\"read\":true,\"dt\":\"2025-06-18T09:30:10\",\"description\":\"Новый тарифный план подойдет крупным компаниям, которые часто и много проверяют контрагентов. Мы взяли все лучшее от «Премиума» и добавили: работу со списками, расширенную выгрузку и выбор критериев выгрузки.\",\"type\":\"system\",\"important\":true,\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"bef6ff90-dcd7-4b17-93e3-d69f345b3c43\",\"title\":\"Теперь в моделях проверки можно учитывать риски по ЗСК\",\"link\":\"https://focus.kontur.ru/site/news/56768-v_modelyax_proverki_uchityvat_riski_po_zsk\",\"read\":true,\"dt\":\"2025-06-06T11:07:43\",\"description\":\"Риски по системе «Знай своего клиента» Центробанка можно учитывать при расчете скоринг-оценки. В Фокус.Комплаенсе критерии можно включить, выключить или присвоить балл, согласно правилам внутреннего контроля или правилам безопасности компании.\",\"type\":\"system\",\"important\":true,\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"6b5a6708-0952-45f0-8e6e-0525fbcd5682\",\"title\":\"Контур.Фокус и ИНЭК-ИТ: диагностика финансовых рисков\",\"link\":\"https://focus.kontur.ru/site/news/56314-kompleks_resheniy_dlya_detalnoy_diagnostiki_finansovyh_riskov\",\"read\":true,\"dt\":\"2025-05-16T13:32:26\",\"description\":\"Компании представили комплекс решений для автоматической оценки и мониторинга финансовой надежности бизнес-партнеров и заемщиков.\",\"type\":\"system\",\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"10d6e70a-4102-44f1-854b-60590a401121\",\"title\":\"Источник сведений о налоговой задолженности стал работать еще точнее\",\"link\":\"https://focus.kontur.ru/site/news/56348-istochnik_svedeniy_o_nalogovoy_zadolzhennosti\",\"read\":true,\"dt\":\"2025-05-16T13:22:14\",\"description\":\"Начиная с 2023 года реестры с этими сведениями перестали обновляться. Мы нашли альтернативу – теперь Фокус снова показывает сведения о налоговой задолженности и непредоставлении отчетности, но теперь они отображаются не в блоке «Особые реестры», а в публичных списках.\",\"type\":\"system\",\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"9b77eba2-34dd-4f31-969f-f7b9ea71450a\",\"title\":\"Добавили сведения о специальных налоговых режимах ИП\",\"link\":\"https://focus.kontur.ru/site/news/56347-svedeniya_o_specialnyh_nalogovyh_rezhimah_ip\",\"read\":true,\"dt\":\"2025-05-14T13:53:44\",\"description\":\"Раньше Фокус показывал специальные налоговые режимы только у юрлиц, теперь добавилась информация по ИП. В новом блоке «Система налогообложения» — не только данные о специальном налоговом режиме, но и история изменений.\",\"type\":\"system\",\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"a572a7fa-a050-48a1-9012-2b0da62a06fd\",\"title\":\"Как Дмитриевский химический завод ускорил оценку контрагентов\",\"link\":\"https://focus.kontur.ru/site/news/56025-dmitrievskiy_himicheskiy_zavod_uskoril_ocenku_kontragentov\",\"read\":true,\"dt\":\"2025-04-22T13:54:51\",\"description\":\"Рассказываем, как Контур.Фокус помог крупному российскому производителю химической продукции настроить комплексную оценку рисков в работе с тысячами контрагентов.\",\"type\":\"analysis\",\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"31dbcdb9-1e07-4377-bc20-afb042b35b1d\",\"title\":\"С 1 марта цены на большинство тарифных планов Контур.Фокуса изменятся на 15-20%\",\"link\":\"https://focus.kontur.ru/site/news/55088-ceny_na_konturfokus_izmenyatsya\",\"read\":true,\"dt\":\"2025-02-18T07:24:38\",\"description\":\"С учетом увеличения затрат на поддержку и развитие сервиса, а также роста инфляции, мы вынуждены пересмотреть стоимость подписки.\",\"type\":\"system\",\"important\":true,\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"784bc2d7-75d6-4b31-9fb9-0b1d8ea08898\",\"title\":\"Улучшили поиск компаний по Киргизии и добавили онлайн-поиск еще по восьми регионам\",\"link\":\"https://focus.kontur.ru/site/news/54911-uluchshili_poisk_kompaniy_po_kirgizii\",\"read\":true,\"dt\":\"2025-02-03T07:45:13\",\"description\":\"Качество данных по компаниям Киргизии в Фокусе стало лучше. Еще в сервисе появился поиск по компаниям из восьми регионов: Грузии, Эстонии, Австралии, Тайваню, Израилю, Японии, Сингапуру и Гонконгу. Читайте в статье, как эффективно пользоваться поиском по этим регионам.\",\"type\":\"system\",\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"a8e67eb8-6963-465c-99f4-5d3843081860\",\"title\":\"Как доказать реальность сделки?\",\"link\":\"https://focus.kontur.ru/site/news/54582-dokazat_realnost_sdelki\",\"read\":true,\"dt\":\"2025-01-24T06:48:54\",\"description\":\"ФНС продолжает активно бороться с фирмами-однодневками, а также с мнимыми сделками, совершенными ради выгоды. В ходе налоговой проверки инспекторы изучают все контракты проверяемого лица и запрашивают документы, подтверждающие реальность их исполнения как у самого налогоплательщика, так и у его контрагентов. Разбираем с экспертом, как доказать реальность сделки.\",\"type\":\"analysis\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"a218ef24-a77a-40db-81f4-cae8b1a515de\",\"title\":\"Как ускорить проверку контрагентов в 10 раз?\",\"link\":\"https://focus.kontur.ru/site/news/54149-uskorili_proverku_v_10_raz\",\"read\":true,\"dt\":\"2024-12-27T09:02:30\",\"description\":\"Рассказываем, как с помощью Контур.Фокуса федеральный дистрибьютор удобрений и агрохимических продуктов настроил скоринговую оценку контрагентов и каких результатов добился.\",\"type\":\"analysis\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"28f99a33-39a2-45f2-a83f-37416a136073\",\"title\":\"Как изменился круг публичных должностных лиц?\",\"link\":\"https://focus.kontur.ru/site/news/54294-vazhnye_izmeneniya_dlya_subektov_115fz\",\"read\":true,\"dt\":\"2024-12-27T08:57:04\",\"description\":\"С 14 ноября 2024 года субъекты 115-ФЗ должны учитывать положения нового указа Президента № 974 «О государственных должностях Российской Федерации» (далее — указ № 974). Документ заменил устаревший указ от 11 января 1995 года № 32 и обновил перечень российских публичных должностных лиц (ПДЛ). Разбираем с экспертом, на что важно обратить внимание субъектам 115-ФЗ.\",\"type\":\"analysis\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"}],\"meta\":{\"isSynchronized\":true,\"requestId\":\"anDiwweFqdPq5Cr4Cks71\",\"requestStatus\":\"fulfilled\"}},\"tabId\":\"Bb_5GquNXhqsmgQJ_hcKI\"}"
+          "value": "{\"action\":{\"type\":\"news/loadNews/fulfilled\",\"payload\":[{\"id\":\"174510a8-ee57-4578-9beb-a8ee80222996\",\"title\":\"Закон о контрсанкциях продлили до 2027 года\",\"link\":\"https://focus.kontur.ru/site/news/50907-obyazannosti_kompaniyam_iz_finansovogo_sektora\",\"dt\":\"2025-10-08T04:40:56\",\"description\":\"Правительство продлило действие контрсанкций до конца 2027 года. Это касается ранее введенных временных ограничений на ввоз и вывоз из страны отдельных видов товаров, сырья и оборудования. Напоминаем о сути мер и рассказываем о том, что изменилось.\",\"type\":\"laws\",\"iconLink\":\"https://services.kontur.ru/Files/Modules/Author/597_l.jpg?t=1759847223\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"762f4eb0-4e36-4f5e-9252-1353bd3e7da2\",\"title\":\"Дизайн блока «Финансы» стал более информативным\",\"link\":\"https://focus.kontur.ru/site/news/81409-dizajn_bloka_finansy_stal_bolee_informativnym\",\"dt\":\"2025-10-02T11:54:49\",\"description\":\"Обновили дизайн блока «Финансы» на сводке: добавили график по трем показателям, изменили отображение экспертных оценок и подсказок.\",\"type\":\"system\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"9d5426dd-b979-4844-830b-c241f98ca80b\",\"title\":\"В Фокусе стало больше данных по онлайн-кассам\",\"link\":\"https://focus.kontur.ru/site/news/81328-v_fokuse_stalo_bolshe_dannyx_po_onlajn_kassam\",\"dt\":\"2025-09-29T12:32:47\",\"description\":\"В Фокусе появился новый источник данных по онлайн-кассам. Теперь сведения, полученные через онлайн-кассы, можно использовать для анализа деятельности более 500 тыс. организаций.\",\"type\":\"system\",\"pinned\":true,\"important\":true,\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"10caab7d-7408-4636-bdee-9d9994b12704\",\"title\":\"Автозаполнение анкеты клиента по фото паспорта\",\"link\":\"https://focus.kontur.ru/site/news/81168-avtozapolnenie_ankety_klienta_po_foto_pasporta\",\"read\":true,\"dt\":\"2025-09-18T12:09:00\",\"description\":\"В Фокус.Комплаенсе появилась новая возможность, которая позволяет быстрее и удобнее заполнять анкеты клиентов. Просто загрузите фото паспорта РФ — сервис сам распознает данные и внесет их в нужные поля. Оцените качество распознавания и оставьте комментарий — так вы поможете сделать сервис еще полезнее.\",\"type\":\"system\",\"important\":true,\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"ff0d519e-fbb6-4b61-8a0e-0641b1259503\",\"title\":\"В Фокусе появилась «Дополнительная информация»\",\"link\":\"https://focus.kontur.ru/site/news/80997-v_fokuse_poyavilas_dopolnitelnaya_informaciya\",\"read\":true,\"dt\":\"2025-09-09T07:03:22\",\"description\":\"В карточке контрагента в Фокусе теперь есть новый раздел — «Дополнительная информация». Здесь собраны данные из отраслевых источников, которые помогают быстрее и точнее оценивать контрагентов. Первые добавленные площадки — СРО Нострой, «Честный знак» и Реестр отечественного ПО.\",\"type\":\"system\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"1d75775f-cc57-48d4-939d-a29321321af6\",\"title\":\"Как проверить генерального директора\",\"link\":\"https://focus.kontur.ru/site/news/80890-proverit_generalnogo_direktora\",\"read\":true,\"dt\":\"2025-09-02T09:09:12\",\"description\":\"Рассказываем, когда необходимо проверять генерального директора, где получить информацию о нем и как обезопасить свой бизнес.\",\"type\":\"analysis\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"7bf5c532-82ae-4525-b02a-01f007de038f\",\"title\":\"18 пакет санкций ЕС: как бизнесу адаптироваться к изменениям\",\"link\":\"https://focus.kontur.ru/site/news/80639-18_paket_sankciy_es\",\"read\":true,\"dt\":\"2025-08-20T05:13:19\",\"description\":\"Совет ЕС принял 18 пакет санкций против России. Меры охватывают энергетику, финансовый сектор, судоходство, ВПК, а также информационную сферу. Рассказываем в статье, как российскому бизнесу адаптироваться к изменениям.\",\"type\":\"analysis\",\"important\":true,\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"c92f5594-9e49-4732-ba86-3f3e0a263d43\",\"title\":\"Как быстро автоматизировать проверку контрагентов в BPMSoft: опыт консалтинговой компании\",\"link\":\"https://focus.kontur.ru/site/news/80607-bystro_avtomatizirovat_proverku_kontragentov\",\"read\":true,\"dt\":\"2025-08-19T04:30:12\",\"description\":\"Рассказываем, как Евроэксперт в кратчайшие сроки автоматизировал проверку контрагентов с помощью готового интеграционного модуля Контур.Фокуса.\",\"type\":\"analysis\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"094dcbce-7904-422f-be32-0e5953ade99a\",\"title\":\"Как увеличить объем проверок в 15 раз: опыт лизинговой компании\",\"link\":\"https://focus.kontur.ru/site/news/80368-uvelichit_obem_proverok_v_15_raz\",\"read\":true,\"dt\":\"2025-08-01T05:00:42\",\"description\":\"Рассказываем, как с помощью Контур.Фокуса крупная лизинговая компания перестроила процесс проверки контрагентов. Сейчас она выполняет около 3 тыс. проверок в год против 200 ранее. При этом процесс по-прежнему курирует один сотрудник.\",\"type\":\"analysis\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"16fe7b67-f093-4260-b51a-59834c3a3a51\",\"title\":\"Добавили проверки по 248‑ФЗ\",\"link\":\"https://focus.kontur.ru/site/news/80335-dobavili_proverki_po_248fz\",\"read\":true,\"dt\":\"2025-07-31T05:14:44\",\"description\":\"В Фокусе появились данные о плановых и внеплановых проверках по 248-ФЗ. О том, что содержат новые данные — в статье.\",\"type\":\"system\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"48928a9c-d34a-4908-91be-cb419b957d20\",\"title\":\"Обновления в тарифе Корпорация\",\"link\":\"https://focus.kontur.ru/site/news/79557-obnovleniya_v_tarife_korporaciya\",\"read\":true,\"dt\":\"2025-07-08T08:52:24\",\"description\":\"В новом тарифе Корпорация появилась возможность назначать роль дополнительному пользователю, а также выдавать доступ к расходованию расширенных сведений и пакетов отчетов о проверке физлиц.\",\"type\":\"system\",\"tariffs\":\"Всем платным пользователям\",\"comment\":\"\"},{\"id\":\"14b43d05-7aee-40fa-8a5b-da6cd614cb92\",\"title\":\"В Контур.Фокусе возобновилась проверка паспортов\",\"link\":\"https://focus.kontur.ru/site/news/79480-v_konturfokuse_vozobnovilas_proverka_pasportov\",\"read\":true,\"dt\":\"2025-06-24T10:45:40\",\"description\":\"Теперь проверить действительность паспорта можно в модуле Фокус.Комплаенс и в Фокусе при заказе отчета о проверке физлица. Рассказываем, что изменилось.\",\"type\":\"system\",\"important\":true,\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"c3c8d6da-2b44-428e-a118-615b8d7231ba\",\"title\":\"Появился тариф «Корпорация» с расширенной выгрузкой списка\",\"link\":\"https://focus.kontur.ru/site/news/56909-pervyy_tarif_fokusa\",\"read\":true,\"dt\":\"2025-06-18T09:30:10\",\"description\":\"Новый тарифный план подойдет крупным компаниям, которые часто и много проверяют контрагентов. Мы взяли все лучшее от «Премиума» и добавили: работу со списками, расширенную выгрузку и выбор критериев выгрузки.\",\"type\":\"system\",\"important\":true,\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"bef6ff90-dcd7-4b17-93e3-d69f345b3c43\",\"title\":\"Теперь в моделях проверки можно учитывать риски по ЗСК\",\"link\":\"https://focus.kontur.ru/site/news/56768-v_modelyax_proverki_uchityvat_riski_po_zsk\",\"read\":true,\"dt\":\"2025-06-06T11:07:43\",\"description\":\"Риски по системе «Знай своего клиента» Центробанка можно учитывать при расчете скоринг-оценки. В Фокус.Комплаенсе критерии можно включить, выключить или присвоить балл, согласно правилам внутреннего контроля или правилам безопасности компании.\",\"type\":\"system\",\"important\":true,\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"6b5a6708-0952-45f0-8e6e-0525fbcd5682\",\"title\":\"Контур.Фокус и ИНЭК-ИТ: диагностика финансовых рисков\",\"link\":\"https://focus.kontur.ru/site/news/56314-kompleks_resheniy_dlya_detalnoy_diagnostiki_finansovyh_riskov\",\"read\":true,\"dt\":\"2025-05-16T13:32:26\",\"description\":\"Компании представили комплекс решений для автоматической оценки и мониторинга финансовой надежности бизнес-партнеров и заемщиков.\",\"type\":\"system\",\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"10d6e70a-4102-44f1-854b-60590a401121\",\"title\":\"Источник сведений о налоговой задолженности стал работать еще точнее\",\"link\":\"https://focus.kontur.ru/site/news/56348-istochnik_svedeniy_o_nalogovoy_zadolzhennosti\",\"read\":true,\"dt\":\"2025-05-16T13:22:14\",\"description\":\"Начиная с 2023 года реестры с этими сведениями перестали обновляться. Мы нашли альтернативу – теперь Фокус снова показывает сведения о налоговой задолженности и непредоставлении отчетности, но теперь они отображаются не в блоке «Особые реестры», а в публичных списках.\",\"type\":\"system\",\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"9b77eba2-34dd-4f31-969f-f7b9ea71450a\",\"title\":\"Добавили сведения о специальных налоговых режимах ИП\",\"link\":\"https://focus.kontur.ru/site/news/56347-svedeniya_o_specialnyh_nalogovyh_rezhimah_ip\",\"read\":true,\"dt\":\"2025-05-14T13:53:44\",\"description\":\"Раньше Фокус показывал специальные налоговые режимы только у юрлиц, теперь добавилась информация по ИП. В новом блоке «Система налогообложения» — не только данные о специальном налоговом режиме, но и история изменений.\",\"type\":\"system\",\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"a572a7fa-a050-48a1-9012-2b0da62a06fd\",\"title\":\"Как Дмитриевский химический завод ускорил оценку контрагентов\",\"link\":\"https://focus.kontur.ru/site/news/56025-dmitrievskiy_himicheskiy_zavod_uskoril_ocenku_kontragentov\",\"read\":true,\"dt\":\"2025-04-22T13:54:51\",\"description\":\"Рассказываем, как Контур.Фокус помог крупному российскому производителю химической продукции настроить комплексную оценку рисков в работе с тысячами контрагентов.\",\"type\":\"analysis\",\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"31dbcdb9-1e07-4377-bc20-afb042b35b1d\",\"title\":\"С 1 марта цены на большинство тарифных планов Контур.Фокуса изменятся на 15-20%\",\"link\":\"https://focus.kontur.ru/site/news/55088-ceny_na_konturfokus_izmenyatsya\",\"read\":true,\"dt\":\"2025-02-18T07:24:38\",\"description\":\"С учетом увеличения затрат на поддержку и развитие сервиса, а также роста инфляции, мы вынуждены пересмотреть стоимость подписки.\",\"type\":\"system\",\"important\":true,\"tariffs\":\"Всем\",\"comment\":\"\"},{\"id\":\"784bc2d7-75d6-4b31-9fb9-0b1d8ea08898\",\"title\":\"Улучшили поиск компаний по Киргизии и добавили онлайн-поиск еще по восьми регионам\",\"link\":\"https://focus.kontur.ru/site/news/54911-uluchshili_poisk_kompaniy_po_kirgizii\",\"read\":true,\"dt\":\"2025-02-03T07:45:13\",\"description\":\"Качество данных по компаниям Киргизии в Фокусе стало лучше. Еще в сервисе появился поиск по компаниям из восьми регионов: Грузии, Эстонии, Австралии, Тайваню, Израилю, Японии, Сингапуру и Гонконгу. Читайте в статье, как эффективно пользоваться поиском по этим регионам.\",\"type\":\"system\",\"tariffs\":\"Всем\",\"comment\":\"\"}],\"meta\":{\"isSynchronized\":true,\"requestId\":\"pfMl_NJ3vYq5IHEl-f98-\",\"requestStatus\":\"fulfilled\"}},\"tabId\":\"P2Ke2-wos7pJpOHff7J0S\"}"
         },
         {
           "name": "tmr_lvidTS",
-          "value": "1758213543756"
+          "value": "1759925121920"
         },
         {
           "name": "_ym14324677_il",
@@ -865,7 +871,7 @@
         },
         {
           "name": "barCountry",
-          "value": "{\"tabId\":\"Bb_5GquNXhqsmgQJ_hcKI\",\"value\":\"RU\"}"
+          "value": "{\"tabId\":\"P2Ke2-wos7pJpOHff7J0S\",\"value\":\"RU\"}"
         },
         {
           "name": "tmr_reqNum",
@@ -873,7 +879,7 @@
         },
         {
           "name": "_ym_uid",
-          "value": "\"1758213544567608534\""
+          "value": "\"1759925122762899129\""
         },
         {
           "name": "abtest_active",
@@ -885,16 +891,7 @@
         },
         {
           "name": "_ym14324677_lastHit",
-          "value": "1758213575469"
-        }
-      ]
-    },
-    {
-      "origin": "https://tp.kontur.ru",
-      "localStorage": [
-        {
-          "name": "livechat_widget_last_timestamp",
-          "value": "{\"timeStamp\":1757575765961}"
+          "value": "1759925139291"
         }
       ]
     },
@@ -903,7 +900,7 @@
       "localStorage": [
         {
           "name": "LS_lastAuth_login",
-          "value": "{\"value\":\"BlackBlok88@yandex.ru\",\"expires\":1789317559768}"
+          "value": "{\"value\":\"BlackBlok88@yandex.ru\",\"expires\":1791029181970}"
         },
         {
           "name": "LS_lastAuthModes",
@@ -911,11 +908,11 @@
         },
         {
           "name": "LS_ABTestValue",
-          "value": "{\"value\":{\"value\":0.24312582597378363},\"expires\":253402214400000}"
+          "value": "{\"value\":{\"value\":0.5031465529268068},\"expires\":253402214400000}"
         },
         {
           "name": "LS_lastAuthUsersData",
-          "value": "{\"value\":[{\"CertsInfo\":[],\"CertsInfoHash\":\"E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855\",\"ProductData\":null,\"UserId\":\"90f19edc-edf7-4785-ada0-3e75681cdfbf\",\"FirstName\":null,\"MiddleName\":null,\"LastName\":null,\"Login\":\"bl***k88@yandex.ru\",\"Phone\":null,\"UserInfoHash\":\"B2851E0683E5B177D44F2AF85489768A46DCE03CE9B49DDEC1CDD2B9A22453BA\",\"date\":1758213559767}],\"expires\":0}"
+          "value": "{\"value\":[{\"CertsInfo\":[],\"CertsInfoHash\":\"E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855\",\"ProductData\":null,\"UserId\":\"90f19edc-edf7-4785-ada0-3e75681cdfbf\",\"FirstName\":null,\"MiddleName\":null,\"LastName\":null,\"Login\":\"bl***k88@yandex.ru\",\"Phone\":null,\"UserInfoHash\":\"B2851E0683E5B177D44F2AF85489768A46DCE03CE9B49DDEC1CDD2B9A22453BA\",\"date\":1759925181970}],\"expires\":0}"
         }
       ]
     }
