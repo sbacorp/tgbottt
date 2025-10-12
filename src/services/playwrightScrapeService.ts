@@ -1,10 +1,10 @@
 import { chromium, Browser, Page } from "playwright";
 import logger from "../utils/logger";
 import { cbrService } from "./cbrService";
-import Anthropic from '@anthropic-ai/sdk';
+import Anthropic from "@anthropic-ai/sdk";
 import { config } from "../utils/config";
-import * as fs from 'fs';
-const pdfParse = require('pdf-parse');
+import * as fs from "fs";
+const pdfParse = require("pdf-parse");
 
 export interface UnreliableDataInfo {
   /** Недостоверность адреса */
@@ -41,7 +41,7 @@ export class PlaywrightScrapeService {
 
   constructor() {
     this.anthropic = new Anthropic({
-      apiKey: config.CLAUDE_API_KEY || '',
+      apiKey: config.CLAUDE_API_KEY || "",
     });
   }
 
@@ -64,12 +64,14 @@ export class PlaywrightScrapeService {
     }
   }
 
-
-  private async parseWithAI(text: string, inn: string): Promise<KonturOrganizationData | null> {
+  private async parseWithAI(
+    text: string,
+    inn: string
+  ): Promise<KonturOrganizationData | null> {
     try {
       const response = await this.anthropic.messages.create({
         model: "claude-3-5-sonnet-latest",
-        max_tokens: 2000, 
+        max_tokens: 2000,
         system: `Ты эксперт по анализу PDF экспресс-отчетов с сайта Контур.Фокус и системе противодействия отмыванию денежных средств (115-ФЗ). 
 Твоя задача - извлекать ключевые данные об организации СТРОГО из текста PDF отчета и определять потенциальные риски согласно системе СВЕТОФОР ЦБ РФ.
 НЕ ДОПУСКАЕТСЯ добавление информации, которой нет в тексте.
@@ -193,16 +195,18 @@ ${text}
 
 ИНН организации: ${inn}
 
-Верни результат в указанном JSON формате.`
-          }
-        ]
+Верни результат в указанном JSON формате.`,
+          },
+        ],
       });
 
       const content = response.content[0];
       logger.info(`Ответ AI: ${content}`);
-      if (content && content.type === 'text') {
+      if (content && content.type === "text") {
         // Улучшенный поиск JSON, который может быть обернут в markdown
-        const jsonMatch = content.text.match(/```json\s*([\s\S]*?)\s*```|(\{[\s\S]*\})/);
+        const jsonMatch = content.text.match(
+          /```json\s*([\s\S]*?)\s*```|(\{[\s\S]*\})/
+        );
         logger.info(`JSON: ${jsonMatch}`);
         if (jsonMatch) {
           // Выбираем правильную группу из совпадения
@@ -211,27 +215,32 @@ ${text}
           if (jsonString) {
             // Обработка потенциальных проблем с riskInfo
             // Заменяем неэкранированные переносы строк внутри riskInfo
-            jsonString = jsonString.replace(/"riskInfo":\s*"(.*?)"/gs, (_match, group1) => {
-              const cleanedGroup = group1.replace(/\n/g, '\\n').replace(/"/g, '\\"');
-              return `"riskInfo": "${cleanedGroup}"`;
-            });
-            
+            jsonString = jsonString.replace(
+              /"riskInfo":\s*"(.*?)"/gs,
+              (_match, group1) => {
+                const cleanedGroup = group1
+                  .replace(/\n/g, "\\n")
+                  .replace(/"/g, '\\"');
+                return `"riskInfo": "${cleanedGroup}"`;
+              }
+            );
+
             try {
               const parsed = JSON.parse(jsonString);
               logger.info(`Parsed: ${JSON.stringify(parsed, null, 2)}`);
               return {
                 inn,
                 name: parsed.name || `Организация ${inn}`,
-                organizationStatus: parsed.organizationStatus || 'active',
-                status: parsed.status || 'green',
+                organizationStatus: parsed.organizationStatus || "active",
+                status: parsed.status || "green",
                 hasRejectionsByLists: false, // Будет установлено отдельно через cbrService
                 region: parsed.region || undefined,
                 unreliableData: parsed.unreliableData || undefined,
-                riskInfo: parsed.riskInfo || undefined
+                riskInfo: parsed.riskInfo || undefined,
               };
             } catch (parseError) {
-              logger.error('Ошибка JSON.parse:', parseError);
-              logger.error('Строка, которую не удалось спарсить:', jsonString);
+              logger.error("Ошибка JSON.parse:", parseError);
+              logger.error("Строка, которую не удалось спарсить:", jsonString);
               return null;
             }
           }
@@ -239,7 +248,7 @@ ${text}
       }
       return null;
     } catch (error) {
-      logger.error('Ошибка AI парсинга:', error);
+      logger.error("Ошибка AI парсинга:", error);
       return null;
     }
   }
@@ -279,153 +288,177 @@ ${text}
 
         // Ждем загрузки input поля и вводим ИНН
         await page.waitForSelector("input", { timeout: 10000 });
-        await page.waitForTimeout(1000)
+        await page.waitForTimeout(1000);
         const genericInput = page.locator("input").first();
         await genericInput.fill(inn);
         await genericInput.press("Enter");
-        
+
         // Дополнительное ожидание для стабильности
         await page.waitForTimeout(2000);
 
         // Проверяем, есть ли пагинация (второй сценарий)
-        const hasPagination = await page.getByRole('complementary').count() > 0;
+        const hasPagination =
+          (await page.getByRole("complementary").count()) > 0;
         if (hasPagination) {
-          console.log('Найдена пагинация - это список результатов, ищем нужную организацию...');
+          const isIndividualINN = inn.toString().length > 10;
+          console.log(
+            "Найдена пагинация - это список результатов, ищем нужную организацию..."
+          );
           await page.waitForTimeout(1000);
           // Получаем историю поиска через API
           const searchHistory = await page.evaluate(async () => {
             try {
-              const response = await fetch('https://focus.kontur.ru/v2/api/search/history?take=6');
+              const response = await fetch(
+                "https://focus.kontur.ru/v2/api/search/history?take=6"
+              );
               const data = await response.json();
               return data;
             } catch (e) {
               return null;
             }
           }, inn);
-          
+
           if (searchHistory && searchHistory.data) {
             // Находим индекс точного совпадения с нашим ИНН
-            const exactMatchIndex = searchHistory.data.findIndex((item: any) => item.text === inn);
-            
+            let exactMatchIndex = searchHistory.data.findIndex(
+              (item: any) => item.text === inn
+            );
+
             if (exactMatchIndex >= 0) {
-              console.log(`Найдено точное совпадение на позиции ${exactMatchIndex}, кликаем...`);
-              
+              console.log(
+                `Найдено точное совпадение на позиции ${exactMatchIndex}, кликаем...`
+              );
+
               // Кликаем на нужную ссылку по индексу (на тег a внутри entityLink)
               const entityLinks = page.locator('[data-tid="entityLink"] a');
               const linkCount = await entityLinks.count();
-              
-              if (exactMatchIndex < linkCount) {
+
+              if (isIndividualINN) {
+                const entityLinksFiltered = entityLinks.filter({
+                  hasNotText: "ООО",
+                });
+                await entityLinksFiltered.first().click();
+                await page.waitForTimeout(3000);
+              } else if (exactMatchIndex < linkCount) {
                 // Ждем, пока ссылка станет кликабельной
-                await entityLinks.nth(exactMatchIndex).waitFor({ state: 'visible', timeout: 5000 });
+                await entityLinks
+                  .nth(exactMatchIndex)
+                  .waitFor({ state: "visible", timeout: 5000 });
                 await entityLinks.nth(exactMatchIndex).click();
-                console.log('Переходим на страницу организации...');
-                
+                console.log("Переходим на страницу организации...");
+
                 // Ждём загрузки страницы организации
                 // await page.waitForLoadState("networkidle", { timeout: 15000 });
                 await page.waitForTimeout(3000);
               } else {
-                console.log('Индекс превышает количество найденных ссылок');
+                console.log("Индекс превышает количество найденных ссылок");
               }
             } else {
-              console.log('Точное совпадение ИНН не найдено в результатах');
+              console.log("Точное совпадение ИНН не найдено в результатах");
             }
           } else {
-            console.log('Не удалось получить историю поиска');
+            console.log("Не удалось получить историю поиска");
           }
         } else {
-          console.log('Пагинация не найдена - это прямая страница организации');
+          console.log("Пагинация не найдена - это прямая страница организации");
         }
-        
+
         // Ждем загрузки main элемента
-        await page.waitForSelector('main', { timeout: 10000 });
-        
+        await page.waitForSelector("main", { timeout: 10000 });
+
         // Отладка: проверим URL и содержимое страницы
         const currentUrl = page.url();
-        console.log('Текущий URL:', currentUrl);
-        
+        console.log("Текущий URL:", currentUrl);
+
         // Ищем ссылку содержащую текст "Экспресс-отчёт"
         console.log('Ищем ссылку с "Экспресс-отчёт"...');
         const expressReportLink = page.locator('a:has-text("Экспресс-отчёт")');
         const linkCount = await expressReportLink.count();
         console.log(`Найдено ссылок с "Экспресс-отчёт": ${linkCount}`);
-        
+
         if (linkCount === 0) {
           // Попробуем альтернативные селекторы
-          console.log('Ссылка с "Экспресс-отчёт" не найдена, пробуем альтернативные селекторы...');
-          
+          console.log(
+            'Ссылка с "Экспресс-отчёт" не найдена, пробуем альтернативные селекторы...'
+          );
+
           // Попробуем найти по data-tid и href содержащему pdf
-          const pdfLinks = page.locator('a[data-tid="Link__root"][href*=".pdf"]');
+          const pdfLinks = page.locator(
+            'a[data-tid="Link__root"][href*=".pdf"]'
+          );
           const pdfLinkCount = await pdfLinks.count();
           console.log(`Найдено PDF ссылок: ${pdfLinkCount}`);
-          
+
           if (pdfLinkCount === 0) {
-            console.log('Никаких PDF ссылок не найдено');
+            console.log("Никаких PDF ссылок не найдено");
             return null;
           }
-          
+
           // Используем первую найденную PDF ссылку
-          const downloadPromise = page.waitForEvent('download');
-          console.log('Кликаем на PDF ссылку...');
+          const downloadPromise = page.waitForEvent("download");
+          console.log("Кликаем на PDF ссылку...");
           await pdfLinks.first().click();
-          
+
           const download = await downloadPromise;
           const fileName = `express-report-${inn}-${Date.now()}.pdf`;
-          const downloadsDir = './downloads';
+          const downloadsDir = "./downloads";
           if (!fs.existsSync(downloadsDir)) {
             fs.mkdirSync(downloadsDir);
             logger.info(`Директория ${downloadsDir} создана`);
           }
           const filePath = `${downloadsDir}/${fileName}`;
           await download.saveAs(filePath);
-          
+
           console.log(`PDF сохранен: ${filePath}`);
           return filePath;
         }
-        
+
         // Получаем URL PDF из href атрибута
-        const pdfHref = await expressReportLink.first().getAttribute('href');
+        const pdfHref = await expressReportLink.first().getAttribute("href");
         if (!pdfHref) {
-          console.log('Не удалось получить href ссылки');
+          console.log("Не удалось получить href ссылки");
           return null;
         }
-        
-        console.log('Найден URL PDF:', pdfHref);
-        
+
+        console.log("Найден URL PDF:", pdfHref);
+
         // Скачиваем PDF напрямую через HTTP запрос
-        console.log('Скачиваем PDF файл...');
-        
+        console.log("Скачиваем PDF файл...");
+
         // Используем page.request для прямого HTTP запроса
         const response = await page.request.get(pdfHref);
-        
+
         if (!response.ok()) {
-          console.log(`Ошибка загрузки PDF: ${response.status()} ${response.statusText()}`);
+          console.log(
+            `Ошибка загрузки PDF: ${response.status()} ${response.statusText()}`
+          );
           return null;
         }
-        
+
         // Получаем содержимое PDF
         const pdfBuffer = await response.body();
-        
+
         // Сохраняем файл
         const fileName = `express-report-${inn}-${Date.now()}.pdf`;
-        const downloadsDir = './downloads';
+        const downloadsDir = "./downloads";
         if (!fs.existsSync(downloadsDir)) {
           fs.mkdirSync(downloadsDir);
           logger.info(`Директория ${downloadsDir} создана`);
         }
         const filePath = `${downloadsDir}/${fileName}`;
-        
+
         // Записываем байты в файл
         fs.writeFileSync(filePath, pdfBuffer);
-        
+
         console.log(`PDF сохранен: ${filePath}`);
         return filePath;
       });
 
       if (!pdfPath) {
-        console.log('PDF не был загружен');
+        console.log("PDF не был загружен");
         return null;
       }
-      
+
       // Извлекаем текст из PDF
       const pdfText = await this.extractTextFromPDF(pdfPath);
       if (!pdfText) {
@@ -435,14 +468,17 @@ ${text}
           fs.unlinkSync(pdfPath);
           console.log(`PDF файл удален после ошибки: ${pdfPath}`);
         } catch (deleteError) {
-          logger.warn(`Не удалось удалить PDF файл после ошибки ${pdfPath}:`, deleteError);
+          logger.warn(
+            `Не удалось удалить PDF файл после ошибки ${pdfPath}:`,
+            deleteError
+          );
         }
         return null;
       }
-      
+
       // Парсим данные с помощью AI
       const organizationData = await this.parseWithAI(pdfText, inn);
-      
+
       // Удаляем PDF файл после парсинга
       try {
         fs.unlinkSync(pdfPath);
@@ -450,27 +486,26 @@ ${text}
       } catch (error) {
         logger.warn(`Не удалось удалить PDF файл ${pdfPath}:`, error);
       }
-      
+
       if (!organizationData) {
         logger.error(`AI не смог обработать данные для ИНН ${inn}`);
         return null;
       }
-      
+
       // Проверяем наличие в списках отказов ЦБ РФ
       const hasRejectionsByLists = await cbrService.searchOrganization(inn);
-      
+
       // Обновляем статус если найдена в списках ЦБ
       let finalStatus = organizationData.status;
-      if (hasRejectionsByLists && finalStatus === 'green') {
-        finalStatus = 'red'; // Если найдена в списках ЦБ, это красный статус
+      if (hasRejectionsByLists && finalStatus === "green") {
+        finalStatus = "red"; // Если найдена в списках ЦБ, это красный статус
       }
-      
+
       return {
         ...organizationData,
         hasRejectionsByLists,
-        status: finalStatus
+        status: finalStatus,
       };
-      
     } catch (error) {
       logger.error(`Ошибка Playwright для ИНН ${inn}:`, error);
       return null;
