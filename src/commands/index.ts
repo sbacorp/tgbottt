@@ -14,6 +14,7 @@ export { handleHelp } from './help';
 export { handleAddAdmins } from './addAdmins';
 export { handleRemoveAdmins } from './removeAdmins';
 export { handleDeleteGroup } from './removeGroup';
+export { handleNewsletter } from './newsletter';
 
 function getPrivateChatCommands(): BotCommand[] {
   return [
@@ -49,6 +50,10 @@ function getPrivateChatAdminCommands(): BotCommand[] {
     {
       command: "status",
       description: "Статус системы",
+    },
+    {
+      command: "newsletter",
+      description: "Рассылка всем пользователям",
     },
     {
       command: "setcommands",

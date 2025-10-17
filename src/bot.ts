@@ -19,6 +19,7 @@ import {
   handleHelp,
   setCommandsHandler,
   handleDeleteGroup,
+  handleNewsletter,
 } from './commands';
 
 import { handleCallback } from './handlers/callbackHandlers';
@@ -37,6 +38,7 @@ import { removeInnFromGroupConversation } from './conversations/removeInnFromGro
 import { addUserToGroupConversation } from './conversations/addUserToGroup.conversation';
 import { removeUserFromGroupConversation } from './conversations/removeUserFromGroup.conversation';
 import { handleStart } from './commands/start';
+import { newsletterConversation } from './conversations/newsletter.conversation';
 
 // Импорт features
 import { tracking } from './features/tracking';
@@ -74,6 +76,7 @@ bot.use(createConversation(addInnToGroupConversation, "add_inn_to_group"));
 bot.use(createConversation(removeInnFromGroupConversation, "remove_inn_from_group"));
 bot.use(createConversation(addUserToGroupConversation, "add_user_to_group"));
 bot.use(createConversation(removeUserFromGroupConversation, "remove_user_from_group"));
+bot.use(createConversation(newsletterConversation, "newsletter"));
 
 // Регистрация features
 bot.use(tracking);
@@ -132,6 +135,7 @@ bot.command('status', handleStatus);
 bot.command('help', handleHelp);
 bot.command('setcommands', setCommandsHandler);
 bot.command('delete_group', handleDeleteGroup);
+bot.command('newsletter', handleNewsletter);
 
 // Обработчик callback запросов
 bot.on('callback_query:data', handleCallback);
