@@ -16,6 +16,7 @@ const configSchema = z.object({
   
   // Другие API ключи
   CLAUDE_API_KEY: z.string().default(''),
+  OPENROUTER_API_KEY: z.string().default(''),
   
   // Настройки мониторинга
   MONITORING_INTERVAL: z.string().default('2700000'),

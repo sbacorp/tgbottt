@@ -2,6 +2,7 @@ import { chromium, Browser, Page } from "playwright";
 import logger from "../utils/logger";
 import { cbrService } from "./cbrService";
 import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { config } from "../utils/config";
 import * as fs from "fs";
 const pdfParse = require("pdf-parse");
@@ -38,11 +39,19 @@ export interface KonturOrganizationData {
 export class PlaywrightScrapeService {
   private browser: Browser | null = null;
   private anthropic: Anthropic;
+  private openai: OpenAI | null = null;
 
   constructor() {
     this.anthropic = new Anthropic({
       apiKey: config.CLAUDE_API_KEY || "",
     });
+    
+    if (config.OPENROUTER_API_KEY) {
+      this.openai = new OpenAI({
+        apiKey: config.OPENROUTER_API_KEY,
+        baseURL: "https://openrouter.ai/api/v1",
+      });
+    }
   }
 
   private async ensureBrowser(): Promise<Browser> {
@@ -64,15 +73,12 @@ export class PlaywrightScrapeService {
     }
   }
 
+
   private async parseWithAI(
     text: string,
     inn: string
   ): Promise<KonturOrganizationData | null> {
-    try {
-      const response = await this.anthropic.messages.create({
-        model: "claude-3-5-sonnet-latest",
-        max_tokens: 2000,
-        system: `Ты эксперт по анализу PDF экспресс-отчетов с сайта Контур.Фокус и системе противодействия отмыванию денежных средств (115-ФЗ). 
+    const systemPrompt = `Ты эксперт по анализу PDF экспресс-отчетов с сайта Контур.Фокус и системе противодействия отмыванию денежных средств (115-ФЗ). 
 Твоя задача - извлекать ключевые данные об организации СТРОГО из текста PDF отчета и определять потенциальные риски согласно системе СВЕТОФОР ЦБ РФ.
 НЕ ДОПУСКАЕТСЯ добавление информации, которой нет в тексте.
 не выдумывай
@@ -184,71 +190,124 @@ export class PlaywrightScrapeService {
 - Учитывай сферу деятельности организации при оценке рисков
 - НЕ ВКЛЮЧАЙ в riskInfo информацию о статусе ликвидации ("Находится в процессе ликвидации") или о недостоверности сведений ("Недостоверность адреса регистрации"). Эта информация указывается в полях organizationStatus и unreliableData.
 
-Если информация не найдена, используй null для опциональных полей, false для boolean полей.`,
-        messages: [
-          {
-            role: "user",
-            content: `Проанализируй текст PDF экспресс-отчета организации с Контур.Фокус и извлеки ключевые данные.
+Если информация не найдена, используй null для опциональных полей, false для boolean полей.`;
+
+    const userPrompt = `Проанализируй текст PDF экспресс-отчета организации с Контур.Фокус и извлеки ключевые данные.
 
 Текст PDF отчета:
 ${text}
 
 ИНН организации: ${inn}
 
-Верни результат в указанном JSON формате.`,
+Верни результат в указанном JSON формате.`;
+
+    // Сначала пробуем OpenRouter с DeepSeek
+    if (this.openai) {
+      try {
+        logger.info('Trying OpenRouter API with DeepSeek...');
+        const completion = await this.openai.chat.completions.create({
+          model: "meta-llama/llama-4-maverick:free",
+          messages: [
+            {
+              role: "system",
+              content: systemPrompt
+            },
+            {
+              role: "user",
+              content: userPrompt
+            }
+          ],
+        });
+
+        const deepseekContent = completion.choices[0]?.message?.content;
+        
+        if (deepseekContent) {
+          logger.info('OpenRouter response received, parsing...');
+          const result = this.parseAIResponse(deepseekContent, inn);
+          if (result) {
+            logger.info('Successfully parsed with OpenRouter/DeepSeek');
+            return result;
+          }
+        }
+      } catch (openRouterError) {
+        logger.warn('OpenRouter API error, falling back to Anthropic:', openRouterError);
+      }
+    }
+
+    // Fallback на Anthropic
+    try {
+      logger.info('Using Anthropic API...');
+      const response = await this.anthropic.messages.create({
+        model: "claude-3-5-sonnet-latest",
+        max_tokens: 2000,
+        system: systemPrompt,
+        messages: [
+          {
+            role: "user",
+            content: userPrompt,
           },
         ],
       });
 
       const content = response.content[0];
-      logger.info(`Ответ AI: ${content}`);
+      logger.info(`Ответ Anthropic AI: ${content}`);
       if (content && content.type === "text") {
-        // Улучшенный поиск JSON, который может быть обернут в markdown
-        const jsonMatch = content.text.match(
-          /```json\s*([\s\S]*?)\s*```|(\{[\s\S]*\})/
-        );
-        logger.info(`JSON: ${jsonMatch}`);
-        if (jsonMatch) {
-          // Выбираем правильную группу из совпадения
-          let jsonString = jsonMatch[1] || jsonMatch[2];
+        return this.parseAIResponse(content.text, inn);
+      }
+      return null;
+    } catch (error) {
+      logger.error("Ошибка AI парсинга:", error);
+      return null;
+    }
+  }
 
-          if (jsonString) {
-            // Обработка потенциальных проблем с riskInfo
-            // Заменяем неэкранированные переносы строк внутри riskInfo
-            jsonString = jsonString.replace(
-              /"riskInfo":\s*"(.*?)"/gs,
-              (_match, group1) => {
-                const cleanedGroup = group1
-                  .replace(/\n/g, "\\n")
-                  .replace(/"/g, '\\"');
-                return `"riskInfo": "${cleanedGroup}"`;
-              }
-            );
+  private parseAIResponse(text: string, inn: string): KonturOrganizationData | null {
+    try {
+      // Улучшенный поиск JSON, который может быть обернут в markdown
+      const jsonMatch = text.match(
+        /```json\s*([\s\S]*?)\s*```|(\{[\s\S]*\})/
+      );
+      logger.info(`JSON match found: ${!!jsonMatch}`);
+      if (jsonMatch) {
+        // Выбираем правильную группу из совпадения
+        let jsonString = jsonMatch[1] || jsonMatch[2];
 
-            try {
-              const parsed = JSON.parse(jsonString);
-              logger.info(`Parsed: ${JSON.stringify(parsed, null, 2)}`);
-              return {
-                inn,
-                name: parsed.name || `Организация ${inn}`,
-                organizationStatus: parsed.organizationStatus || "active",
-                status: parsed.status || "green",
-                hasRejectionsByLists: false, // Будет установлено отдельно через cbrService
-                region: parsed.region || undefined,
-                unreliableData: parsed.unreliableData || undefined,
-                riskInfo: parsed.riskInfo || undefined,
-              };
-            } catch (parseError) {
-              logger.error("Ошибка JSON.parse:", parseError);
-              logger.error("Строка, которую не удалось спарсить:", jsonString);
-              return null;
+        if (jsonString) {
+          // Обработка потенциальных проблем с riskInfo
+          // Заменяем неэкранированные переносы строк внутри riskInfo
+          jsonString = jsonString.replace(
+            /"riskInfo":\s*"(.*?)"/gs,
+            (_match, group1) => {
+              const cleanedGroup = group1
+                .replace(/\n/g, "\\n")
+                .replace(/"/g, '\\"');
+              return `"riskInfo": "${cleanedGroup}"`;
             }
+          );
+
+          try {
+            const parsed = JSON.parse(jsonString);
+            logger.info(`Parsed successfully: ${parsed.name}`);
+            return {
+              inn,
+              name: parsed.name || `Организация ${inn}`,
+              organizationStatus: parsed.organizationStatus || "active",
+              status: parsed.status || "green",
+              hasRejectionsByLists: false, // Будет установлено отдельно через cbrService
+              region: parsed.region || undefined,
+              unreliableData: parsed.unreliableData || undefined,
+              riskInfo: parsed.riskInfo || undefined,
+            };
+          } catch (parseError) {
+            logger.error("Ошибка JSON.parse:", parseError);
+            logger.error("Строка, которую не удалось спарсить:", jsonString);
+            return null;
           }
         }
       }
       return null;
     } catch (error) {
-      logger.error("Ошибка AI парсинга:", error);
+      logger.error("Ошибка парсинга ответа AI:", error);
       return null;
     }
   }

@@ -3,6 +3,7 @@ import logger from '../utils/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import Jimp from 'jimp';
 import { config } from '../utils/config';
 
@@ -14,11 +15,19 @@ import { config } from '../utils/config';
 export class PlatformZskService {
     private browser: Browser | null = null;
     private anthropic: Anthropic | null = null;
+    private openai: OpenAI | null = null;
 
     constructor() {
         const apiKey = config.CLAUDE_API_KEY;
         if (apiKey) {
             this.anthropic = new Anthropic({ apiKey });
+        }
+        
+        if (config.OPENROUTER_API_KEY) {
+            this.openai = new OpenAI({
+                apiKey: config.OPENROUTER_API_KEY,
+                baseURL: "https://openrouter.ai/api/v1",
+            });
         }
     }
 
@@ -549,10 +558,6 @@ export class PlatformZskService {
 
     async analyzeCaptchaScreenshot(screenshotPath: string): Promise<{ success: boolean; text?: string; error?: string }> {
         try {
-            if (!this.anthropic) {
-                return { success: false, error: 'Claude AI client not initialized' };
-            }
-
             if (!fs.existsSync(screenshotPath)) {
                 return { success: false, error: 'Screenshot file not found' };
             }
@@ -563,6 +568,59 @@ export class PlatformZskService {
             const imageBuffer = fs.readFileSync(imagePath);
             const base64Image = imageBuffer.toString('base64');
 
+            const captchaPrompt = `Это скриншот капчи с сайта ЦБР. На изображении текст только русские буквы, слова не всегда связанные, без символов и цифр. Пожалуйста, проанализируй изображение и ответь на следующие вопросы:
+
+1. Можешь ли ты прочитать текст на этом изображении?
+2. Если да, то какой именно текст ты видишь? (только текст который видишь, в кавычках например "кусочка игрушки")
+
+Ответь кратко и по существу. Если текст не читается, так и скажи.`;
+
+            // Сначала пробуем OpenRouter с DeepSeek
+            if (this.openai) {
+                try {
+                    logger.info('Trying OpenRouter API with DeepSeek for captcha...');
+                    const completion = await this.openai.chat.completions.create({
+                        model: "meta-llama/llama-4-maverick:free",
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    {
+                                        type: "text",
+                                        text: captchaPrompt
+                                    },
+                                    {
+                                        type: "image_url",
+                                        image_url: {
+                                            url: `data:image/png;base64,${base64Image}`
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                    });
+
+                    const deepseekContent = completion.choices[0]?.message?.content;
+                    
+                    if (deepseekContent) {
+                        logger.info('OpenRouter response received for captcha, parsing...');
+                        const result = this.parseCaptchaResponse(deepseekContent);
+                        if (result.success) {
+                            logger.info('Successfully parsed captcha with OpenRouter/DeepSeek');
+                            return result;
+                        }
+                    }
+                } catch (openRouterError) {
+                    logger.warn('OpenRouter API error for captcha, falling back to Anthropic:', openRouterError);
+                }
+            }
+
+            // Fallback на Anthropic
+            if (!this.anthropic) {
+                return { success: false, error: 'No AI client available (neither OpenRouter nor Claude)' };
+            }
+
+            logger.info('Using Anthropic API for captcha...');
             const message = await this.anthropic.messages.create({
                 model: 'claude-sonnet-4-0',
                 max_tokens: 1000,
@@ -572,12 +630,7 @@ export class PlatformZskService {
                         content: [
                             {
                                 type: 'text',
-                                text: `Это скриншот капчи с сайта ЦБР. На изображении текст только русские буквы, слова не всегда связанные, без символов и цифр. Пожалуйста, проанализируй изображение и ответь на следующие вопросы:
-
-1. Можешь ли ты прочитать текст на этом изображении?
-2. Если да, то какой именно текст ты видишь? (только текст который видишь, в кавычках например "кусочка игрушки")
-
-Ответь кратко и по существу. Если текст не читается, так и скажи.`
+                                text: captchaPrompt
                             },
                             {
                                 type: 'image',
@@ -594,29 +647,33 @@ export class PlatformZskService {
 
             const response = message.content[0];
             if (response && response.type === 'text') {
-                const lines = response.text.split('\n');
-                const firstLine = lines[0]?.toLowerCase().trim() || '';
-
-                if (firstLine.includes('да')) {
-                    const quotedTextMatch = response.text.match(/"([^"]+)"/);
-                    if (quotedTextMatch && quotedTextMatch[1]) {
-                        return { success: true, text: quotedTextMatch[1] };
-                    } else {
-                        return { success: false, error: 'No quoted text found in response' };
-                    }
-                } else {
-                    return { success: false, error: 'Text not readable according to Claude AI' };
-                }
+                return this.parseCaptchaResponse(response.text);
             } else {
                 return { success: false, error: 'Unexpected response format from Claude AI' };
             }
 
         } catch (error) {
-            logger.error('Error analyzing screenshot with Claude AI:', error);
+            logger.error('Error analyzing screenshot with AI:', error);
             return { 
                 success: false, 
                 error: error instanceof Error ? error.message : String(error) 
             };
+        }
+    }
+
+    private parseCaptchaResponse(text: string): { success: boolean; text?: string; error?: string } {
+        const lines = text.split('\n');
+        const firstLine = lines[0]?.toLowerCase().trim() || '';
+
+        if (firstLine.includes('да')) {
+            const quotedTextMatch = text.match(/"([^"]+)"/); 
+            if (quotedTextMatch && quotedTextMatch[1]) {
+                return { success: true, text: quotedTextMatch[1] };
+            } else {
+                return { success: false, error: 'No quoted text found in response' };
+            }
+        } else {
+            return { success: false, error: 'Text not readable according to AI' };
         }
     }
 
